@@ -1,0 +1,187 @@
+import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import boundaries from 'eslint-plugin-boundaries'
+
+const layerNames = [
+  'domain',
+  'db',
+  'config',
+  'git',
+  'runtime-tmux',
+  'scanner',
+  'reconciler',
+  'events',
+  'observability',
+  'keymap',
+  'ui',
+  'test-utils',
+]
+
+export const baseConfig = tseslint.config(
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/.turbo/**',
+      '**/dist/**',
+      '**/coverage/**',
+    ],
+  },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ['**/*.{ts,mts,cts,js,mjs,cjs}'],
+    plugins: {
+      boundaries,
+    },
+    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+)
+
+export const boundaryConfig = {
+  files: ['apps/*/src/**/*.ts', 'packages/*/src/**/*.ts'],
+  plugins: {
+    boundaries,
+  },
+  settings: {
+    'boundaries/elements': [
+      {
+        type: 'app',
+        pattern: 'apps/*/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'domain',
+        pattern: 'packages/domain/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'db',
+        pattern: 'packages/db/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'config',
+        pattern: 'packages/config/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'git',
+        pattern: 'packages/git/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'runtime-tmux',
+        pattern: 'packages/runtime-tmux/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'scanner',
+        pattern: 'packages/scanner/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'reconciler',
+        pattern: 'packages/reconciler/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'events',
+        pattern: 'packages/events/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'observability',
+        pattern: 'packages/observability/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'keymap',
+        pattern: 'packages/keymap/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'ui',
+        pattern: 'packages/ui/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'test-utils',
+        pattern: 'packages/test-utils/src/**',
+        mode: 'full',
+      },
+    ],
+  },
+  rules: {
+    'boundaries/no-private': 'error',
+    'boundaries/element-types': [
+      'error',
+      {
+        default: 'disallow',
+        rules: [
+          {
+            from: ['app'],
+            allow: layerNames,
+          },
+          {
+            from: ['domain'],
+            allow: [],
+          },
+          {
+            from: ['ui'],
+            allow: ['domain'],
+          },
+          {
+            from: ['keymap'],
+            allow: ['domain'],
+          },
+          {
+            from: ['db'],
+            allow: ['domain', 'observability'],
+          },
+          {
+            from: ['config'],
+            allow: ['domain'],
+          },
+          {
+            from: ['git'],
+            allow: ['domain', 'observability'],
+          },
+          {
+            from: ['runtime-tmux'],
+            allow: ['domain', 'observability'],
+          },
+          {
+            from: ['scanner'],
+            allow: ['domain', 'config', 'git', 'observability'],
+          },
+          {
+            from: ['reconciler'],
+            allow: ['domain', 'db', 'scanner', 'events', 'observability'],
+          },
+          {
+            from: ['events'],
+            allow: ['domain', 'observability'],
+          },
+          {
+            from: ['observability'],
+            allow: ['domain'],
+          },
+          {
+            from: ['test-utils'],
+            allow: ['domain', 'db', 'config'],
+          },
+        ],
+      },
+    ],
+  },
+}

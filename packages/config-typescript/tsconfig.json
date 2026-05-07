@@ -1,0 +1,4 @@
+{
+  "extends": "./library.json",
+  "include": ["src/**/*.ts"]
+}

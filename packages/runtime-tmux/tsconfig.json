@@ -1,0 +1,4 @@
+{
+  "extends": "@harbour/config-typescript/library.json",
+  "include": ["src/**/*.ts"]
+}

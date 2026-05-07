@@ -1,0 +1,16 @@
+{
+  "name": "@harbour/config-typescript",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./base.json": "./base.json",
+    "./app.json": "./app.json",
+    "./library.json": "./library.json"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}
