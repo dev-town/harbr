@@ -10,5 +10,8 @@
     "lint:fix": "eslint src --fix",
     "test": "vitest run src/index.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "effect": "^3.21.2"
   }
 }

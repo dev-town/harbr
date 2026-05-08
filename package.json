@@ -2,10 +2,12 @@
   "name": "harbour",
   "private": true,
   "packageManager": "bun@1.2.13",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ]
+  },
   "scripts": {
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",

@@ -1,9 +1,17 @@
-import { access, readFile, stat } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import path from 'node:path'
 
 import type { ModuleSelector, ProjectConfig } from '@harbour/domain'
-import { z } from 'zod'
+import { Effect } from 'effect'
+import type { ZodIssue } from 'zod'
+import {
+  ConfigNotFoundError,
+  ConfigReadError,
+  InvalidConfigError,
+  InvalidJsonError,
+} from './errors'
+import type { HarbourConfigIssue, HarbourConfigIssueCode } from './errors'
 import { configSchema, type HarbourConfigInput } from './schema'
 
 export type {
@@ -11,6 +19,17 @@ export type {
   HarbourModuleSelectorInput,
   HarbourProjectInput,
 } from './schema'
+export {
+  ConfigNotFoundError,
+  ConfigReadError,
+  InvalidConfigError,
+  InvalidJsonError,
+} from './errors'
+export type {
+  HarbourConfigError,
+  HarbourConfigIssue,
+  HarbourConfigIssueCode,
+} from './errors'
 
 export type HarbourModuleSelector = ModuleSelector
 export type HarbourProject = ProjectConfig
@@ -21,191 +40,130 @@ export type HarbourConfig = {
   projects: ProjectConfig[]
 }
 
-export type HarbourConfigIssueCode =
-  | 'duplicate_project_name'
-  | 'module_path_not_relative'
-  | 'repo_not_found'
-  | 'schema'
-
-export type HarbourConfigIssue = {
-  code: HarbourConfigIssueCode
-  path: (string | number)[]
-  message: string
-  projectName?: string
-  value?: string
-}
-
-export type HarbourConfigError =
-  | {
-      code: 'config_not_found'
-      configPath: string
-    }
-  | {
-      code: 'invalid_json'
-      configPath: string
-      message: string
-    }
-  | {
-      code: 'invalid_config'
-      configPath: string
-      issues: HarbourConfigIssue[]
-    }
-
-export type HarbourConfigResult =
-  | {
-      ok: true
-      value: HarbourConfig
-    }
-  | {
-      ok: false
-      error: HarbourConfigError
-    }
-
-type ParsedConfigResult =
-  | {
-      ok: true
-      value: HarbourConfigInput
-    }
-  | {
-      ok: false
-      error: Extract<HarbourConfigError, { code: 'invalid_json' }>
-    }
-
 export function getDefaultConfigPath() {
   return path.join(homedir(), '.config', 'harbour', 'config.json')
 }
 
-export async function loadConfig() {
+export function loadConfig() {
   return loadConfigAtPath(getDefaultConfigPath())
 }
 
-export async function loadConfigAtPath(
-  configPath: string,
-): Promise<HarbourConfigResult> {
+export function loadConfigAtPath(configPath: string) {
   const resolvedConfigPath = resolveTopLevelPath(configPath)
 
-  try {
-    await access(resolvedConfigPath)
-  } catch {
-    return {
-      ok: false,
-      error: {
-        code: 'config_not_found',
-        configPath: resolvedConfigPath,
-      },
-    }
-  }
+  return Effect.gen(function* () {
+    const configExists = yield* Effect.promise(() =>
+      pathExists(resolvedConfigPath),
+    )
 
-  const rawConfig = await readConfigFile(resolvedConfigPath)
-
-  if (!rawConfig.ok) {
-    return rawConfig
-  }
-
-  const parsed = configSchema.safeParse(rawConfig.value)
-
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: {
-        code: 'invalid_config',
-        configPath: resolvedConfigPath,
-        issues: parsed.error.issues.map(mapSchemaIssue),
-      },
-    }
-  }
-
-  const projects: ProjectConfig[] = []
-  const issues: HarbourConfigIssue[] = []
-
-  for (const [projectIndex, project] of parsed.data.projects.entries()) {
-    const repoPath = resolveTopLevelPath(project.repo)
-
-    if (!(await isDirectory(repoPath))) {
-      issues.push({
-        code: 'repo_not_found',
-        path: ['projects', projectIndex, 'repo'],
-        message: `repo path not found: ${repoPath}`,
-        projectName: project.name,
-        value: repoPath,
-      })
-      continue
+    if (!configExists) {
+      return yield* Effect.fail(
+        new ConfigNotFoundError({
+          configPath: resolvedConfigPath,
+        }),
+      )
     }
 
-    const modules: ModuleSelector[] = []
+    const rawConfig = yield* Effect.tryPromise({
+      try: () => readFile(resolvedConfigPath, 'utf8'),
+      catch: (error) =>
+        new ConfigReadError({
+          configPath: resolvedConfigPath,
+          message: error instanceof Error ? error.message : String(error),
+        }),
+    })
 
-    for (const [moduleIndex, moduleSelector] of project.modules.entries()) {
-      const normalizedSelector = normalizeModuleSelector(moduleSelector)
-      const absoluteModulePath = path.resolve(repoPath, normalizedSelector.path)
+    const configInput = yield* Effect.try({
+      try: () => JSON.parse(rawConfig) as HarbourConfigInput,
+      catch: (error) =>
+        new InvalidJsonError({
+          configPath: resolvedConfigPath,
+          message: error instanceof Error ? error.message : String(error),
+        }),
+    })
 
-      if (!isWithinParent(repoPath, absoluteModulePath)) {
+    const parsedConfig = configSchema.safeParse(configInput)
+
+    if (!parsedConfig.success) {
+      return yield* Effect.fail(
+        new InvalidConfigError({
+          configPath: resolvedConfigPath,
+          issues: parsedConfig.error.issues.map(mapSchemaIssue),
+        }),
+      )
+    }
+
+    const projects: ProjectConfig[] = []
+    const issues: HarbourConfigIssue[] = []
+
+    for (const [
+      projectIndex,
+      project,
+    ] of parsedConfig.data.projects.entries()) {
+      const repoPath = resolveTopLevelPath(project.repo)
+
+      if (!(yield* Effect.promise(() => isDirectory(repoPath)))) {
         issues.push({
-          code: 'module_path_not_relative',
-          path: ['projects', projectIndex, 'modules', moduleIndex],
-          message: `module selector escapes repo: ${moduleSelector}`,
+          code: 'repo_not_found',
+          path: ['projects', projectIndex, 'repo'],
+          message: `repo path not found: ${repoPath}`,
           projectName: project.name,
-          value: moduleSelector,
+          value: repoPath,
         })
         continue
       }
 
-      modules.push({
-        raw: moduleSelector,
-        path: normalizedSelector.path,
-        mode: normalizedSelector.mode,
+      const modules: ModuleSelector[] = []
+
+      for (const [moduleIndex, moduleSelector] of project.modules.entries()) {
+        const normalizedSelector = normalizeModuleSelector(moduleSelector)
+        const absoluteModulePath = path.resolve(
+          repoPath,
+          normalizedSelector.path,
+        )
+
+        if (!isWithinParent(repoPath, absoluteModulePath)) {
+          issues.push({
+            code: 'module_path_not_relative',
+            path: ['projects', projectIndex, 'modules', moduleIndex],
+            message: `module selector escapes repo: ${moduleSelector}`,
+            projectName: project.name,
+            value: moduleSelector,
+          })
+          continue
+        }
+
+        modules.push({
+          raw: moduleSelector,
+          path: normalizedSelector.path,
+          mode: normalizedSelector.mode,
+        })
+      }
+
+      projects.push({
+        name: project.name,
+        repo: repoPath,
+        modules,
       })
     }
 
-    projects.push({
-      name: project.name,
-      repo: repoPath,
-      modules,
-    })
-  }
-
-  if (issues.length > 0) {
-    return {
-      ok: false,
-      error: {
-        code: 'invalid_config',
-        configPath: resolvedConfigPath,
-        issues,
-      },
+    if (issues.length > 0) {
+      return yield* Effect.fail(
+        new InvalidConfigError({
+          configPath: resolvedConfigPath,
+          issues,
+        }),
+      )
     }
-  }
 
-  return {
-    ok: true,
-    value: {
+    return {
       configPath: resolvedConfigPath,
       projects,
-      ...(parsed.data.$schema ? { $schema: parsed.data.$schema } : {}),
-    },
-  }
-}
-
-async function readConfigFile(configPath: string): Promise<ParsedConfigResult> {
-  try {
-    const raw = await readFile(configPath, 'utf8')
-
-    return {
-      ok: true,
-      value: JSON.parse(raw) as HarbourConfigInput,
-    }
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return {
-        ok: false,
-        error: {
-          code: 'invalid_json',
-          configPath,
-          message: error.message,
-        },
-      }
-    }
-
-    throw error
-  }
+      ...(parsedConfig.data.$schema
+        ? { $schema: parsedConfig.data.$schema }
+        : {}),
+    } satisfies HarbourConfig
+  })
 }
 
 function resolveTopLevelPath(inputPath: string) {
@@ -260,7 +218,16 @@ async function isDirectory(targetPath: string) {
   }
 }
 
-function getSchemaIssueCode(issue: z.ZodIssue): HarbourConfigIssueCode {
+async function pathExists(targetPath: string) {
+  try {
+    await stat(targetPath)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function getSchemaIssueCode(issue: ZodIssue): HarbourConfigIssueCode {
   const customCode =
     issue.code === 'custom' ? issue.params?.issueCode : undefined
 
@@ -274,7 +241,7 @@ function getSchemaIssueCode(issue: z.ZodIssue): HarbourConfigIssueCode {
   return 'schema'
 }
 
-function mapSchemaIssue(issue: z.ZodIssue): HarbourConfigIssue {
+function mapSchemaIssue(issue: ZodIssue): HarbourConfigIssue {
   return {
     code: getSchemaIssueCode(issue),
     path: issue.path.map((segment) =>

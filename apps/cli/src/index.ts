@@ -1,5 +1,6 @@
 import { loadConfig, loadConfigAtPath } from '@harbour/config'
 import { inspectRepo } from '@harbour/git'
+import { Either, Effect } from 'effect'
 
 const args = process.argv.slice(2)
 
@@ -11,30 +12,32 @@ if (configPathFlagIndex >= 0 && !configPath) {
   console.error('missing value for --path')
   process.exitCode = 1
 } else {
-  const result = configPath
-    ? await loadConfigAtPath(configPath)
-    : await loadConfig()
+  const program = (
+    configPath ? loadConfigAtPath(configPath) : loadConfig()
+  ).pipe(
+    Effect.flatMap((config) =>
+      Effect.forEach(config.projects, (project) =>
+        inspectRepo(project.repo).pipe(
+          Effect.map((repo) => ({ project: project.name, repo })),
+          Effect.catchAll((error) =>
+            Effect.succeed({ project: project.name, error }),
+          ),
+        ),
+      ).pipe(
+        Effect.map((repos) => ({
+          config,
+          repos,
+        })),
+      ),
+    ),
+  )
 
-  if (!result.ok) {
-    console.error(JSON.stringify(result.error, null, 2))
+  const result = await Effect.runPromise(Effect.either(program))
+
+  if (Either.isLeft(result)) {
+    console.error(JSON.stringify(result.left, null, 2))
     process.exitCode = 1
   } else {
-    const repos = await Promise.all(
-      result.value.projects.map(async (project) => ({
-        project: project.name,
-        inspection: await inspectRepo(project.repo),
-      })),
-    )
-
-    console.log(
-      JSON.stringify(
-        {
-          config: result.value,
-          repos,
-        },
-        null,
-        2,
-      ),
-    )
+    console.log(JSON.stringify(result.right, null, 2))
   }
 }

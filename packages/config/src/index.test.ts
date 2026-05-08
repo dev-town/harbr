@@ -2,9 +2,15 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 
+import { Either, Effect } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { loadConfigAtPath } from './index'
+import {
+  ConfigNotFoundError,
+  InvalidConfigError,
+  InvalidJsonError,
+  loadConfigAtPath,
+} from './index'
 
 const tempRoots: string[] = []
 
@@ -18,16 +24,12 @@ afterEach(async () => {
 
 describe('loadConfigAtPath', () => {
   it('returns config_not_found for missing files', async () => {
-    const result = await loadConfigAtPath(
-      '/tmp/harbour-config-that-does-not-exist.json',
+    const result = await runEither(
+      loadConfigAtPath('/tmp/harbour-config-that-does-not-exist.json'),
     )
 
-    expect(result).toEqual({
-      ok: false,
-      error: {
-        code: 'config_not_found',
-        configPath: '/tmp/harbour-config-that-does-not-exist.json',
-      },
+    expectLeft(result, ConfigNotFoundError, {
+      configPath: '/tmp/harbour-config-that-does-not-exist.json',
     })
   })
 
@@ -37,14 +39,9 @@ describe('loadConfigAtPath', () => {
 
     await writeFile(configPath, '{bad json', 'utf8')
 
-    const result = await loadConfigAtPath(configPath)
+    const result = await runEither(loadConfigAtPath(configPath))
 
-    expect(result.ok).toBe(false)
-    if (result.ok) {
-      return
-    }
-
-    expect(result.error.code).toBe('invalid_json')
+    expectLeft(result, InvalidJsonError, {})
   })
 
   it('returns schema issues for duplicate project names', async () => {
@@ -69,19 +66,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await loadConfigAtPath(configPath)
+    const result = await runEither(loadConfigAtPath(configPath))
 
-    expect(result.ok).toBe(false)
-    if (result.ok) {
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
       return
     }
 
-    expect(result.error.code).toBe('invalid_config')
-    if (result.error.code !== 'invalid_config') {
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.error.issues).toEqual(
+    expect(result.left.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'duplicate_project_name' }),
       ]),
@@ -104,25 +101,22 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    await expect(loadConfigAtPath(configPath)).resolves.toEqual({
-      ok: true,
-      value: {
-        configPath,
-        projects: [
-          {
-            name: 'alpha',
-            repo: repoPath,
-            modules: [
-              { raw: 'packages/core', path: 'packages/core', mode: 'explicit' },
-              {
-                raw: 'packages/core-2',
-                path: 'packages/core-2',
-                mode: 'explicit',
-              },
-            ],
-          },
-        ],
-      },
+    await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [
+            { raw: 'packages/core', path: 'packages/core', mode: 'explicit' },
+            {
+              raw: 'packages/core-2',
+              path: 'packages/core-2',
+              mode: 'explicit',
+            },
+          ],
+        },
+      ],
     })
   })
 
@@ -140,19 +134,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await loadConfigAtPath(configPath)
+    const result = await runEither(loadConfigAtPath(configPath))
 
-    expect(result.ok).toBe(false)
-    if (result.ok) {
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
       return
     }
 
-    expect(result.error.code).toBe('invalid_config')
-    if (result.error.code !== 'invalid_config') {
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.error.issues).toEqual(
+    expect(result.left.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'repo_not_found' }),
       ]),
@@ -175,21 +169,18 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    await expect(loadConfigAtPath(configPath)).resolves.toEqual({
-      ok: true,
-      value: {
-        configPath,
-        projects: [
-          {
-            name: 'alpha',
-            repo: repoPath,
-            modules: [
-              { raw: 'packages/', path: 'packages', mode: 'children' },
-              { raw: 'docs', path: 'docs', mode: 'explicit' },
-            ],
-          },
-        ],
-      },
+    await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [
+            { raw: 'packages/', path: 'packages', mode: 'children' },
+            { raw: 'docs', path: 'docs', mode: 'explicit' },
+          ],
+        },
+      ],
     })
   })
 
@@ -210,19 +201,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await loadConfigAtPath(configPath)
+    const result = await runEither(loadConfigAtPath(configPath))
 
-    expect(result.ok).toBe(false)
-    if (result.ok) {
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
       return
     }
 
-    expect(result.error.code).toBe('invalid_config')
-    if (result.error.code !== 'invalid_config') {
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.error.issues).toEqual(
+    expect(result.left.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'module_path_not_relative' }),
       ]),
@@ -246,24 +237,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await loadConfigAtPath(configPath)
-
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        $schema: '../../packages/config/harbour.schema.json',
-        configPath,
-        projects: [
-          {
-            name: 'alpha',
-            repo: repoPath,
-            modules: [
-              { raw: './apps/', path: 'apps', mode: 'children' },
-              { raw: 'docs', path: 'docs', mode: 'explicit' },
-            ],
-          },
-        ],
-      },
+    await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+      $schema: '../../packages/config/harbour.schema.json',
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [
+            { raw: './apps/', path: 'apps', mode: 'children' },
+            { raw: 'docs', path: 'docs', mode: 'explicit' },
+          ],
+        },
+      ],
     })
   })
 
@@ -287,26 +273,45 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await loadConfigAtPath(tildeConfigPath)
-
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        configPath,
-        projects: [
-          {
-            name: 'alpha',
-            repo: repoPath,
-            modules: [
-              { raw: 'packages/', path: 'packages', mode: 'children' },
-              { raw: 'docs', path: 'docs', mode: 'explicit' },
-            ],
-          },
-        ],
-      },
+    await expect(
+      runSuccess(loadConfigAtPath(tildeConfigPath)),
+    ).resolves.toEqual({
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [
+            { raw: 'packages/', path: 'packages', mode: 'children' },
+            { raw: 'docs', path: 'docs', mode: 'explicit' },
+          ],
+        },
+      ],
     })
   })
 })
+
+async function runEither(effect: ReturnType<typeof loadConfigAtPath>) {
+  return Effect.runPromise(Effect.either(effect))
+}
+
+async function runSuccess(effect: ReturnType<typeof loadConfigAtPath>) {
+  return Effect.runPromise(effect)
+}
+
+function expectLeft(
+  result: Awaited<ReturnType<typeof runEither>>,
+  ErrorType: abstract new (...args: never[]) => Error,
+  shape: Record<string, unknown>,
+) {
+  expect(Either.isLeft(result)).toBe(true)
+  if (!Either.isLeft(result)) {
+    return
+  }
+
+  expect(result.left).toBeInstanceOf(ErrorType)
+  expect(result.left).toMatchObject(shape)
+}
 
 async function createTempRoot() {
   const tempRoot = await mkdtemp(path.join(tmpdir(), 'harbour-config-'))

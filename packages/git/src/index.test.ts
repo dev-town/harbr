@@ -4,9 +4,15 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
+import { Either, Effect } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { inspectRepo } from './index'
+import {
+  RepoNotFoundError,
+  RepoNotGitError,
+  RepoNotSupportedError,
+  inspectRepo,
+} from './index'
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
@@ -26,12 +32,9 @@ describe('inspectRepo', () => {
 
     await execFileAsync('git', ['init', repoPath])
 
-    await expect(inspectRepo(repoPath)).resolves.toEqual({
-      ok: true,
-      value: {
-        repoPath,
-        kind: 'standard',
-      },
+    await expect(runSuccess(inspectRepo(repoPath))).resolves.toEqual({
+      repoPath,
+      kind: 'standard',
     })
   })
 
@@ -41,12 +44,9 @@ describe('inspectRepo', () => {
 
     await execFileAsync('git', ['init', '--bare', repoPath])
 
-    await expect(inspectRepo(repoPath)).resolves.toEqual({
-      ok: true,
-      value: {
-        repoPath,
-        kind: 'bare',
-      },
+    await expect(runSuccess(inspectRepo(repoPath))).resolves.toEqual({
+      repoPath,
+      kind: 'bare',
     })
   })
 
@@ -56,26 +56,18 @@ describe('inspectRepo', () => {
 
     await mkdir(repoPath, { recursive: true })
 
-    await expect(inspectRepo(repoPath)).resolves.toEqual({
-      ok: false,
-      error: {
-        code: 'repo_not_git',
-        repoPath,
-      },
-    })
+    const result = await runEither(inspectRepo(repoPath))
+
+    expectLeft(result, RepoNotGitError, { repoPath })
   })
 
   it('returns repo_not_found for missing directories', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'missing')
 
-    await expect(inspectRepo(repoPath)).resolves.toEqual({
-      ok: false,
-      error: {
-        code: 'repo_not_found',
-        repoPath,
-      },
-    })
+    const result = await runEither(inspectRepo(repoPath))
+
+    expectLeft(result, RepoNotFoundError, { repoPath })
   })
 
   it('returns repo_not_supported for linked worktree roots', async () => {
@@ -114,15 +106,33 @@ describe('inspectRepo', () => {
       worktreePath,
     ])
 
-    await expect(inspectRepo(worktreePath)).resolves.toEqual({
-      ok: false,
-      error: {
-        code: 'repo_not_supported',
-        repoPath: worktreePath,
-      },
-    })
+    const result = await runEither(inspectRepo(worktreePath))
+
+    expectLeft(result, RepoNotSupportedError, { repoPath: worktreePath })
   })
 })
+
+async function runEither(effect: ReturnType<typeof inspectRepo>) {
+  return Effect.runPromise(Effect.either(effect))
+}
+
+async function runSuccess(effect: ReturnType<typeof inspectRepo>) {
+  return Effect.runPromise(effect)
+}
+
+function expectLeft(
+  result: Awaited<ReturnType<typeof runEither>>,
+  ErrorType: abstract new (...args: never[]) => Error,
+  shape: Record<string, unknown>,
+) {
+  expect(Either.isLeft(result)).toBe(true)
+  if (!Either.isLeft(result)) {
+    return
+  }
+
+  expect(result.left).toBeInstanceOf(ErrorType)
+  expect(result.left).toMatchObject(shape)
+}
 
 async function createTempRoot() {
   const tempRoot = await mkdtemp(path.join(tmpdir(), 'harbour-git-'))
