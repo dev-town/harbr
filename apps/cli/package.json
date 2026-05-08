@@ -6,7 +6,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@harbour/config": "workspace:*"
+    "@harbour/config": "workspace:*",
+    "@harbour/git": "workspace:*"
   },
   "scripts": {
     "lint": "eslint src --max-warnings=0",

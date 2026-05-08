@@ -1,4 +1,5 @@
 import { loadConfig, loadConfigAtPath } from '@harbour/config'
+import { inspectRepo } from '@harbour/git'
 
 const args = process.argv.slice(2)
 
@@ -18,6 +19,22 @@ if (configPathFlagIndex >= 0 && !configPath) {
     console.error(JSON.stringify(result.error, null, 2))
     process.exitCode = 1
   } else {
-    console.log(JSON.stringify(result.value, null, 2))
+    const repos = await Promise.all(
+      result.value.projects.map(async (project) => ({
+        project: project.name,
+        inspection: await inspectRepo(project.repo),
+      })),
+    )
+
+    console.log(
+      JSON.stringify(
+        {
+          config: result.value,
+          repos,
+        },
+        null,
+        2,
+      ),
+    )
   }
 }
