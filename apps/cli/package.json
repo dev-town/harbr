@@ -5,9 +5,13 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@harbour/config": "workspace:*"
+  },
   "scripts": {
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
+    "start": "bun src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }

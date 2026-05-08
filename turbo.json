@@ -8,6 +8,9 @@
       "cache": false,
       "outputs": []
     },
+    "test": {
+      "outputs": []
+    },
     "typecheck": {
       "outputs": []
     }

@@ -9,18 +9,21 @@
   "scripts": {
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "test": "vitest run",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "bun run lint && bun run typecheck && bun run format:check"
+    "check": "bun run lint && bun run test && bun run typecheck && bun run format:check"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^25.6.2",
     "eslint": "^10.3.0",
     "eslint-plugin-boundaries": "^6.0.2",
     "prettier": "^3.8.3",
     "turbo": "^2.9.10",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.2"
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.5"
   }
 }
