@@ -9,3 +9,10 @@ export type ProjectConfig = {
   repo: string
   modules: ModuleSelector[]
 }
+
+export type ResolvedModule = {
+  name: string
+  path: string
+  workspacePath: string
+  selector: ModuleSelector
+}
