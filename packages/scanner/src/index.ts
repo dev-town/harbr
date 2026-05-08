@@ -1,8 +1,23 @@
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { ProjectConfig, ResolvedModule } from '@harbour/domain'
+import type { ProjectConfig, ProjectScan, ResolvedModule } from '@harbour/domain'
 import { Effect } from 'effect'
+
+export function scanProject(project: ProjectConfig, workspacePath: string) {
+  const resolvedWorkspacePath = path.resolve(workspacePath)
+
+  return Effect.map(
+    resolveProjectModules(project, resolvedWorkspacePath),
+    (modules) =>
+      ({
+        projectName: project.name,
+        repoPath: project.repo,
+        workspacePath: resolvedWorkspacePath,
+        modules,
+      }) satisfies ProjectScan,
+  )
+}
 
 export function resolveProjectModules(
   project: ProjectConfig,

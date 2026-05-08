@@ -8,6 +8,7 @@
   "dependencies": {
     "@harbour/config": "workspace:*",
     "@harbour/git": "workspace:*",
+    "@harbour/scanner": "workspace:*",
     "effect": "^3.21.2"
   },
   "scripts": {

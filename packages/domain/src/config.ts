@@ -16,3 +16,10 @@ export type ResolvedModule = {
   workspacePath: string
   selector: ModuleSelector
 }
+
+export type ProjectScan = {
+  projectName: string
+  repoPath: string
+  workspacePath: string
+  modules: ResolvedModule[]
+}

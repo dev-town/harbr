@@ -6,7 +6,7 @@ import type { ProjectConfig } from '@harbour/domain'
 import { Effect } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { resolveProjectModules } from './index'
+import { resolveProjectModules, scanProject } from './index'
 
 const tempRoots: string[] = []
 
@@ -117,7 +117,42 @@ describe('resolveProjectModules', () => {
   })
 })
 
+describe('scanProject', () => {
+  it('wires project metadata and resolved modules into one scan result', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const workspacePath = path.join(tempRoot, 'workspace')
+
+    await mkdir(repoPath, { recursive: true })
+    await mkdir(path.join(workspacePath, 'apps', 'cli'), { recursive: true })
+
+    const project: ProjectConfig = {
+      name: 'alpha',
+      repo: repoPath,
+      modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
+    }
+
+    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual({
+      projectName: 'alpha',
+      repoPath,
+      workspacePath,
+      modules: [
+        {
+          name: 'apps/cli',
+          path: 'apps/cli',
+          workspacePath: path.join(workspacePath, 'apps', 'cli'),
+          selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+        },
+      ],
+    })
+  })
+})
+
 async function runSuccess(effect: ReturnType<typeof resolveProjectModules>) {
+  return Effect.runPromise(effect)
+}
+
+async function runScan(effect: ReturnType<typeof scanProject>) {
   return Effect.runPromise(effect)
 }
 

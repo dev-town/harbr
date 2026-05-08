@@ -1,6 +1,19 @@
 import { loadConfig, loadConfigAtPath } from '@harbour/config'
-import { inspectRepo } from '@harbour/git'
+import type { ProjectScan } from '@harbour/domain'
+import { inspectRepo, type RepoInspection, type RepoInspectionError } from '@harbour/git'
+import { scanProject } from '@harbour/scanner'
 import { Either, Effect } from 'effect'
+
+type ProjectRepoResult =
+  | {
+      project: string
+      repo: RepoInspection
+      scan: ProjectScan | null
+    }
+  | {
+      project: string
+      error: RepoInspectionError
+    }
 
 const args = process.argv.slice(2)
 
@@ -16,14 +29,7 @@ if (configPathFlagIndex >= 0 && !configPath) {
     configPath ? loadConfigAtPath(configPath) : loadConfig()
   ).pipe(
     Effect.flatMap((config) =>
-      Effect.forEach(config.projects, (project) =>
-        inspectRepo(project.repo).pipe(
-          Effect.map((repo) => ({ project: project.name, repo })),
-          Effect.catchAll((error) =>
-            Effect.succeed({ project: project.name, error }),
-          ),
-        ),
-      ).pipe(
+      Effect.forEach(config.projects, scanProjectRepo).pipe(
         Effect.map((repos) => ({
           config,
           repos,
@@ -40,4 +46,21 @@ if (configPathFlagIndex >= 0 && !configPath) {
   } else {
     console.log(JSON.stringify(result.right, null, 2))
   }
+}
+
+function scanProjectRepo(project: {
+  name: string
+  repo: string
+  modules: { raw: string; path: string; mode: 'children' | 'explicit' }[]
+}): Effect.Effect<ProjectRepoResult, never, never> {
+  return inspectRepo(project.repo).pipe(
+    Effect.flatMap((repo): Effect.Effect<ProjectRepoResult, never, never> =>
+      repo.kind === 'standard'
+        ? scanProject(project, repo.repoPath).pipe(
+            Effect.map((scan) => ({ project: project.name, repo, scan })),
+          )
+        : Effect.succeed({ project: project.name, repo, scan: null }),
+    ),
+    Effect.catchAll((error) => Effect.succeed({ project: project.name, error })),
+  )
 }
