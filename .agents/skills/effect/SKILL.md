@@ -1,3 +1,0 @@
-# Effect Skill
-
-Placeholder.

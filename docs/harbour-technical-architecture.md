@@ -7,13 +7,13 @@ Harbour is not an IDE, terminal multiplexer, Git client, or AI coding assistant.
 Core model:
 
 ```text
-Project → Workspace → App → Runtime
+Project → Workspace → Module → Runtime
 ```
 
 Core principle:
 
 ```text
-Project / Workspace / App = persistent domain model
+Project / Workspace / Module = persistent domain model
 Runtime / tmux session     = optional execution state
 ```
 

@@ -9,7 +9,7 @@ Harbour is not a terminal multiplexer, IDE, Git client, or AI coding tool. It is
 The core idea is:
 
 ```text
-Project → Workspace → App → Runtime
+Project → Workspace → Module → Runtime
 ```
 
 Git remains the source of truth. tmux remains the main local runtime. Harbour coordinates them.
@@ -30,17 +30,17 @@ A workspace is a working copy of a project, usually backed by a Git worktree. It
 
 A workspace does not automatically create a tmux session. It is a Git working context that can later have one or more runtimes attached.
 
-### App
+### Module
 
-An app is a meaningful subdirectory inside a workspace. In a monorepo this might be an app, service, package, infra directory, or docs area. In a single-package repo, the app can simply be `root`.
+A module is a meaningful subdirectory inside a workspace. In a monorepo this might be an app, service, package, infra directory, or docs area. In a single-package repo, the module can simply be `root`.
 
-Apps are launch targets. They may have default commands or layout templates, but they are not required to have live runtimes.
+Modules are launch targets. They may have default commands or layout templates, but they are not required to have live runtimes.
 
 ### Runtime
 
 A runtime is an actual working environment. Initially this means a tmux session, but the model should allow future runtime types such as remote sandboxes or agent workers.
 
-A runtime can be created from a project, workspace, or app. Sessions are created lazily when the user asks to jump into that context.
+A runtime can be created from a project, workspace, or module. Sessions are created lazily when the user asks to jump into that context.
 
 ---
 
@@ -49,11 +49,11 @@ A runtime can be created from a project, workspace, or app. Sessions are created
 Harbour should separate domain identity from runtime state.
 
 ```text
-Project / Workspace / App = persistent domain model
+Project / Workspace / Module = persistent domain model
 Runtime / tmux session     = optional execution state
 ```
 
-The user must be able to browse projects, workspaces, and apps even when no tmux sessions exist.
+The user must be able to browse projects, workspaces, and modules even when no tmux sessions exist.
 
 ---
 
@@ -65,14 +65,14 @@ The primary interface is a nested selector, not a dashboard.
 
 ```text
 ┌───────────────┬──────────────────┬────────────────────┬────────────────────┐
-│ Projects      │ Workspaces       │ Apps               │ Runtimes / Actions │
+│ Projects      │ Workspaces       │ Modules            │ Runtimes / Actions │
 │ advice        │ main             │ root               │ tmux open          │
 │ ideas         │ fix-auth         │ api                │ create session     │
 │ veg-patch     │ onboarding-flow  │ capture            │ attach agent       │
 └───────────────┴──────────────────┴────────────────────┴────────────────────┘
 ```
 
-Each column depends on the selected item before it. Selecting a project shows its workspaces. Selecting a workspace shows apps inside it. Selecting an app shows relevant runtimes and actions.
+Each column depends on the selected item before it. Selecting a project shows its workspaces. Selecting a workspace shows modules inside it. Selecting a module shows relevant runtimes and actions.
 
 The UI should answer only:
 
@@ -107,7 +107,7 @@ Project actions:
 - Rescan project
 - Edit project config
 
-Do not show app lists, logs, pane details, diffs, or agent internals at this level.
+Do not show module lists, logs, pane details, diffs, or agent internals at this level.
 
 ### Workspace Level
 
@@ -121,7 +121,7 @@ Show workspace/task state:
 
 Workspace actions:
 
-- View apps
+- View modules
 - Create or jump to workspace runtime
 - Open Git UI in workspace root
 - Open file browser in workspace root
@@ -129,23 +129,23 @@ Workspace actions:
 - Rename or delete workspace
 - Show workspace agents
 
-### App Level
+### Module Level
 
-Show app runtime state:
+Show module runtime state:
 
-- App name
+- Module name
 - Runtime status: open, closed, running, failed
 - Agent status if present
-- Dirty marker if changes exist in that app path
+- Dirty marker if changes exist in that module path
 
-App actions:
+Module actions:
 
-- Create or jump to app runtime
-- Restore app layout
+- Create or jump to module runtime
+- Restore module layout
 - Start or attach local agent
 - Open Git UI scoped to workspace
-- Open file browser at app path
-- Show app-scoped diff
+- Open file browser at module path
+- Show module-scoped diff
 
 ### Runtime Level
 
@@ -174,7 +174,7 @@ Recommended session names should be predictable and parseable:
 
 ```text
 project/workspace
-project/workspace/app
+project/workspace/module
 ```
 
 Examples:
@@ -188,10 +188,10 @@ advice/fix-auth/api
 
 Harbour should support both runtime styles:
 
-1. App-session mode: one tmux session per app context.
-2. Workspace-session mode: one tmux session per workspace, with windows per app.
+1. Module-session mode: one tmux session per module context.
+2. Workspace-session mode: one tmux session per workspace, with windows per module.
 
-This should be configurable per project. The app must not hard-code one model.
+This should be configurable per project. Harbour must not hard-code one model.
 
 ---
 
@@ -204,7 +204,7 @@ A typical workspace creation asks for:
 - Type: feature, bugfix, chore, spike
 - Name
 - Base branch
-- Optional affected apps
+- Optional affected modules
 
 The workspace then appears under the selected project and can be opened later.
 
@@ -212,7 +212,7 @@ The workspace then appears under the selected project and can be opened later.
 
 ## Agent Model
 
-Agents are optional workers attached to a project, workspace, or app. Initially an agent may simply be a local process such as OpenCode running inside a tmux pane or session.
+Agents are optional workers attached to a project, workspace, or module. Initially an agent may simply be a local process such as OpenCode running inside a tmux pane or session.
 
 Future agents may run in remote sandboxes such as Daytona or Cloudflare Sandboxes.
 
@@ -262,26 +262,23 @@ The database is not the ultimate source of truth for Git or tmux. Harbour should
 
 ## Configuration
 
-A project config should define things like:
+A global Harbour config should define things like:
 
-```yaml
-name: advice
-repo: ~/repos/advice.git
-worktrees: ~/worktrees/advice
-mainBranch: main
-monorepo: true
-runtimeMode: app-session
-
-apps:
-  - name: api
-    path: apps/api
-  - name: capture
-    path: apps/capture
-  - name: core
-    path: packages/core
+```json
+{
+  "projects": [
+    {
+      "name": "advice",
+      "repo": "~/repos/advice.git",
+      "modules": ["apps/", "packages/", "docs"]
+    }
+  ]
+}
 ```
 
-App-specific runtime templates may define panes, commands, and whether commands should auto-start, prompt, or stay manual.
+Module selectors are relative paths. `apps` means treat `apps` as one fixed module. `apps/` means expand immediate child directories later from a real workspace path.
+
+Module-specific runtime templates may define panes, commands, and whether commands should auto-start, prompt, or stay manual.
 
 ---
 
@@ -289,7 +286,7 @@ App-specific runtime templates may define panes, commands, and whether commands 
 
 ### Opening existing work
 
-The user opens Harbour from tmux, selects a project, then a workspace, then an app. If a runtime exists, Harbour jumps to it. If not, Harbour offers to create one.
+The user opens Harbour from tmux, selects a project, then a workspace, then a module. If a runtime exists, Harbour jumps to it. If not, Harbour offers to create one.
 
 ### Creating a task
 
@@ -297,15 +294,15 @@ The user selects a project and creates a new workspace. Harbour creates the Git 
 
 ### Working in a monorepo
 
-The user selects a workspace and then chooses an app/package inside it. Each app can have its own runtime, or the workspace can have one runtime with app windows, depending on project configuration.
+The user selects a workspace and then chooses a module/package inside it. Each module can have its own runtime, or the workspace can have one runtime with module windows, depending on project configuration.
 
 ### Working in a single-package repo
 
-The project has one implicit app named `root`. The hierarchy still works, but Harbour can omit `root` from display or session names when appropriate.
+The project has one implicit module named `root`. The hierarchy still works, but Harbour can omit `root` from display or session names when appropriate.
 
 ### Starting an agent
 
-The user selects an app and starts an agent. Harbour records the agent, launches it in the configured runtime, and shows only minimal inline status until the user chooses to inspect it.
+The user selects a module and starts an agent. Harbour records the agent, launches it in the configured runtime, and shows only minimal inline status until the user chooses to inspect it.
 
 ### Syncing remote work
 
@@ -337,7 +334,7 @@ prefix + g    lazygit popup
 prefix + y    yazi popup
 ```
 
-Most project/workspace/app management should happen inside Harbour rather than through many tmux leader bindings.
+Most project/workspace/module management should happen inside Harbour rather than through many tmux leader bindings.
 
 ---
 
@@ -350,7 +347,7 @@ The user should be able to understand and act on:
 ```text
 what projects exist
 what workspaces exist
-what apps are available
+what modules are available
 what runtimes are open
 what agents are running
 what needs attention

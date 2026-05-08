@@ -1,3 +1,0 @@
-# Boundaries Skill
-
-Placeholder.

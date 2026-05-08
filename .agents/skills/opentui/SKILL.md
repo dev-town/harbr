@@ -1,3 +1,0 @@
-# OpenTUI Skill
-
-Placeholder.
