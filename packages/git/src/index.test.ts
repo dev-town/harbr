@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -12,6 +12,7 @@ import {
   RepoNotGitError,
   RepoNotSupportedError,
   inspectRepo,
+  resolveWorkspacePath,
 } from './index'
 
 const execFileAsync = promisify(execFile)
@@ -112,11 +113,78 @@ describe('inspectRepo', () => {
   })
 })
 
+describe('resolveWorkspacePath', () => {
+  it('returns repo path for standard repos', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+
+    await execFileAsync('git', ['init', repoPath])
+
+    await expect(
+      runWorkspaceSuccess(resolveWorkspacePath({ repoPath, kind: 'standard' })),
+    ).resolves.toBe(repoPath)
+  })
+
+  it('returns first linked worktree path for bare repos', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo.git')
+    const mainPath = path.join(tempRoot, 'main')
+    const worktreePath = path.join(tempRoot, 'feature')
+
+    await execFileAsync('git', ['init', '--bare', repoPath])
+    await execFileAsync('git', ['clone', repoPath, mainPath])
+    await execFileAsync('git', [
+      '-C',
+      mainPath,
+      '-c',
+      'user.name=Test',
+      '-c',
+      'user.email=test@example.com',
+      'commit',
+      '--allow-empty',
+      '-m',
+      'init',
+    ])
+    await execFileAsync('git', ['-C', mainPath, 'push', 'origin', 'HEAD'])
+    await execFileAsync('git', [
+      '--git-dir',
+      repoPath,
+      'worktree',
+      'add',
+      worktreePath,
+      'master',
+    ])
+
+    const expectedWorkspacePath = await realpath(worktreePath)
+
+    await expect(
+      runWorkspaceSuccess(resolveWorkspacePath({ repoPath, kind: 'bare' })),
+    ).resolves.toBe(expectedWorkspacePath)
+  })
+
+  it('returns null when bare repo has no linked worktrees', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo.git')
+
+    await execFileAsync('git', ['init', '--bare', repoPath])
+
+    await expect(
+      runWorkspaceSuccess(resolveWorkspacePath({ repoPath, kind: 'bare' })),
+    ).resolves.toBeNull()
+  })
+})
+
 async function runEither(effect: ReturnType<typeof inspectRepo>) {
   return Effect.runPromise(Effect.either(effect))
 }
 
 async function runSuccess(effect: ReturnType<typeof inspectRepo>) {
+  return Effect.runPromise(effect)
+}
+
+async function runWorkspaceSuccess(
+  effect: ReturnType<typeof resolveWorkspacePath>,
+) {
   return Effect.runPromise(effect)
 }
 

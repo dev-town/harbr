@@ -1,21 +1,20 @@
 import { loadConfig, loadConfigAtPath } from '@harbour/config'
-import type { ProjectScan } from '@harbour/domain'
-import { inspectRepo, type RepoInspection, type RepoInspectionError } from '@harbour/git'
+import type { ProjectConfig } from '@harbour/domain'
+import {
+  inspectRepo,
+  resolveWorkspacePath,
+} from '@harbour/git'
 import { scanProject } from '@harbour/scanner'
 import { Either, Effect } from 'effect'
-
-type ProjectRepoResult =
-  | {
-      project: string
-      repo: RepoInspection
-      scan: ProjectScan | null
-    }
-  | {
-      project: string
-      error: RepoInspectionError
-    }
+import {
+  formatCliError,
+  formatCliOutput,
+  type CliOutput,
+  type ProjectRepoResult,
+} from './format'
 
 const args = process.argv.slice(2)
+const jsonMode = args.includes('--json')
 
 const configPathFlagIndex = args.indexOf('--path')
 const configPath =
@@ -41,26 +40,47 @@ if (configPathFlagIndex >= 0 && !configPath) {
   const result = await Effect.runPromise(Effect.either(program))
 
   if (Either.isLeft(result)) {
-    console.error(JSON.stringify(result.left, null, 2))
+    console.error(
+      jsonMode ? JSON.stringify(result.left, null, 2) : formatCliError(result.left),
+    )
     process.exitCode = 1
   } else {
-    console.log(JSON.stringify(result.right, null, 2))
+    console.log(
+      jsonMode
+        ? JSON.stringify(result.right, null, 2)
+        : formatCliOutput(result.right satisfies CliOutput),
+    )
   }
 }
 
-function scanProjectRepo(project: {
-  name: string
-  repo: string
-  modules: { raw: string; path: string; mode: 'children' | 'explicit' }[]
-}): Effect.Effect<ProjectRepoResult, never, never> {
+function scanProjectRepo(
+  project: ProjectConfig,
+): Effect.Effect<ProjectRepoResult, never, never> {
   return inspectRepo(project.repo).pipe(
-    Effect.flatMap((repo): Effect.Effect<ProjectRepoResult, never, never> =>
-      repo.kind === 'standard'
-        ? scanProject(project, repo.repoPath).pipe(
-            Effect.map((scan) => ({ project: project.name, repo, scan })),
-          )
-        : Effect.succeed({ project: project.name, repo, scan: null }),
+    Effect.flatMap((repo) =>
+      resolveWorkspacePath(repo).pipe(
+        Effect.flatMap(
+          (workspacePath): Effect.Effect<ProjectRepoResult, never, never> =>
+            workspacePath
+              ? scanProject(project, workspacePath).pipe(
+                  Effect.map(
+                    (scan): ProjectRepoResult => ({
+                      project: project.name,
+                      repo,
+                      scan,
+                    }),
+                  ),
+                )
+              : Effect.succeed<ProjectRepoResult>({
+                  project: project.name,
+                  repo,
+                  scan: null,
+                }),
+        ),
+      ),
     ),
-    Effect.catchAll((error) => Effect.succeed({ project: project.name, error })),
+    Effect.catchAll((error) =>
+      Effect.succeed<ProjectRepoResult>({ project: project.name, error }),
+    ),
   )
 }

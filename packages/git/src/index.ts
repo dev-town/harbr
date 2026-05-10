@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { stat } from 'node:fs/promises'
+import { realpath, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
@@ -24,6 +24,11 @@ export type RepoKind = 'bare' | 'standard'
 export type RepoInspection = {
   repoPath: string
   kind: RepoKind
+}
+
+type WorktreeEntry = {
+  path: string
+  isBare: boolean
 }
 
 export function inspectRepo(repoPath: string) {
@@ -76,6 +81,23 @@ export function inspectRepo(repoPath: string) {
   })
 }
 
+export function resolveWorkspacePath(repo: RepoInspection) {
+  if (repo.kind === 'standard') {
+    return Effect.succeed(repo.repoPath)
+  }
+
+  return Effect.tryPromise({
+    try: async () => {
+      const worktrees = await listWorktrees(repo.repoPath)
+      return worktrees.find((worktree) => !worktree.isBare)?.path ?? null
+    },
+    catch: () =>
+      new RepoNotGitError({
+        repoPath: repo.repoPath,
+      }),
+  })
+}
+
 function runGitRevParse(repoPath: string, flag: string) {
   return Effect.tryPromise({
     try: async () => {
@@ -92,6 +114,41 @@ function runGitRevParse(repoPath: string, flag: string) {
         repoPath,
       }),
   })
+}
+
+async function listWorktrees(repoPath: string) {
+  const { stdout } = await execFileAsync('git', [
+    '--git-dir',
+    repoPath,
+    'worktree',
+    'list',
+    '--porcelain',
+  ])
+
+  return parseWorktreeList(stdout)
+}
+
+async function parseWorktreeList(output: string) {
+  const entries: WorktreeEntry[] = []
+  const blocks = output.trim().split(/\n\s*\n/).filter(Boolean)
+
+  for (const block of blocks) {
+    const lines = block.split('\n')
+    const worktreeLine = lines.find((line) => line.startsWith('worktree '))
+
+    if (!worktreeLine) {
+      continue
+    }
+
+    const worktreePath = worktreeLine.slice('worktree '.length)
+
+    entries.push({
+      path: await realpath(worktreePath),
+      isBare: lines.includes('bare'),
+    })
+  }
+
+  return entries
 }
 
 async function isDirectory(targetPath: string) {

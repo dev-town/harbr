@@ -15,6 +15,7 @@
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
     "start": "bun src/index.ts",
+    "test": "vitest run src/format.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }
