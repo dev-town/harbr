@@ -5,9 +5,21 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@harbour/domain": "workspace:*",
+    "better-sqlite3": "^12.4.1",
+    "drizzle-orm": "^0.44.7",
+    "drizzle-zod": "^0.8.3",
+    "zod": "^4.4.3"
+  },
   "scripts": {
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
+    "test": "vitest run src/index.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.5"
   }
 }

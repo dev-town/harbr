@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@harbour/domain": "workspace:*",
+    "@harbour/git": "workspace:*",
     "effect": "^3.21.2"
   }
 }

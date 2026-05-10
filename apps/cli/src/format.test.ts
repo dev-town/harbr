@@ -1,90 +1,65 @@
 import { describe, expect, it } from 'vitest'
-import { RepoNotFoundError } from '@harbour/git'
 
 import { formatCliError, formatCliOutput, type CliOutput } from './format'
 
 describe('formatCliOutput', () => {
   it('formats scanned projects as readable blocks', () => {
     const output: CliOutput = {
-      config: {
-        configPath: '/tmp/harbour.json',
-      },
-      repos: [
+      projects: [
         {
-          project: 'alpha',
-          repo: {
-            repoPath: '/tmp/repo',
-            kind: 'standard',
-          },
-          scan: {
-            projectName: 'alpha',
-            repoPath: '/tmp/repo',
-            workspacePath: '/tmp/workspace',
-            modules: [
-              {
-                name: 'apps/cli',
-                path: 'apps/cli',
-                workspacePath: '/tmp/workspace/apps/cli',
-                selector: {
-                  raw: 'apps/',
-                  path: 'apps',
-                  mode: 'children',
-                },
-              },
-              {
-                name: 'apps/tui',
-                path: 'apps/tui',
-                workspacePath: '/tmp/workspace/apps/tui',
-                selector: {
-                  raw: 'apps/',
-                  path: 'apps',
-                  mode: 'children',
-                },
-              },
-            ],
-          },
+          projectName: 'alpha',
+          repoPath: '/tmp/repo',
+          repoKind: 'standard',
+          workspacePath: '/tmp/workspace',
+          moduleCount: 2,
+          status: 'synced',
+          errorTag: null,
         },
       ],
     }
 
     expect(formatCliOutput(output)).toBe(
-      ['alpha', '  repo: standard', '  workspace: /tmp/workspace', '  modules: 2', '    apps/cli', '    apps/tui'].join('\n'),
+      ['alpha', '  repo: standard', '  workspace: /tmp/workspace', '  modules: 2'].join('\n'),
     )
   })
 
   it('formats bare repos without workspace', () => {
     const output: CliOutput = {
-      config: {
-        configPath: '/tmp/harbour.json',
-      },
-      repos: [
+      projects: [
         {
-          project: 'alpha',
-          repo: {
-            repoPath: '/tmp/repo.git',
-            kind: 'bare',
-          },
-          scan: null,
+          projectName: 'alpha',
+          repoPath: '/tmp/repo.git',
+          repoKind: 'bare',
+          workspacePath: null,
+          moduleCount: 0,
+          status: 'no_workspace',
+          errorTag: null,
         },
       ],
     }
 
     expect(formatCliOutput(output)).toBe(
-      ['alpha', '  repo: bare', '  workspace: none', '  modules: 0'].join('\n'),
+      [
+        'alpha',
+        '  repo: bare',
+        '  workspace: none',
+        '  modules: 0',
+        '  status: no workspace',
+      ].join('\n'),
     )
   })
 
   it('formats project-level repo errors', () => {
     const output: CliOutput = {
-      config: {
-        configPath: '/tmp/harbour.json',
-      },
-      repos: [
+      projects: [
         {
-          project: 'alpha',
-          error: new RepoNotFoundError({
-            repoPath: '/tmp/missing',
-          }),
+          projectName: 'alpha',
+          repoPath: '/tmp/missing',
+          repoKind: null,
+          workspacePath: null,
+          moduleCount: 0,
+          status: 'error',
+          errorTag: 'RepoNotFoundError',
         },
       ],
     }

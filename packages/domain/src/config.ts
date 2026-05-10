@@ -23,3 +23,54 @@ export type ProjectScan = {
   workspacePath: string
   modules: ResolvedModule[]
 }
+
+export type RepoKind = 'bare' | 'standard'
+
+export type ProjectObservation = {
+  projectName: string
+  repoPath: string
+  repoKind: RepoKind
+  workspacePath: string | null
+  modules: ResolvedModule[]
+}
+
+export type ProjectRecord = {
+  id: string
+  name: string
+  repoPath: string
+  repoKind: RepoKind
+  createdAt: number
+  updatedAt: number
+}
+
+export type WorkspaceRecord = {
+  id: string
+  projectId: string
+  workspacePath: string
+  createdAt: number
+  updatedAt: number
+}
+
+export type ModuleRecord = {
+  id: string
+  workspaceId: string
+  name: string
+  path: string
+  selector: ModuleSelector
+  createdAt: number
+  updatedAt: number
+}
+
+export type SyncProjectResult = {
+  projectName: string
+  repoPath: string
+  repoKind: RepoKind | null
+  workspacePath: string | null
+  moduleCount: number
+  status: 'error' | 'no_workspace' | 'synced'
+  errorTag: string | null
+}
+
+export type SyncResult = {
+  projects: SyncProjectResult[]
+}

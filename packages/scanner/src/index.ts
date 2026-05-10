@@ -1,8 +1,45 @@
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { ProjectConfig, ProjectScan, ResolvedModule } from '@harbour/domain'
+import type {
+  ProjectConfig,
+  ProjectObservation,
+  ProjectScan,
+  ResolvedModule,
+} from '@harbour/domain'
+import { inspectRepo, resolveWorkspacePath } from '@harbour/git'
 import { Effect } from 'effect'
+
+export function observeProject(project: ProjectConfig) {
+  return inspectRepo(project.repo).pipe(
+    Effect.flatMap((repo) =>
+      resolveWorkspacePath(repo).pipe(
+        Effect.flatMap((workspacePath) =>
+          workspacePath
+            ? scanProject(project, workspacePath).pipe(
+                Effect.map(
+                  (scan) =>
+                    ({
+                      projectName: project.name,
+                      repoPath: scan.repoPath,
+                      repoKind: repo.kind,
+                      workspacePath: scan.workspacePath,
+                      modules: scan.modules,
+                    }) satisfies ProjectObservation,
+                ),
+              )
+            : Effect.succeed<ProjectObservation>({
+                projectName: project.name,
+                repoPath: repo.repoPath,
+                repoKind: repo.kind,
+                workspacePath: null,
+                modules: [],
+              }),
+        ),
+      ),
+    ),
+  )
+}
 
 export function scanProject(project: ProjectConfig, workspacePath: string) {
   const resolvedWorkspacePath = path.resolve(workspacePath)

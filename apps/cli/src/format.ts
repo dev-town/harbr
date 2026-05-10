@@ -1,23 +1,8 @@
 import type { HarbourConfigIssue } from '@harbour/config'
-import type { ProjectScan } from '@harbour/domain'
-import type { RepoInspection, RepoInspectionError } from '@harbour/git'
-
-export type ProjectRepoResult =
-  | {
-      project: string
-      repo: RepoInspection
-      scan: ProjectScan | null
-    }
-  | {
-      project: string
-      error: RepoInspectionError
-    }
+import type { SyncProjectResult } from '@harbour/domain'
 
 export type CliOutput = {
-  config: {
-    configPath: string
-  }
-  repos: ProjectRepoResult[]
+  projects: SyncProjectResult[]
 }
 
 type CliError = {
@@ -29,7 +14,7 @@ type CliError = {
 }
 
 export function formatCliOutput(output: CliOutput) {
-  return output.repos.map(formatProjectRepoResult).join('\n\n')
+  return output.projects.map(formatProjectResult).join('\n\n')
 }
 
 export function formatCliError(error: CliError) {
@@ -58,20 +43,22 @@ export function formatCliError(error: CliError) {
   return lines.join('\n')
 }
 
-function formatProjectRepoResult(result: ProjectRepoResult) {
-  if ('error' in result) {
-    return [result.project, `  error: ${result.error._tag}`].join('\n')
+function formatProjectResult(result: SyncProjectResult) {
+  if (result.status === 'error') {
+    return [result.projectName, `  error: ${result.errorTag ?? 'unknown'}`].join(
+      '\n',
+    )
   }
 
   const lines = [
-    result.project,
-    `  repo: ${result.repo.kind}`,
-    `  workspace: ${result.scan?.workspacePath ?? 'none'}`,
-    `  modules: ${result.scan?.modules.length ?? 0}`,
+    result.projectName,
+    `  repo: ${result.repoKind ?? 'unknown'}`,
+    `  workspace: ${result.workspacePath ?? 'none'}`,
+    `  modules: ${result.moduleCount}`,
   ]
 
-  for (const module of result.scan?.modules ?? []) {
-    lines.push(`    ${module.name}`)
+  if (result.status === 'no_workspace') {
+    lines.push('  status: no workspace')
   }
 
   return lines.join('\n')

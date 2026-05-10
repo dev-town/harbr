@@ -5,9 +5,17 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@harbour/config": "workspace:*",
+    "@harbour/db": "workspace:*",
+    "@harbour/domain": "workspace:*",
+    "@harbour/scanner": "workspace:*",
+    "effect": "^3.21.2"
+  },
   "scripts": {
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
+    "test": "vitest run src/index.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }
