@@ -3,12 +3,11 @@ import { randomUUID } from 'node:crypto'
 import type {
   ModuleRecord,
   ProjectRecord,
-  RepoKind,
   ResolvedModule,
   WorkspaceRecord,
 } from '@harbour/domain'
 import { eq } from 'drizzle-orm'
-import type { HarbourDatabase } from './client'
+import type { HarbourDatabase, ReplaceProjectSnapshotInput } from '../db.types'
 import {
   moduleRowSchema,
   modules,
@@ -16,17 +15,9 @@ import {
   projects,
   workspaceRowSchema,
   workspaces,
-} from './schema'
+} from '../schema'
 
-export type ReplaceProjectSnapshotInput = {
-  projectName: string
-  repoPath: string
-  repoKind: RepoKind
-  workspacePath: string | null
-  modules: ResolvedModule[]
-}
-
-export async function getProjectByName(
+export function getProjectByName(
   db: HarbourDatabase,
   projectName: string,
 ) {
@@ -93,7 +84,7 @@ export function upsertProject(
   return mapProjectRow(projectRowSchema.parse(row))
 }
 
-export async function replaceProjectSnapshot(
+export function replaceProjectSnapshot(
   db: HarbourDatabase,
   input: ReplaceProjectSnapshotInput,
 ) {

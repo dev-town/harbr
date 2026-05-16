@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
 import { migrateDatabase } from './migrate'
 import { openDatabase } from './client'
-import { getProjectByName, replaceProjectSnapshot } from './repositories'
+import { getProjectByName, replaceProjectSnapshot } from './repos/project-snapshot.repo'
 import { modules, projects, workspaces } from './schema'
 
 const tempRoots: string[] = []

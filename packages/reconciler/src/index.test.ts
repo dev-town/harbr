@@ -4,11 +4,22 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import { openDatabase, getProjectByName } from '@harbour/db'
-import { Effect } from 'effect'
+import { ConfigService, type HarbourConfig } from '@harbour/config'
+import { openDatabase, ProjectService } from '@harbour/db'
+import { type ProjectConfig, type ProjectObservation } from '@harbour/domain'
+import { RepoNotGitError } from '@harbour/git'
+import { Either, Effect, Layer } from 'effect'
+import { ScannerService } from '@harbour/scanner'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { refreshProject, sync } from './index'
+import {
+  ProjectNotFoundError,
+  ReconcilerServiceLive,
+  refreshProjectProgram,
+  refreshProject,
+  syncProgram,
+  sync,
+} from './index'
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
@@ -58,7 +69,9 @@ describe('reconciler', () => {
 
     const database = await openDatabase(dbPath)
     try {
-      const project = await getProjectByName(database.db, 'alpha')
+      const project = await database.db.query.projects.findFirst({
+        where: (projectRow, { eq }) => eq(projectRow.name, 'alpha'),
+      })
       expect(project?.repoPath).toBe(repoPath)
     } finally {
       database.sqlite.close()
@@ -151,10 +164,161 @@ describe('reconciler', () => {
       },
     ])
   })
+
+  it('can run against provided service layers', async () => {
+    const persistedProjects: string[] = []
+    const alpha = createProjectConfig('alpha')
+    const beta = createProjectConfig('beta')
+
+    const config: HarbourConfig = {
+      configPath: '/tmp/harbour.json',
+      projects: [alpha, beta],
+    }
+
+    const layer = ReconcilerServiceLive.pipe(
+      Layer.provide(
+        Layer.succeed(ConfigService, {
+          load: Effect.succeed(config),
+          loadAtPath: () => Effect.succeed(config),
+        }),
+      ),
+      Layer.provide(
+        Layer.succeed(ScannerService, {
+          observeProject: (project: ProjectConfig) =>
+            project.name === 'alpha'
+              ? Effect.succeed(createObservation(project))
+              : Effect.fail(new RepoNotGitError({ repoPath: project.repo })),
+        }),
+      ),
+      Layer.provide(
+        Layer.succeed(ProjectService, {
+          findByName: () => Effect.succeed(null),
+          syncSnapshot: (input) => {
+            persistedProjects.push(input.projectName)
+            return Effect.succeed({
+              project: {
+                id: input.projectName,
+                name: input.projectName,
+                repoPath: input.repoPath,
+                repoKind: input.repoKind,
+                createdAt: 0,
+                updatedAt: 0,
+              },
+              workspace: input.workspacePath
+                ? {
+                    id: `${input.projectName}-workspace`,
+                    projectId: input.projectName,
+                    workspacePath: input.workspacePath,
+                    createdAt: 0,
+                    updatedAt: 0,
+                  }
+                : null,
+              modules: [],
+            })
+          },
+        }),
+      ),
+    )
+
+    await expect(
+      Effect.runPromise(
+        syncProgram.pipe(Effect.provide(layer)),
+      ),
+    ).resolves.toEqual({
+      projects: [
+        {
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          repoKind: 'standard',
+          workspacePath: '/tmp/alpha-main',
+          moduleCount: 1,
+          status: 'synced',
+          errorTag: null,
+        },
+        {
+          projectName: 'beta',
+          repoPath: '/tmp/beta.git',
+          repoKind: null,
+          workspacePath: null,
+          moduleCount: 0,
+          status: 'error',
+          errorTag: 'RepoNotGitError',
+        },
+      ],
+    })
+
+    expect(persistedProjects).toEqual(['alpha'])
+  })
+
+  it('returns tagged project_not_found from provided services', async () => {
+    const config: HarbourConfig = {
+      configPath: '/tmp/harbour.json',
+      projects: [createProjectConfig('alpha')],
+    }
+
+    const layer = ReconcilerServiceLive.pipe(
+      Layer.provide(
+        Layer.succeed(ConfigService, {
+          load: Effect.succeed(config),
+          loadAtPath: () => Effect.succeed(config),
+        }),
+      ),
+      Layer.provide(
+        Layer.succeed(ScannerService, {
+          observeProject: () => Effect.die('not used'),
+        }),
+      ),
+      Layer.provide(
+        Layer.succeed(ProjectService, {
+          findByName: () => Effect.succeed(null),
+          syncSnapshot: () => Effect.die('not used'),
+        }),
+      ),
+    )
+
+    const result = await Effect.runPromise(
+      Effect.either(
+        refreshProjectProgram('missing').pipe(Effect.provide(layer)),
+      ),
+    )
+
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
+      return
+    }
+
+    expect(result.left).toBeInstanceOf(ProjectNotFoundError)
+    expect(result.left).toEqual(new ProjectNotFoundError({ projectName: 'missing' }))
+  })
 })
 
 async function createTempRoot() {
   const tempRoot = await mkdtemp(path.join(tmpdir(), 'harbour-reconciler-'))
   tempRoots.push(tempRoot)
   return tempRoot
+}
+
+function createProjectConfig(name: string): ProjectConfig {
+  return {
+    name,
+    repo: `/tmp/${name}.git`,
+    modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
+  }
+}
+
+function createObservation(project: ProjectConfig): ProjectObservation {
+  return {
+    projectName: project.name,
+    repoPath: project.repo,
+    repoKind: 'standard',
+    workspacePath: `/tmp/${project.name}-main`,
+    modules: [
+      {
+        name: 'apps/cli',
+        path: 'apps/cli',
+        workspacePath: `/tmp/${project.name}-main/apps/cli`,
+        selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+      },
+    ],
+  }
 }

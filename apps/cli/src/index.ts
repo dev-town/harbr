@@ -1,10 +1,6 @@
-import { Either, Effect } from 'effect'
-import { sync } from '@harbour/reconciler'
-import {
-  formatCliError,
-  formatCliOutput,
-  type CliOutput,
-} from './format'
+import { Effect } from 'effect'
+import { makeReconcilerLayer, syncProgram } from '@harbour/reconciler'
+import { formatCliError, formatCliOutput } from './format'
 
 const args = process.argv.slice(2)
 const jsonMode = args.includes('--json')
@@ -17,26 +13,42 @@ if (configPathFlagIndex >= 0 && !configPath) {
   console.error('missing value for --path')
   process.exitCode = 1
 } else {
-  const program = sync(
+  const layer = makeReconcilerLayer(
     configPath
       ? {
           configPath,
         }
       : undefined,
-  ).pipe(Effect.map((result) => ({ projects: result.projects } satisfies CliOutput)))
+  )
 
-  const result = await Effect.runPromise(Effect.either(program))
+  const program = syncProgram.pipe(Effect.provide(layer))
 
-  if (Either.isLeft(result)) {
-    console.error(
-      jsonMode ? JSON.stringify(result.left, null, 2) : formatCliError(result.left),
-    )
-    process.exitCode = 1
+  const result = await Effect.runPromise(
+    program.pipe(
+      Effect.match({
+        onFailure: (error) => ({
+          exitCode: 1,
+          output: jsonMode
+            ? JSON.stringify(error, null, 2)
+            : formatCliError(error),
+          stream: 'stderr' as const,
+        }),
+        onSuccess: (output) => ({
+          exitCode: 0,
+          output: jsonMode
+            ? JSON.stringify(output, null, 2)
+            : formatCliOutput(output),
+          stream: 'stdout' as const,
+        }),
+      }),
+    ),
+  )
+
+  if (result.stream === 'stderr') {
+    console.error(result.output)
   } else {
-    console.log(
-      jsonMode
-        ? JSON.stringify(result.right, null, 2)
-        : formatCliOutput(result.right satisfies CliOutput),
-    )
+    console.log(result.output)
   }
+
+  process.exitCode = result.exitCode
 }

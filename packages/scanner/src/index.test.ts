@@ -5,10 +5,17 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 
 import type { ProjectConfig } from '@harbour/domain'
-import { Effect } from 'effect'
+import { GitService, type GitServiceApi } from '@harbour/git'
+import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { observeProject, resolveProjectModules, scanProject } from './index'
+import {
+  ScannerService,
+  ScannerServiceLive,
+  observeProject,
+  resolveProjectModules,
+  scanProject,
+} from './index'
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
@@ -178,6 +185,41 @@ describe('observeProject', () => {
           selector: { raw: 'apps/', path: 'apps', mode: 'children' },
         },
       ],
+    })
+  })
+
+  it('can run against a provided git service layer', async () => {
+    const project: ProjectConfig = {
+      name: 'alpha',
+      repo: '/tmp/alpha.git',
+      modules: [{ raw: 'apps', path: 'apps', mode: 'explicit' }],
+    }
+
+    const git: GitServiceApi = {
+      inspectRepo: () =>
+        Effect.succeed({
+          repoPath: '/tmp/alpha.git',
+          kind: 'bare',
+        }),
+      resolveWorkspacePath: () => Effect.succeed(null),
+    }
+
+    await expect(
+      Effect.runPromise(
+        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
+          Effect.provide(
+            ScannerServiceLive.pipe(
+              Layer.provide(Layer.succeed(GitService, git)),
+            ),
+          ),
+        ),
+      ),
+    ).resolves.toEqual({
+      projectName: 'alpha',
+      repoPath: '/tmp/alpha.git',
+      repoKind: 'bare',
+      workspacePath: null,
+      modules: [],
     })
   })
 })

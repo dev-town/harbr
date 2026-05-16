@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatCliError, formatCliOutput, type CliOutput } from './format'
+import type { SyncResult } from '@harbour/domain'
+import { formatCliError, formatCliOutput } from './format'
 
 describe('formatCliOutput', () => {
   it('formats scanned projects as readable blocks', () => {
-    const output: CliOutput = {
+    const output: SyncResult = {
       projects: [
         {
           projectName: 'alpha',
@@ -24,7 +25,7 @@ describe('formatCliOutput', () => {
   })
 
   it('formats bare repos without workspace', () => {
-    const output: CliOutput = {
+    const output: SyncResult = {
       projects: [
         {
           projectName: 'alpha',
@@ -50,7 +51,7 @@ describe('formatCliOutput', () => {
   })
 
   it('formats project-level repo errors', () => {
-    const output: CliOutput = {
+    const output: SyncResult = {
       projects: [
         {
           projectName: 'alpha',

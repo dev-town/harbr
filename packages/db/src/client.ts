@@ -1,20 +1,11 @@
+/// <reference path="./sqlite-shims.d.ts" />
+
 import { mkdir } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import path from 'node:path'
 
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
-import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import * as schema from './schema'
-
-export type HarbourDatabase =
-  | BetterSQLite3Database<typeof schema>
-  | BunSQLiteDatabase<typeof schema>
-
-export type HarbourDatabaseConnection = {
-  driver: 'better-sqlite3' | 'bun-sqlite'
-  sqlite: { close(): void }
-  db: HarbourDatabase
-}
+import type { HarbourDatabaseConnection } from './db.types'
 
 export async function openDatabase(dbPath: string) {
   await mkdir(path.dirname(dbPath), { recursive: true })
@@ -57,7 +48,7 @@ export function getDefaultDatabasePath() {
 }
 
 function importBunSqlite() {
-  return new Function('return import("bun:sqlite")')() as Promise<{
+  return import('bun:sqlite') as Promise<{
     Database: new (
       filename: string,
       options?: {
@@ -72,7 +63,7 @@ function importBunSqlite() {
 }
 
 function importBetterSqlite3() {
-  return new Function('return import("better-sqlite3")')() as Promise<{
+  return import('better-sqlite3') as Promise<{
     default: new (filename: string) => {
       close(): void
       pragma(statement: string): unknown

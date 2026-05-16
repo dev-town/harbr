@@ -1,9 +1,5 @@
 import type { HarbourConfigIssue } from '@harbour/config'
-import type { SyncProjectResult } from '@harbour/domain'
-
-export type CliOutput = {
-  projects: SyncProjectResult[]
-}
+import type { SyncProjectResult, SyncResult } from '@harbour/domain'
 
 type CliError = {
   _tag?: string
@@ -13,7 +9,7 @@ type CliError = {
   message?: string
 }
 
-export function formatCliOutput(output: CliOutput) {
+export function formatCliOutput(output: SyncResult) {
   return output.projects.map(formatProjectResult).join('\n\n')
 }
 
