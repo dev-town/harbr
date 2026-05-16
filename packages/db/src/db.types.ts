@@ -7,6 +7,9 @@ import type {
   ProjectRecord,
   RepoKind,
   ResolvedModule,
+  RuntimeFact,
+  RuntimeIssue,
+  RuntimeRecord,
   WorkspaceRecord,
 } from '@harbour/domain'
 import type * as schema from './schema'
@@ -34,14 +37,18 @@ export type ReplaceProjectSnapshotInput = {
   projectName: string
   repoPath: string
   repoKind: RepoKind
+  workspaceName: string | null
   workspacePath: string | null
   modules: ResolvedModule[]
+  runtimes: RuntimeFact[]
+  runtimeIssue: RuntimeIssue | null
 }
 
 export type ProjectSnapshot = {
   project: ProjectRecord
   workspace: WorkspaceRecord | null
   modules: ModuleRecord[]
+  runtimes: RuntimeRecord[]
 }
 
 export type ProjectServiceApi = {

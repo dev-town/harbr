@@ -20,10 +20,13 @@ export function syncProjects(
             projectName: project.name,
             repoPath: project.repo,
             repoKind: null,
+            workspaceName: null,
             workspacePath: null,
             moduleCount: 0,
+            runtimeCount: 0,
             status: 'error',
             errorTag: getErrorTag(error),
+            runtimeIssue: null,
           }),
         ),
       ),
@@ -63,18 +66,24 @@ export function refreshConfiguredProject(
       projectName: observation.projectName,
       repoPath: observation.repoPath,
       repoKind: observation.repoKind,
+      workspaceName: observation.workspaceName,
       workspacePath: observation.workspacePath,
       modules: observation.modules,
+      runtimes: observation.runtimes,
+      runtimeIssue: observation.runtimeIssue,
     })
 
     return {
       projectName: observation.projectName,
       repoPath: observation.repoPath,
       repoKind: observation.repoKind,
+      workspaceName: observation.workspaceName,
       workspacePath: observation.workspacePath,
       moduleCount: observation.modules.length,
+      runtimeCount: observation.runtimes.length,
       status: observation.workspacePath ? 'synced' : 'no_workspace',
       errorTag: null,
+      runtimeIssue: observation.runtimeIssue,
     } satisfies SyncProjectResult
   })
 }

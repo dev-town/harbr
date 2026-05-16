@@ -6,6 +6,7 @@ import { promisify } from 'node:util'
 
 import type { ProjectConfig } from '@harbour/domain'
 import { GitService, type GitServiceApi } from '@harbour/git'
+import { RuntimeTmuxService, type RuntimeTmuxServiceApi } from '@harbour/runtime-tmux'
 import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -172,10 +173,13 @@ describe('observeProject', () => {
       modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
     }
 
-    await expect(runObservation(observeProject(project))).resolves.toEqual({
+    const observation = await runObservation(observeProject(project))
+
+    expect(observation).toMatchObject({
       projectName: 'alpha',
       repoPath,
       repoKind: 'standard',
+      workspaceName: 'main',
       workspacePath: repoPath,
       modules: [
         {
@@ -186,6 +190,7 @@ describe('observeProject', () => {
         },
       ],
     })
+    expect([null, 'tmux_not_found']).toContain(observation.runtimeIssue)
   })
 
   it('can run against a provided git service layer', async () => {
@@ -204,11 +209,28 @@ describe('observeProject', () => {
       resolveWorkspacePath: () => Effect.succeed(null),
     }
 
+    const runtimeTmux: RuntimeTmuxServiceApi = {
+      listRuntimes: Effect.succeed({
+        runtimes: [
+          {
+            sessionName: 'alpha',
+            scope: 'project',
+            projectName: 'alpha',
+            workspaceName: null,
+            moduleName: null,
+            status: 'open',
+          },
+        ],
+        runtimeIssue: 'tmux_not_found',
+      }),
+    }
+
     await expect(
       Effect.runPromise(
         Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
+              Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
               Layer.provide(Layer.succeed(GitService, git)),
             ),
           ),
@@ -218,8 +240,137 @@ describe('observeProject', () => {
       projectName: 'alpha',
       repoPath: '/tmp/alpha.git',
       repoKind: 'bare',
+      workspaceName: null,
       workspacePath: null,
       modules: [],
+      runtimes: [
+        {
+          sessionName: 'alpha',
+          scope: 'project',
+          projectName: 'alpha',
+          workspaceName: null,
+          moduleName: null,
+          status: 'open',
+        },
+      ],
+      runtimeIssue: 'tmux_not_found',
+    })
+  })
+
+  it('maps matching workspace and module runtimes', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+
+    await execFileAsync('git', ['init', repoPath])
+    await mkdir(path.join(repoPath, 'apps', 'cli'), { recursive: true })
+
+    const project: ProjectConfig = {
+      name: 'alpha',
+      repo: repoPath,
+      modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
+    }
+
+    const runtimeTmux: RuntimeTmuxServiceApi = {
+      listRuntimes: Effect.succeed({
+        runtimes: [
+          {
+            sessionName: 'alpha',
+            scope: 'project',
+            projectName: 'alpha',
+            workspaceName: null,
+            moduleName: null,
+            status: 'open',
+          },
+          {
+            sessionName: 'alpha__main',
+            scope: 'workspace',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: null,
+            status: 'open',
+          },
+          {
+            sessionName: 'alpha__main__apps/cli',
+            scope: 'module',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: 'apps/cli',
+            status: 'open',
+          },
+          {
+            sessionName: 'alpha__main__apps/tui',
+            scope: 'module',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: 'apps/tui',
+            status: 'open',
+          },
+        ],
+        runtimeIssue: null,
+      }),
+    }
+
+    await expect(
+      Effect.runPromise(
+        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
+          Effect.provide(
+            ScannerServiceLive.pipe(
+              Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+              Layer.provide(
+                Layer.succeed(GitService, {
+                  inspectRepo: () =>
+                    Effect.succeed({
+                      repoPath,
+                      kind: 'standard',
+                    }),
+                  resolveWorkspacePath: () => Effect.succeed(repoPath),
+                }),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ).resolves.toEqual({
+      projectName: 'alpha',
+      repoPath,
+      repoKind: 'standard',
+      workspaceName: 'main',
+      workspacePath: repoPath,
+      modules: [
+        {
+          name: 'apps/cli',
+          path: 'apps/cli',
+          workspacePath: path.join(repoPath, 'apps', 'cli'),
+          selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+        },
+      ],
+      runtimes: [
+        {
+          sessionName: 'alpha',
+          scope: 'project',
+          projectName: 'alpha',
+          workspaceName: null,
+          moduleName: null,
+          status: 'open',
+        },
+        {
+          sessionName: 'alpha__main',
+          scope: 'workspace',
+          projectName: 'alpha',
+          workspaceName: 'main',
+          moduleName: null,
+          status: 'open',
+        },
+        {
+          sessionName: 'alpha__main__apps/cli',
+          scope: 'module',
+          projectName: 'alpha',
+          workspaceName: 'main',
+          moduleName: 'apps/cli',
+          status: 'open',
+        },
+      ],
+      runtimeIssue: null,
     })
   })
 })

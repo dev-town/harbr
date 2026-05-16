@@ -49,12 +49,18 @@ function formatProjectResult(result: SyncProjectResult) {
   const lines = [
     result.projectName,
     `  repo: ${result.repoKind ?? 'unknown'}`,
+    `  workspace name: ${result.workspaceName ?? 'none'}`,
     `  workspace: ${result.workspacePath ?? 'none'}`,
     `  modules: ${result.moduleCount}`,
+    `  runtimes: ${result.runtimeCount}`,
   ]
 
   if (result.status === 'no_workspace') {
     lines.push('  status: no workspace')
+  }
+
+  if (result.runtimeIssue) {
+    lines.push(`  runtime issue: ${result.runtimeIssue}`)
   }
 
   return lines.join('\n')

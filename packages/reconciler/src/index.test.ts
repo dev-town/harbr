@@ -55,17 +55,18 @@ describe('reconciler', () => {
 
     const result = await Effect.runPromise(sync({ configPath, dbPath }))
 
-    expect(result.projects).toEqual([
-      {
-        projectName: 'alpha',
-        repoPath,
-        repoKind: 'standard',
-        workspacePath: repoPath,
-        moduleCount: 1,
-        status: 'synced',
-        errorTag: null,
-      },
-    ])
+    expect(result.projects).toHaveLength(1)
+    expect(result.projects[0]).toMatchObject({
+      projectName: 'alpha',
+      repoPath,
+      repoKind: 'standard',
+      workspaceName: 'main',
+      workspacePath: repoPath,
+      moduleCount: 1,
+      status: 'synced',
+      errorTag: null,
+    })
+    expect([null, 'tmux_not_found']).toContain(result.projects[0]?.runtimeIssue ?? null)
 
     const database = await openDatabase(dbPath)
     try {
@@ -101,15 +102,17 @@ describe('reconciler', () => {
 
     const result = await Effect.runPromise(refreshProject('alpha', { configPath, dbPath }))
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       projectName: 'alpha',
       repoPath,
       repoKind: 'bare',
+      workspaceName: null,
       workspacePath: null,
       moduleCount: 0,
       status: 'no_workspace',
       errorTag: null,
     })
+    expect([null, 'tmux_not_found']).toContain(result.runtimeIssue)
   })
 
   it('isolates per-project failures during sync', async () => {
@@ -143,26 +146,30 @@ describe('reconciler', () => {
 
     const result = await Effect.runPromise(sync({ configPath, dbPath }))
 
-    expect(result.projects).toEqual([
-      {
-        projectName: 'alpha',
-        repoPath,
-        repoKind: 'standard',
-        workspacePath: repoPath,
-        moduleCount: 1,
-        status: 'synced',
-        errorTag: null,
-      },
-      {
-        projectName: 'beta',
-        repoPath: plainDirPath,
-        repoKind: null,
-        workspacePath: null,
-        moduleCount: 0,
-        status: 'error',
-        errorTag: 'RepoNotGitError',
-      },
-    ])
+    expect(result.projects).toHaveLength(2)
+    expect(result.projects[0]).toMatchObject({
+      projectName: 'alpha',
+      repoPath,
+      repoKind: 'standard',
+      workspaceName: 'main',
+      workspacePath: repoPath,
+      moduleCount: 1,
+      status: 'synced',
+      errorTag: null,
+    })
+    expect([null, 'tmux_not_found']).toContain(result.projects[0]?.runtimeIssue ?? null)
+    expect(result.projects[1]).toEqual({
+      projectName: 'beta',
+      repoPath: plainDirPath,
+      repoKind: null,
+      workspaceName: null,
+      workspacePath: null,
+      moduleCount: 0,
+      runtimeCount: 0,
+      status: 'error',
+      errorTag: 'RepoNotGitError',
+      runtimeIssue: null,
+    })
   })
 
   it('can run against provided service layers', async () => {
@@ -199,24 +206,26 @@ describe('reconciler', () => {
               project: {
                 id: input.projectName,
                 name: input.projectName,
-                repoPath: input.repoPath,
-                repoKind: input.repoKind,
-                createdAt: 0,
-                updatedAt: 0,
-              },
-              workspace: input.workspacePath
-                ? {
+                    repoPath: input.repoPath,
+                    repoKind: input.repoKind,
+                    createdAt: 0,
+                    updatedAt: 0,
+                  },
+                workspace: input.workspacePath
+                  ? {
                     id: `${input.projectName}-workspace`,
                     projectId: input.projectName,
+                    name: input.workspaceName ?? 'main',
                     workspacePath: input.workspacePath,
                     createdAt: 0,
                     updatedAt: 0,
                   }
                 : null,
-              modules: [],
-            })
-          },
-        }),
+                modules: [],
+                runtimes: [],
+              })
+            },
+          }),
       ),
     )
 
@@ -230,19 +239,25 @@ describe('reconciler', () => {
           projectName: 'alpha',
           repoPath: '/tmp/alpha.git',
           repoKind: 'standard',
+          workspaceName: 'main',
           workspacePath: '/tmp/alpha-main',
           moduleCount: 1,
+          runtimeCount: 0,
           status: 'synced',
           errorTag: null,
+          runtimeIssue: 'tmux_not_found',
         },
         {
           projectName: 'beta',
           repoPath: '/tmp/beta.git',
           repoKind: null,
+          workspaceName: null,
           workspacePath: null,
           moduleCount: 0,
+          runtimeCount: 0,
           status: 'error',
           errorTag: 'RepoNotGitError',
+          runtimeIssue: null,
         },
       ],
     })
@@ -311,6 +326,7 @@ function createObservation(project: ProjectConfig): ProjectObservation {
     projectName: project.name,
     repoPath: project.repo,
     repoKind: 'standard',
+    workspaceName: 'main',
     workspacePath: `/tmp/${project.name}-main`,
     modules: [
       {
@@ -320,5 +336,7 @@ function createObservation(project: ProjectConfig): ProjectObservation {
         selector: { raw: 'apps/', path: 'apps', mode: 'children' },
       },
     ],
+    runtimes: [],
+    runtimeIssue: 'tmux_not_found',
   }
 }

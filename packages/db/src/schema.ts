@@ -16,6 +16,7 @@ export const workspaces = sqliteTable('workspaces', {
   projectId: text('project_id')
     .notNull()
     .references(() => projects.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
   workspacePath: text('workspace_path').notNull().unique(),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
@@ -46,8 +47,31 @@ export const modules = sqliteTable(
   ],
 )
 
+export const runtimes = sqliteTable(
+  'runtimes',
+  {
+    id: text('id').primaryKey(),
+    projectId: text('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    workspaceId: text('workspace_id').references(() => workspaces.id, {
+      onDelete: 'cascade',
+    }),
+    sessionName: text('session_name').notNull().unique(),
+    scope: text('scope', {
+      enum: ['module', 'project', 'workspace'],
+    }).notNull(),
+    modulePath: text('module_path'),
+    status: text('status', { enum: ['open'] }).notNull(),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (table) => [uniqueIndex('runtimes_project_session_idx').on(table.projectId, table.sessionName)],
+)
+
 export const projectRelations = relations(projects, ({ many }) => ({
   workspaces: many(workspaces),
+  runtimes: many(runtimes),
 }))
 
 export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
@@ -56,6 +80,7 @@ export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
     references: [projects.id],
   }),
   modules: many(modules),
+  runtimes: many(runtimes),
 }))
 
 export const moduleRelations = relations(modules, ({ one }) => ({
@@ -65,10 +90,23 @@ export const moduleRelations = relations(modules, ({ one }) => ({
   }),
 }))
 
+export const runtimeRelations = relations(runtimes, ({ one }) => ({
+  project: one(projects, {
+    fields: [runtimes.projectId],
+    references: [projects.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [runtimes.workspaceId],
+    references: [workspaces.id],
+  }),
+}))
+
 export const projectRowSchema = createSelectSchema(projects)
 export const workspaceRowSchema = createSelectSchema(workspaces)
 export const moduleRowSchema = createSelectSchema(modules)
+export const runtimeRowSchema = createSelectSchema(runtimes)
 
 export type ProjectRow = typeof projects.$inferSelect
 export type WorkspaceRow = typeof workspaces.$inferSelect
 export type ModuleRow = typeof modules.$inferSelect
+export type RuntimeRow = typeof runtimes.$inferSelect

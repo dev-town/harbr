@@ -11,16 +11,26 @@ describe('formatCliOutput', () => {
           projectName: 'alpha',
           repoPath: '/tmp/repo',
           repoKind: 'standard',
+          workspaceName: 'main',
           workspacePath: '/tmp/workspace',
           moduleCount: 2,
+          runtimeCount: 1,
           status: 'synced',
           errorTag: null,
+          runtimeIssue: null,
         },
       ],
     }
 
     expect(formatCliOutput(output)).toBe(
-      ['alpha', '  repo: standard', '  workspace: /tmp/workspace', '  modules: 2'].join('\n'),
+      [
+        'alpha',
+        '  repo: standard',
+        '  workspace name: main',
+        '  workspace: /tmp/workspace',
+        '  modules: 2',
+        '  runtimes: 1',
+      ].join('\n'),
     )
   })
 
@@ -31,10 +41,13 @@ describe('formatCliOutput', () => {
           projectName: 'alpha',
           repoPath: '/tmp/repo.git',
           repoKind: 'bare',
+          workspaceName: null,
           workspacePath: null,
           moduleCount: 0,
+          runtimeCount: 0,
           status: 'no_workspace',
           errorTag: null,
+          runtimeIssue: 'tmux_not_found',
         },
       ],
     }
@@ -43,9 +56,12 @@ describe('formatCliOutput', () => {
       [
         'alpha',
         '  repo: bare',
+        '  workspace name: none',
         '  workspace: none',
         '  modules: 0',
+        '  runtimes: 0',
         '  status: no workspace',
+        '  runtime issue: tmux_not_found',
       ].join('\n'),
     )
   })
@@ -57,10 +73,13 @@ describe('formatCliOutput', () => {
           projectName: 'alpha',
           repoPath: '/tmp/missing',
           repoKind: null,
+          workspaceName: null,
           workspacePath: null,
           moduleCount: 0,
+          runtimeCount: 0,
           status: 'error',
           errorTag: 'RepoNotFoundError',
+          runtimeIssue: null,
         },
       ],
     }

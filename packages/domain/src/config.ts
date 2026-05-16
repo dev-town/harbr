@@ -26,12 +26,30 @@ export type ProjectScan = {
 
 export type RepoKind = 'bare' | 'standard'
 
+export type RuntimeScope = 'module' | 'project' | 'workspace'
+
+export type RuntimeStatus = 'open'
+
+export type RuntimeFact = {
+  sessionName: string
+  scope: RuntimeScope
+  projectName: string
+  workspaceName: string | null
+  moduleName: string | null
+  status: RuntimeStatus
+}
+
+export type RuntimeIssue = 'tmux_not_found'
+
 export type ProjectObservation = {
   projectName: string
   repoPath: string
   repoKind: RepoKind
+  workspaceName: string | null
   workspacePath: string | null
   modules: ResolvedModule[]
+  runtimes: RuntimeFact[]
+  runtimeIssue: RuntimeIssue | null
 }
 
 export type ProjectRecord = {
@@ -46,6 +64,7 @@ export type ProjectRecord = {
 export type WorkspaceRecord = {
   id: string
   projectId: string
+  name: string
   workspacePath: string
   createdAt: number
   updatedAt: number
@@ -61,14 +80,29 @@ export type ModuleRecord = {
   updatedAt: number
 }
 
+export type RuntimeRecord = {
+  id: string
+  projectId: string
+  workspaceId: string | null
+  sessionName: string
+  scope: RuntimeScope
+  modulePath: string | null
+  status: RuntimeStatus
+  createdAt: number
+  updatedAt: number
+}
+
 export type SyncProjectResult = {
   projectName: string
   repoPath: string
   repoKind: RepoKind | null
+  workspaceName: string | null
   workspacePath: string | null
   moduleCount: number
+  runtimeCount: number
   status: 'error' | 'no_workspace' | 'synced'
   errorTag: string | null
+  runtimeIssue: RuntimeIssue | null
 }
 
 export type SyncResult = {

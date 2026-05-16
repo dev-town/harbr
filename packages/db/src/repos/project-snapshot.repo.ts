@@ -4,6 +4,8 @@ import type {
   ModuleRecord,
   ProjectRecord,
   ResolvedModule,
+  RuntimeFact,
+  RuntimeRecord,
   WorkspaceRecord,
 } from '@harbour/domain'
 import { eq } from 'drizzle-orm'
@@ -13,6 +15,8 @@ import {
   modules,
   projectRowSchema,
   projects,
+  runtimeRowSchema,
+  runtimes,
   workspaceRowSchema,
   workspaces,
 } from '../schema'
@@ -92,26 +96,32 @@ export function replaceProjectSnapshot(
     const project = upsertProject(tx, input)
 
     tx.delete(workspaces).where(eq(workspaces.projectId, project.id)).run()
+    tx.delete(runtimes).where(eq(runtimes.projectId, project.id)).run()
 
     if (!input.workspacePath) {
+      const runtimeRecords = insertRuntimes(tx, project.id, null, input.runtimes, now())
+
       return {
         project,
         workspace: null,
         modules: [] satisfies ModuleRecord[],
+        runtimes: runtimeRecords,
       }
     }
 
-    const now = Date.now()
+    const createdAt = now()
     const workspaceId = randomUUID()
+    const workspaceName = input.workspaceName ?? 'main'
 
     tx
       .insert(workspaces)
       .values({
         id: workspaceId,
         projectId: project.id,
+        name: workspaceName,
         workspacePath: input.workspacePath,
-        createdAt: now,
-        updatedAt: now,
+        createdAt,
+        updatedAt: createdAt,
       })
       .run()
 
@@ -130,14 +140,27 @@ export function replaceProjectSnapshot(
     const moduleRecords =
       input.modules.length === 0
         ? []
-        : insertModules(tx, workspace.id, input.modules, now)
+        : insertModules(tx, workspace.id, input.modules, createdAt)
+
+    const runtimeRecords = insertRuntimes(
+      tx,
+      project.id,
+      workspace.id,
+      input.runtimes,
+      createdAt,
+    )
 
     return {
       project,
       workspace,
       modules: moduleRecords,
+      runtimes: runtimeRecords,
     }
   })
+}
+
+function now() {
+  return Date.now()
 }
 
 function insertModules(
@@ -168,6 +191,35 @@ function insertModules(
   return rows.map((row) => mapModuleRow(moduleRowSchema.parse(row)))
 }
 
+function insertRuntimes(
+  db: HarbourDatabase,
+  projectId: string,
+  workspaceId: string | null,
+  runtimeFacts: RuntimeFact[],
+  createdAt: number,
+) {
+  for (const runtime of runtimeFacts) {
+    db
+      .insert(runtimes)
+      .values({
+        id: randomUUID(),
+        projectId,
+        workspaceId: runtime.scope === 'project' ? null : workspaceId,
+        sessionName: runtime.sessionName,
+        scope: runtime.scope,
+        modulePath: runtime.scope === 'module' ? runtime.moduleName : null,
+        status: runtime.status,
+        createdAt,
+        updatedAt: createdAt,
+      })
+      .run()
+  }
+
+  const rows = db.select().from(runtimes).where(eq(runtimes.projectId, projectId)).all()
+
+  return rows.map((row) => mapRuntimeRow(runtimeRowSchema.parse(row)))
+}
+
 function mapProjectRow(row: ReturnType<typeof projectRowSchema.parse>): ProjectRecord {
   return {
     id: row.id,
@@ -185,6 +237,7 @@ function mapWorkspaceRow(
   return {
     id: row.id,
     projectId: row.projectId,
+    name: row.name,
     workspacePath: row.workspacePath,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -202,6 +255,20 @@ function mapModuleRow(row: ReturnType<typeof moduleRowSchema.parse>): ModuleReco
       path: row.selectorPath,
       mode: row.selectorMode,
     },
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }
+}
+
+function mapRuntimeRow(row: ReturnType<typeof runtimeRowSchema.parse>): RuntimeRecord {
+  return {
+    id: row.id,
+    projectId: row.projectId,
+    workspaceId: row.workspaceId,
+    sessionName: row.sessionName,
+    scope: row.scope,
+    modulePath: row.modulePath,
+    status: row.status,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
