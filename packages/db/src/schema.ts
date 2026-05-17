@@ -70,6 +70,20 @@ export const runtimes = sqliteTable(
   (table) => [uniqueIndex('runtimes_project_session_idx').on(table.projectId, table.sessionName)],
 )
 
+export const uiContext = sqliteTable('ui_context', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').references(() => projects.id, {
+    onDelete: 'set null',
+  }),
+  workspaceId: text('workspace_id').references(() => workspaces.id, {
+    onDelete: 'set null',
+  }),
+  moduleId: text('module_id').references(() => modules.id, {
+    onDelete: 'set null',
+  }),
+  updatedAt: integer('updated_at').notNull(),
+})
+
 export const projectRelations = relations(projects, ({ many }) => ({
   workspaces: many(workspaces),
   runtimes: many(runtimes),
@@ -106,8 +120,10 @@ export const projectRowSchema = createSelectSchema(projects)
 export const workspaceRowSchema = createSelectSchema(workspaces)
 export const moduleRowSchema = createSelectSchema(modules)
 export const runtimeRowSchema = createSelectSchema(runtimes)
+export const uiContextRowSchema = createSelectSchema(uiContext)
 
 export type ProjectRow = typeof projects.$inferSelect
 export type WorkspaceRow = typeof workspaces.$inferSelect
 export type ModuleRow = typeof modules.$inferSelect
 export type RuntimeRow = typeof runtimes.$inferSelect
+export type UiContextRow = typeof uiContext.$inferSelect

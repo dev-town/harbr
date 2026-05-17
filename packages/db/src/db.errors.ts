@@ -16,9 +16,11 @@ export class ProjectServiceError extends Data.TaggedError(
 )<{
   operation:
     | 'findByName'
+    | 'loadUiContext'
     | 'listModuleSummaries'
     | 'listProjectSummaries'
     | 'listWorkspaceSummaries'
+    | 'saveUiContext'
     | 'syncSnapshot'
   message: string
 }> {}

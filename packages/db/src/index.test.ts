@@ -8,10 +8,12 @@ import { migrateDatabase } from './migrate'
 import { openDatabase } from './client'
 import {
   getProjectByName,
+  loadUiContext,
   listModuleSummaries,
   listProjectSummaries,
   listWorkspaceSummaries,
   replaceProjectSnapshot,
+  saveUiContext,
 } from './repos/project-snapshot.repo'
 import { modules, projects, runtimes, workspaces } from './schema'
 
@@ -448,6 +450,64 @@ describe('db', () => {
           hasActiveSession: false,
         },
       ])
+    } finally {
+      database.sqlite.close()
+    }
+  })
+
+  it('persists sticky ui context across project, workspace, and module selection', async () => {
+    const tempRoot = await createTempRoot()
+    const databasePath = path.join(tempRoot, 'harbour.db')
+    const database = await openDatabase(databasePath)
+
+    try {
+      await migrateDatabase(database)
+
+      const snapshot = await replaceProjectSnapshot(database.db, {
+        projectName: 'alpha',
+        repoPath: '/tmp/alpha.git',
+        repoKind: 'standard',
+        workspaces: [
+          {
+            workspaceName: 'main',
+            workspacePath: '/tmp/alpha-main',
+            kind: 'default',
+            modules: [
+              {
+                name: 'apps/tui',
+                path: 'apps/tui',
+                workspacePath: '/tmp/alpha-main/apps/tui',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+            ],
+          },
+        ],
+        runtimes: [],
+        runtimeIssue: null,
+      })
+
+      const workspace = snapshot.workspaces[0]
+      const module = snapshot.modules[0]
+
+      expect(loadUiContext(database.db)).toEqual({})
+
+      expect(
+        saveUiContext(database.db, {
+          projectId: snapshot.project.id,
+          ...(workspace?.id ? { workspaceId: workspace.id } : {}),
+          ...(module?.id ? { moduleId: module.id } : {}),
+        }),
+      ).toEqual({
+        projectId: snapshot.project.id,
+        ...(workspace?.id ? { workspaceId: workspace.id } : {}),
+        ...(module?.id ? { moduleId: module.id } : {}),
+      })
+
+      expect(loadUiContext(database.db)).toEqual({
+        projectId: snapshot.project.id,
+        ...(workspace?.id ? { workspaceId: workspace.id } : {}),
+        ...(module?.id ? { moduleId: module.id } : {}),
+      })
     } finally {
       database.sqlite.close()
     }

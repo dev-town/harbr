@@ -1,6 +1,7 @@
 import { createCliRenderer } from '@opentui/core'
 import { ProjectService, makeProjectServiceLayer } from '@harbour/db'
 import {
+  type HarbourContext,
   harbourCommandIds,
   type ModuleRow,
   type ModuleSummary,
@@ -163,6 +164,7 @@ async function loadProjects(options: TuiOptions) {
   }
 
   const summaries = await listProjectSummaries(options.dbPath)
+  const context = await loadUiContext(options.dbPath)
   store.set(projectRowsAtom, summaries.map(mapProjectSummaryToRow))
   store.set(moduleRowsAtom, [])
   store.set(workspaceRowsAtom, [])
@@ -171,9 +173,18 @@ async function loadProjects(options: TuiOptions) {
   store.set(selectedWorkspaceIdAtom, null)
   store.set(selectedIndexAtom, 0)
   store.set(loadingAtom, false)
+  await restoreUiContext(context, summaries)
   store.set(
     noticeAtom,
     summaries.length === 0 ? 'No projects yet. Check config or run sync.' : null,
+  )
+}
+
+async function loadUiContext(dbPath?: string) {
+  return Effect.runPromise(
+    Effect.flatMap(ProjectService, (service) => service.loadUiContext).pipe(
+      Effect.provide(makeProjectServiceLayer(dbPath)),
+    ),
   )
 }
 
@@ -201,6 +212,14 @@ async function listModuleSummaries(workspaceId: string, dbPath?: string) {
   )
 }
 
+async function saveUiContext(context: HarbourContext, dbPath?: string) {
+  return Effect.runPromise(
+    Effect.flatMap(ProjectService, (service) => service.saveUiContext(context)).pipe(
+      Effect.provide(makeProjectServiceLayer(dbPath)),
+    ),
+  )
+}
+
 function moveSelection(delta: number) {
   const nextIndex = store.get(selectedIndexAtom) + delta
   store.set(selectedIndexAtom, clampIndex(nextIndex, store.get(visibleRowsAtom).length))
@@ -215,6 +234,8 @@ function toggleVisibility() {
 
 function handleEscape() {
   const query = store.get(queryAtom)
+  const selectedProjectId = store.get(selectedProjectIdAtom)
+  const selectedWorkspaceId = store.get(selectedWorkspaceIdAtom)
 
   if (query.length > 0) {
     store.set(queryAtom, '')
@@ -224,6 +245,9 @@ function handleEscape() {
   }
 
   if (store.get(currentSectionAtom) === 'workspaces') {
+    void persistContext({
+      projectId: selectedProjectId ?? undefined,
+    })
     store.set(currentSectionAtom, 'projects')
     store.set(moduleRowsAtom, [])
     store.set(workspaceRowsAtom, [])
@@ -235,6 +259,10 @@ function handleEscape() {
   }
 
   if (store.get(currentSectionAtom) === 'modules') {
+    void persistContext({
+      projectId: selectedProjectId ?? undefined,
+      workspaceId: selectedWorkspaceId ?? undefined,
+    })
     store.set(currentSectionAtom, 'workspaces')
     store.set(moduleRowsAtom, [])
     store.set(selectedWorkspaceIdAtom, null)
@@ -259,12 +287,22 @@ function handleSelect() {
       return
     }
 
+    void persistContext({
+      projectId: row.projectId,
+      workspaceId: row.workspaceId,
+    })
     store.set(noticeAtom, `${row.label}: open workspace root next`)
     return
   }
 
   if (row.kind !== 'project') {
     if (row.kind === 'module') {
+      void persistContext({
+        projectId: row.projectId,
+        workspaceId: row.workspaceId,
+        moduleId: row.moduleId,
+      })
+      // TODO: replace this notice with runtime attach/create once write-side tmux flow exists.
       store.set(noticeAtom, `${row.label}: attach/create module session next`)
     }
 
@@ -277,10 +315,12 @@ function handleSelect() {
   }
 
   if (row.hasModules) {
-    store.set(noticeAtom, `${row.label}: modules view next`)
+    void openDefaultWorkspaceModules(row.projectId)
     return
   }
 
+  void persistContext({ projectId: row.projectId })
+  // TODO: replace this notice with project-root attach/create once runtime actions exist.
   store.set(noticeAtom, `${row.label}: open project root next`)
 }
 
@@ -297,6 +337,7 @@ async function openWorkspaces(projectId: string) {
     store.set(currentSectionAtom, 'workspaces')
     store.set(selectedIndexAtom, 0)
     store.set(queryAtom, '')
+    await persistContext({ projectId })
   } catch (error) {
     store.set(noticeAtom, formatError(error))
   } finally {
@@ -316,10 +357,85 @@ async function openModules(projectId: string, workspaceId: string) {
     store.set(currentSectionAtom, 'modules')
     store.set(selectedIndexAtom, 0)
     store.set(queryAtom, '')
+    await persistContext({ projectId, workspaceId })
   } catch (error) {
     store.set(noticeAtom, formatError(error))
   } finally {
     store.set(loadingAtom, false)
+  }
+}
+
+async function openDefaultWorkspaceModules(projectId: string) {
+  const summaries = await listWorkspaceSummaries(projectId, options.dbPath)
+  const defaultWorkspace = summaries.find((workspace) => workspace.isDefault)
+
+  if (!defaultWorkspace) {
+    // TODO: surface a clearer empty-state when project module config exists but no default workspace was persisted.
+    store.set(noticeAtom, 'No default workspace found')
+    return
+  }
+
+  await openModules(projectId, defaultWorkspace.id)
+}
+
+async function restoreUiContext(
+  context: HarbourContext,
+  projects: readonly ProjectSummary[],
+) {
+  const project = context.projectId
+    ? projects.find((candidate) => candidate.id === context.projectId)
+    : undefined
+
+  if (!project) {
+    return
+  }
+
+  const projectIndex = projects.findIndex((candidate) => candidate.id === project.id)
+  store.set(selectedIndexAtom, clampIndex(projectIndex, projects.length))
+
+  if (context.workspaceId && project.hasModules) {
+    // TODO: prefer workspaces view instead when sticky context points at a project that no longer has module config.
+    await openModules(project.id, context.workspaceId)
+
+    if (context.moduleId) {
+      const moduleRows = store.get(moduleRowsAtom)
+      const moduleIndex = moduleRows.findIndex((row) => row.moduleId === context.moduleId)
+
+      if (moduleIndex >= 0) {
+        store.set(selectedIndexAtom, moduleIndex)
+      }
+    }
+
+    return
+  }
+
+  if (project.hasWorkspaces) {
+    await openWorkspaces(project.id)
+
+    if (context.workspaceId) {
+      const workspaceRows = store.get(workspaceRowsAtom)
+      const workspaceIndex = workspaceRows.findIndex(
+        (row) => row.workspaceId === context.workspaceId,
+      )
+
+      if (workspaceIndex >= 0) {
+        store.set(selectedIndexAtom, workspaceIndex)
+      }
+    }
+
+    return
+  }
+
+  if (project.hasModules) {
+    await openDefaultWorkspaceModules(project.id)
+  }
+}
+
+async function persistContext(context: HarbourContext) {
+  try {
+    await saveUiContext(context, options.dbPath)
+  } catch {
+    // TODO: route persistence failures through observability once that package is wired into the TUI.
   }
 }
 

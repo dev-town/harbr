@@ -3,6 +3,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 
 import type {
+  HarbourContext,
   ModuleSummary,
   ModuleRecord,
   ProjectSummary,
@@ -64,6 +65,7 @@ export type ProjectServiceApi = {
   readonly findByName: (
     projectName: string,
   ) => Effect.Effect<ProjectRecord | null, ProjectServiceError>
+  readonly loadUiContext: Effect.Effect<HarbourContext, ProjectServiceError>
   readonly listProjectSummaries: Effect.Effect<
     readonly ProjectSummary[],
     ProjectServiceError
@@ -74,6 +76,9 @@ export type ProjectServiceApi = {
   readonly listModuleSummaries: (
     workspaceId: string,
   ) => Effect.Effect<readonly ModuleSummary[], ProjectServiceError>
+  readonly saveUiContext: (
+    context: HarbourContext,
+  ) => Effect.Effect<HarbourContext, ProjectServiceError>
   readonly syncSnapshot: (
     input: ReplaceProjectSnapshotInput,
   ) => Effect.Effect<ProjectSnapshot, ProjectServiceError>

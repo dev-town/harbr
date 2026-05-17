@@ -7,10 +7,12 @@ import {
 import { makeDatabaseClientLayer } from '../infra/database-client.live'
 import {
   getProjectByName as getProjectByNameRaw,
+  loadUiContext as loadUiContextRaw,
   listModuleSummaries as listModuleSummariesRaw,
   listProjectSummaries as listProjectSummariesRaw,
   listWorkspaceSummaries as listWorkspaceSummariesRaw,
   replaceProjectSnapshot as replaceProjectSnapshotRaw,
+  saveUiContext as saveUiContextRaw,
 } from '../repos/project-snapshot.repo'
 import type { ProjectServiceApi } from '../db.types'
 import { ProjectService } from './project.service'
@@ -30,6 +32,14 @@ export const ProjectServiceLive = Layer.effect(
               message: error instanceof Error ? error.message : String(error),
             }),
         }),
+      loadUiContext: Effect.try({
+        try: () => loadUiContextRaw(database.db),
+        catch: (error) =>
+          new ProjectServiceError({
+            operation: 'loadUiContext',
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      }),
       listProjectSummaries: Effect.try({
         try: () => listProjectSummariesRaw(database.db),
         catch: (error) =>
@@ -53,6 +63,15 @@ export const ProjectServiceLive = Layer.effect(
           catch: (error) =>
             new ProjectServiceError({
               operation: 'listModuleSummaries',
+              message: error instanceof Error ? error.message : String(error),
+            }),
+        }),
+      saveUiContext: (context) =>
+        Effect.try({
+          try: () => saveUiContextRaw(database.db, context),
+          catch: (error) =>
+            new ProjectServiceError({
+              operation: 'saveUiContext',
               message: error instanceof Error ? error.message : String(error),
             }),
         }),

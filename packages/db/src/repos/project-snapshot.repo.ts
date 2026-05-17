@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import type {
+  HarbourContext,
   ModuleSummary,
   ModuleRecord,
   ProjectSummary,
@@ -23,6 +24,8 @@ import {
   projects,
   runtimeRowSchema,
   runtimes,
+  uiContext,
+  uiContextRowSchema,
   workspaceRowSchema,
   workspaces,
 } from '../schema'
@@ -84,6 +87,51 @@ export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
       } satisfies ProjectSummary
     })
     .sort((left, right) => left.name.localeCompare(right.name))
+}
+
+export function loadUiContext(db: HarbourDatabase): HarbourContext {
+  const row = db.select().from(uiContext).where(eq(uiContext.id, 'main')).get()
+
+  if (!row) {
+    return {}
+  }
+
+  const parsed = uiContextRowSchema.parse(row)
+
+  return compactContext({
+    ...(parsed.projectId ? { projectId: parsed.projectId } : {}),
+    ...(parsed.workspaceId ? { workspaceId: parsed.workspaceId } : {}),
+    ...(parsed.moduleId ? { moduleId: parsed.moduleId } : {}),
+  })
+}
+
+export function saveUiContext(
+  db: HarbourDatabase,
+  context: HarbourContext,
+): HarbourContext {
+  const updatedAt = Date.now()
+
+  db
+    .insert(uiContext)
+    .values({
+      id: 'main',
+      projectId: context.projectId ?? null,
+      workspaceId: context.workspaceId ?? null,
+      moduleId: context.moduleId ?? null,
+      updatedAt,
+    })
+    .onConflictDoUpdate({
+      target: uiContext.id,
+      set: {
+        projectId: context.projectId ?? null,
+        workspaceId: context.workspaceId ?? null,
+        moduleId: context.moduleId ?? null,
+        updatedAt,
+      },
+    })
+    .run()
+
+  return context
 }
 
 export function listWorkspaceSummaries(
@@ -292,6 +340,18 @@ export function replaceProjectSnapshot(
 
 function now() {
   return Date.now()
+}
+
+function compactContext(context: {
+  moduleId?: string
+  projectId?: string
+  workspaceId?: string
+}): HarbourContext {
+  return {
+    ...(context.projectId ? { projectId: context.projectId } : {}),
+    ...(context.workspaceId ? { workspaceId: context.workspaceId } : {}),
+    ...(context.moduleId ? { moduleId: context.moduleId } : {}),
+  }
 }
 
 function insertWorkspaces(

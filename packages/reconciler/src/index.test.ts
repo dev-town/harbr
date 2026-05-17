@@ -196,6 +196,11 @@ describe('reconciler', () => {
       Layer.provide(
         Layer.succeed(ProjectService, {
           findByName: () => Effect.succeed(null),
+          loadUiContext: Effect.succeed({}),
+          listModuleSummaries: () => Effect.die('not used'),
+          listProjectSummaries: Effect.die('not used'),
+          listWorkspaceSummaries: () => Effect.die('not used'),
+          saveUiContext: () => Effect.die('not used'),
           syncSnapshot: (input) => {
             persistedProjects.push(input.projectName)
             return Effect.succeed({
@@ -279,6 +284,11 @@ describe('reconciler', () => {
       Layer.provide(
         Layer.succeed(ProjectService, {
           findByName: () => Effect.succeed(null),
+          loadUiContext: Effect.succeed({}),
+          listModuleSummaries: () => Effect.die('not used'),
+          listProjectSummaries: Effect.die('not used'),
+          listWorkspaceSummaries: () => Effect.die('not used'),
+          saveUiContext: () => Effect.die('not used'),
           syncSnapshot: () => Effect.die('not used'),
         }),
       ),
