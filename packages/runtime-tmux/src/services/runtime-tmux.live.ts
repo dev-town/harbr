@@ -5,7 +5,7 @@ import { Effect, Layer } from 'effect'
 
 import { parseSessionName } from '../session-name.util'
 import { TmuxCommandError, TmuxNotFoundError } from '../runtime-tmux.errors'
-import type { RuntimeDiscovery } from '../runtime-tmux.types'
+import type { CurrentRuntime, RuntimeDiscovery } from '../runtime-tmux.types'
 import {
   RuntimeTmuxService,
   type RuntimeTmuxServiceApi,
@@ -14,6 +14,7 @@ import {
 const execFileAsync = promisify(execFile)
 
 export const RuntimeTmuxServiceLive = Layer.succeed(RuntimeTmuxService, {
+  getCurrentRuntime: getCurrentRuntimeLive(),
   listRuntimes: listRuntimesLive(),
 } satisfies RuntimeTmuxServiceApi)
 
@@ -24,6 +25,29 @@ export function makeRuntimeTmuxServiceLayer() {
 export function listRuntimes() {
   return Effect.flatMap(RuntimeTmuxService, (service) => service.listRuntimes).pipe(
     Effect.provide(makeRuntimeTmuxServiceLayer()),
+  )
+}
+
+export function getCurrentRuntime() {
+  return Effect.flatMap(RuntimeTmuxService, (service) => service.getCurrentRuntime).pipe(
+    Effect.provide(makeRuntimeTmuxServiceLayer()),
+  )
+}
+
+function getCurrentRuntimeLive() {
+  return Effect.tryPromise({
+    try: async () => {
+      const { stdout } = await execFileAsync('tmux', ['display-message', '-p', '#{session_name}'])
+      return parseSessionName(stdout.trim()) satisfies CurrentRuntime
+    },
+    catch: (error) => mapTmuxError(error),
+  }).pipe(
+    Effect.catchTag('TmuxNotFoundError', () => Effect.succeed<CurrentRuntime>(null)),
+    Effect.catchTag('TmuxCommandError', (error) =>
+      isNoServerRunning(error.message)
+        ? Effect.succeed<CurrentRuntime>(null)
+        : Effect.fail(error),
+    ),
   )
 }
 

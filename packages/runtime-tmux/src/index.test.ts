@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { Effect, Layer } from 'effect'
 
-import type { RuntimeDiscovery } from './runtime-tmux.types'
+import type { CurrentRuntime, RuntimeDiscovery } from './runtime-tmux.types'
 import { parseSessionName } from './session-name.util'
-import { listRuntimes, RuntimeTmuxService, RuntimeTmuxServiceLive } from './index'
+import {
+  getCurrentRuntime,
+  listRuntimes,
+  RuntimeTmuxService,
+  RuntimeTmuxServiceLive,
+} from './index'
 
 describe('parseSessionName', () => {
   it('parses project-only session names', () => {
@@ -63,6 +68,7 @@ describe('listRuntimes', () => {
 
     const layer = Layer.succeed(RuntimeTmuxService, {
       listRuntimes: Effect.succeed(discovery),
+      getCurrentRuntime: Effect.succeed(null),
     })
 
     await expect(
@@ -77,5 +83,35 @@ describe('listRuntimes', () => {
   it('exports a usable live layer symbol', () => {
     expect(RuntimeTmuxServiceLive).toBeDefined()
     expect(listRuntimes).toBeTypeOf('function')
+  })
+})
+
+describe('getCurrentRuntime', () => {
+  it('returns provided current runtime from the service layer', async () => {
+    const currentRuntime: CurrentRuntime = {
+      sessionName: 'alpha/main/apps/cli',
+      scope: 'module',
+      projectName: 'alpha',
+      workspaceName: 'main',
+      moduleName: 'apps/cli',
+      status: 'open',
+    }
+
+    const layer = Layer.succeed(RuntimeTmuxService, {
+      listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+      getCurrentRuntime: Effect.succeed(currentRuntime),
+    })
+
+    await expect(
+      Effect.runPromise(
+        Effect.flatMap(RuntimeTmuxService, (service) => service.getCurrentRuntime).pipe(
+          Effect.provide(layer),
+        ),
+      ),
+    ).resolves.toEqual(currentRuntime)
+  })
+
+  it('exports a usable current runtime program symbol', () => {
+    expect(getCurrentRuntime).toBeTypeOf('function')
   })
 })

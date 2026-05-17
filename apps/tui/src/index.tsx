@@ -12,6 +12,7 @@ import {
 } from '@harbour/domain'
 import { makeBrowseKeymap } from '@harbour/keymap'
 import { sync } from '@harbour/reconciler'
+import { getCurrentRuntime } from '@harbour/runtime-tmux'
 import { HarbourPopover } from '@harbour/ui'
 import { KeymapProvider } from '@opentui/keymap/react'
 import { createRoot } from '@opentui/react'
@@ -164,6 +165,7 @@ async function loadProjects(options: TuiOptions) {
   }
 
   const summaries = await listProjectSummaries(options.dbPath)
+  const currentRuntime = await loadCurrentRuntime()
   const context = await loadUiContext(options.dbPath)
   store.set(projectRowsAtom, summaries.map(mapProjectSummaryToRow))
   store.set(moduleRowsAtom, [])
@@ -173,10 +175,22 @@ async function loadProjects(options: TuiOptions) {
   store.set(selectedWorkspaceIdAtom, null)
   store.set(selectedIndexAtom, 0)
   store.set(loadingAtom, false)
-  await restoreUiContext(context, summaries)
+
+  const restoredFromTmux = await restoreCurrentRuntime(currentRuntime, summaries)
+
+  if (!restoredFromTmux) {
+    await restoreUiContext(context, summaries)
+  }
+
   store.set(
     noticeAtom,
     summaries.length === 0 ? 'No projects yet. Check config or run sync.' : null,
+  )
+}
+
+async function loadCurrentRuntime() {
+  return Effect.runPromise(Effect.either(getCurrentRuntime())).then((result) =>
+    Either.isRight(result) ? result.right : null,
   )
 }
 
@@ -234,8 +248,6 @@ function toggleVisibility() {
 
 function handleEscape() {
   const query = store.get(queryAtom)
-  const selectedProjectId = store.get(selectedProjectIdAtom)
-  const selectedWorkspaceId = store.get(selectedWorkspaceIdAtom)
 
   if (query.length > 0) {
     store.set(queryAtom, '')
@@ -245,9 +257,6 @@ function handleEscape() {
   }
 
   if (store.get(currentSectionAtom) === 'workspaces') {
-    void persistContext({
-      projectId: selectedProjectId ?? undefined,
-    })
     store.set(currentSectionAtom, 'projects')
     store.set(moduleRowsAtom, [])
     store.set(workspaceRowsAtom, [])
@@ -259,10 +268,6 @@ function handleEscape() {
   }
 
   if (store.get(currentSectionAtom) === 'modules') {
-    void persistContext({
-      projectId: selectedProjectId ?? undefined,
-      workspaceId: selectedWorkspaceId ?? undefined,
-    })
     store.set(currentSectionAtom, 'workspaces')
     store.set(moduleRowsAtom, [])
     store.set(selectedWorkspaceIdAtom, null)
@@ -337,7 +342,6 @@ async function openWorkspaces(projectId: string) {
     store.set(currentSectionAtom, 'workspaces')
     store.set(selectedIndexAtom, 0)
     store.set(queryAtom, '')
-    await persistContext({ projectId })
   } catch (error) {
     store.set(noticeAtom, formatError(error))
   } finally {
@@ -357,7 +361,6 @@ async function openModules(projectId: string, workspaceId: string) {
     store.set(currentSectionAtom, 'modules')
     store.set(selectedIndexAtom, 0)
     store.set(queryAtom, '')
-    await persistContext({ projectId, workspaceId })
   } catch (error) {
     store.set(noticeAtom, formatError(error))
   } finally {
@@ -429,6 +432,62 @@ async function restoreUiContext(
   if (project.hasModules) {
     await openDefaultWorkspaceModules(project.id)
   }
+}
+
+async function restoreCurrentRuntime(
+  currentRuntime: Awaited<ReturnType<typeof loadCurrentRuntime>>,
+  projects: readonly ProjectSummary[],
+) {
+  if (!currentRuntime) {
+    return false
+  }
+
+  const project = projects.find((candidate) => candidate.name === currentRuntime.projectName)
+
+  if (!project) {
+    return false
+  }
+
+  const projectIndex = projects.findIndex((candidate) => candidate.id === project.id)
+  store.set(selectedIndexAtom, clampIndex(projectIndex, projects.length))
+
+  if (currentRuntime.scope === 'project') {
+    return true
+  }
+
+  const workspaces = await listWorkspaceSummaries(project.id, options.dbPath)
+  const workspace = currentRuntime.workspaceName
+    ? workspaces.find((candidate) => candidate.name === currentRuntime.workspaceName)
+    : undefined
+
+  if (!workspace) {
+    return false
+  }
+
+  store.set(workspaceRowsAtom, workspaces.map(mapWorkspaceSummaryToRow))
+  store.set(selectedProjectIdAtom, project.id)
+  store.set(currentSectionAtom, 'workspaces')
+
+  const workspaceIndex = workspaces.findIndex((candidate) => candidate.id === workspace.id)
+  store.set(selectedIndexAtom, clampIndex(workspaceIndex, workspaces.length))
+
+  if (currentRuntime.scope === 'workspace') {
+    return true
+  }
+
+  await openModules(project.id, workspace.id)
+
+  const moduleRows = store.get(moduleRowsAtom)
+  const moduleIndex = moduleRows.findIndex(
+    (row) => row.label === currentRuntime.moduleName,
+  )
+
+  if (moduleIndex >= 0) {
+    store.set(selectedIndexAtom, moduleIndex)
+    return true
+  }
+
+  return false
 }
 
 async function persistContext(context: HarbourContext) {

@@ -4,3 +4,5 @@ export type RuntimeDiscovery = {
   runtimes: RuntimeFact[]
   runtimeIssue: RuntimeIssue | null
 }
+
+export type CurrentRuntime = RuntimeFact | null

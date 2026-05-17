@@ -216,6 +216,7 @@ describe('observeProject', () => {
     }
 
     const runtimeTmux: RuntimeTmuxServiceApi = {
+      getCurrentRuntime: Effect.succeed(null),
       listRuntimes: Effect.succeed({
         runtimes: [
           {
@@ -275,6 +276,7 @@ describe('observeProject', () => {
     }
 
     const runtimeTmux: RuntimeTmuxServiceApi = {
+      getCurrentRuntime: Effect.succeed(null),
       listRuntimes: Effect.succeed({
         runtimes: [
           {
