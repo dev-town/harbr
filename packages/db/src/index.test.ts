@@ -30,14 +30,19 @@ describe('db', () => {
         projectName: 'alpha',
         repoPath: '/tmp/alpha.git',
         repoKind: 'bare',
-        workspaceName: 'main',
-        workspacePath: '/tmp/workspaces/alpha-main',
-        modules: [
+        workspaces: [
           {
-            name: 'apps/cli',
-            path: 'apps/cli',
-            workspacePath: '/tmp/workspaces/alpha-main/apps/cli',
-            selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+            workspaceName: 'main',
+            workspacePath: '/tmp/workspaces/alpha-main',
+            kind: 'worktree',
+            modules: [
+              {
+                name: 'apps/cli',
+                path: 'apps/cli',
+                workspacePath: '/tmp/workspaces/alpha-main/apps/cli',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+            ],
           },
         ],
         runtimes: [
@@ -54,8 +59,13 @@ describe('db', () => {
       })
 
       expect(snapshot.project.name).toBe('alpha')
-      expect(snapshot.workspace?.name).toBe('main')
-      expect(snapshot.workspace?.workspacePath).toBe('/tmp/workspaces/alpha-main')
+      expect(snapshot.workspaces).toEqual([
+        expect.objectContaining({
+          name: 'main',
+          workspacePath: '/tmp/workspaces/alpha-main',
+          kind: 'worktree',
+        }),
+      ])
       expect(snapshot.modules).toHaveLength(1)
       expect(snapshot.runtimes).toHaveLength(1)
 
@@ -78,20 +88,38 @@ describe('db', () => {
         projectName: 'alpha',
         repoPath: '/tmp/alpha.git',
         repoKind: 'standard',
-        workspaceName: 'main',
-        workspacePath: '/tmp/workspaces/alpha-main',
-        modules: [
+        workspaces: [
           {
-            name: 'apps/cli',
-            path: 'apps/cli',
-            workspacePath: '/tmp/workspaces/alpha-main/apps/cli',
-            selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+            workspaceName: 'main',
+            workspacePath: '/tmp/workspaces/alpha-main',
+            kind: 'default',
+            modules: [
+              {
+                name: 'apps/cli',
+                path: 'apps/cli',
+                workspacePath: '/tmp/workspaces/alpha-main/apps/cli',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+              {
+                name: 'apps/tui',
+                path: 'apps/tui',
+                workspacePath: '/tmp/workspaces/alpha-main/apps/tui',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+            ],
           },
           {
-            name: 'apps/tui',
-            path: 'apps/tui',
-            workspacePath: '/tmp/workspaces/alpha-main/apps/tui',
-            selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+            workspaceName: 'feature-auth',
+            workspacePath: '/tmp/workspaces/alpha-feature-auth',
+            kind: 'worktree',
+            modules: [
+              {
+                name: 'apps/cli',
+                path: 'apps/cli',
+                workspacePath: '/tmp/workspaces/alpha-feature-auth/apps/cli',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+            ],
           },
         ],
         runtimes: [
@@ -111,14 +139,19 @@ describe('db', () => {
         projectName: 'alpha',
         repoPath: '/tmp/alpha.git',
         repoKind: 'standard',
-        workspaceName: 'next',
-        workspacePath: '/tmp/workspaces/alpha-next',
-        modules: [
+        workspaces: [
           {
-            name: 'apps/cli',
-            path: 'apps/cli',
-            workspacePath: '/tmp/workspaces/alpha-next/apps/cli',
-            selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+            workspaceName: 'next',
+            workspacePath: '/tmp/workspaces/alpha-next',
+            kind: 'worktree',
+            modules: [
+              {
+                name: 'apps/cli',
+                path: 'apps/cli',
+                workspacePath: '/tmp/workspaces/alpha-next/apps/cli',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+            ],
           },
         ],
         runtimes: [
@@ -142,6 +175,7 @@ describe('db', () => {
       expect(projectRows).toHaveLength(1)
       expect(workspaceRows).toHaveLength(1)
       expect(workspaceRows[0]?.name).toBe('next')
+      expect(workspaceRows[0]?.kind).toBe('worktree')
       expect(workspaceRows[0]?.workspacePath).toBe('/tmp/workspaces/alpha-next')
       expect(moduleRows).toHaveLength(1)
       expect(moduleRows[0]?.modulePath).toBe('apps/cli')
@@ -164,14 +198,19 @@ describe('db', () => {
         projectName: 'alpha',
         repoPath: '/tmp/alpha.git',
         repoKind: 'bare',
-        workspaceName: 'main',
-        workspacePath: '/tmp/workspaces/alpha-main',
-        modules: [
+        workspaces: [
           {
-            name: 'docs',
-            path: 'docs',
-            workspacePath: '/tmp/workspaces/alpha-main/docs',
-            selector: { raw: 'docs', path: 'docs', mode: 'explicit' },
+            workspaceName: 'main',
+            workspacePath: '/tmp/workspaces/alpha-main',
+            kind: 'worktree',
+            modules: [
+              {
+                name: 'docs',
+                path: 'docs',
+                workspacePath: '/tmp/workspaces/alpha-main/docs',
+                selector: { raw: 'docs', path: 'docs', mode: 'explicit' },
+              },
+            ],
           },
         ],
         runtimes: [
@@ -199,9 +238,7 @@ describe('db', () => {
         projectName: 'alpha',
         repoPath: '/tmp/alpha.git',
         repoKind: 'bare',
-        workspaceName: null,
-        workspacePath: null,
-        modules: [],
+        workspaces: [],
         runtimes: [
           {
             sessionName: 'alpha',

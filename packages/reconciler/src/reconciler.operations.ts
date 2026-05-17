@@ -15,17 +15,16 @@ export function syncProjects(
     const loadedConfig = yield* config.load
     const projects = yield* Effect.forEach(loadedConfig.projects, (project) =>
       refreshConfiguredProject(scanner, projectService, project).pipe(
-        Effect.catchAll((error) =>
-          Effect.succeed<SyncProjectResult>({
-            projectName: project.name,
-            repoPath: project.repo,
-            repoKind: null,
-            workspaceName: null,
-            workspacePath: null,
-            moduleCount: 0,
-            runtimeCount: 0,
-            status: 'error',
-            errorTag: getErrorTag(error),
+          Effect.catchAll((error) =>
+            Effect.succeed<SyncProjectResult>({
+              projectName: project.name,
+              repoPath: project.repo,
+              repoKind: null,
+              workspaceCount: 0,
+              moduleCount: 0,
+              runtimeCount: 0,
+              status: 'error',
+              errorTag: getErrorTag(error),
             runtimeIssue: null,
           }),
         ),
@@ -66,9 +65,7 @@ export function refreshConfiguredProject(
       projectName: observation.projectName,
       repoPath: observation.repoPath,
       repoKind: observation.repoKind,
-      workspaceName: observation.workspaceName,
-      workspacePath: observation.workspacePath,
-      modules: observation.modules,
+      workspaces: observation.workspaces,
       runtimes: observation.runtimes,
       runtimeIssue: observation.runtimeIssue,
     })
@@ -77,11 +74,13 @@ export function refreshConfiguredProject(
       projectName: observation.projectName,
       repoPath: observation.repoPath,
       repoKind: observation.repoKind,
-      workspaceName: observation.workspaceName,
-      workspacePath: observation.workspacePath,
-      moduleCount: observation.modules.length,
+      workspaceCount: observation.workspaces.length,
+      moduleCount: observation.workspaces.reduce(
+        (count, workspace) => count + workspace.modules.length,
+        0,
+      ),
       runtimeCount: observation.runtimes.length,
-      status: observation.workspacePath ? 'synced' : 'no_workspace',
+      status: observation.workspaces.length > 0 ? 'synced' : 'no_workspace',
       errorTag: null,
       runtimeIssue: observation.runtimeIssue,
     } satisfies SyncProjectResult

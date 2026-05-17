@@ -2,7 +2,6 @@ import type { ProjectConfig, ProjectObservation } from '@harbour/domain'
 import type { GitServiceApi } from '@harbour/git'
 import type { RuntimeTmuxServiceApi } from '@harbour/runtime-tmux'
 import { Effect } from 'effect'
-import path from 'node:path'
 
 import { scanProject } from './scanner.scan'
 
@@ -13,46 +12,33 @@ export function observeProjectWithGit(
 ) {
   return git.inspectRepo(project.repo).pipe(
     Effect.flatMap((repo) =>
-      git.resolveWorkspacePath(repo).pipe(
-        Effect.flatMap((workspacePath) =>
+      git.listWorkspaces(repo).pipe(
+        Effect.flatMap((workspaces) =>
           runtimeTmux.listRuntimes.pipe(
             Effect.flatMap(({ runtimes, runtimeIssue }) =>
-              workspacePath
-                ? scanProject(project, workspacePath).pipe(
-                    Effect.map((scan) => {
-                      const workspaceName = getWorkspaceName(repo.kind, scan.workspacePath)
-
-                      return {
-                        projectName: project.name,
-                        repoPath: scan.repoPath,
-                        repoKind: repo.kind,
-                        workspaceName,
-                        workspacePath: scan.workspacePath,
-                        modules: scan.modules,
-                        runtimes: runtimes.filter((runtime) =>
-                          matchesProjectObservation(
-                            runtime,
-                            project.name,
-                            workspaceName,
-                            scan.modules.map((module) => module.name),
-                          ),
-                        ),
-                        runtimeIssue,
-                      } satisfies ProjectObservation
-                    }),
-                  )
-                : Effect.succeed<ProjectObservation>({
-                    projectName: project.name,
-                    repoPath: repo.repoPath,
-                    repoKind: repo.kind,
-                    workspaceName: null,
-                    workspacePath: null,
-                    modules: [],
-                    runtimes: runtimes.filter((runtime) =>
-                      matchesProjectObservation(runtime, project.name, null, []),
-                    ),
-                    runtimeIssue,
-                  }),
+              Effect.all(
+                workspaces.map((workspace) =>
+                  scanProject(project, workspace.path).pipe(
+                    Effect.map((scan) => ({
+                      workspaceName: workspace.name,
+                      workspacePath: scan.workspacePath,
+                      kind: workspace.kind,
+                      modules: scan.modules,
+                    })),
+                  ),
+                ),
+              ).pipe(
+                Effect.map((observedWorkspaces) => ({
+                  projectName: project.name,
+                  repoPath: repo.repoPath,
+                  repoKind: repo.kind,
+                  workspaces: observedWorkspaces,
+                  runtimes: runtimes.filter((runtime) =>
+                    matchesProjectObservation(runtime, project.name, observedWorkspaces),
+                  ),
+                  runtimeIssue,
+                }) satisfies ProjectObservation),
+              ),
             ),
           ),
         ),
@@ -61,15 +47,10 @@ export function observeProjectWithGit(
   )
 }
 
-function getWorkspaceName(repoKind: 'bare' | 'standard', workspacePath: string) {
-  return repoKind === 'standard' ? 'main' : path.basename(workspacePath)
-}
-
 function matchesProjectObservation(
   runtime: ProjectObservation['runtimes'][number],
   projectName: string,
-  workspaceName: string | null,
-  moduleNames: string[],
+  workspaces: ProjectObservation['workspaces'],
 ) {
   if (runtime.projectName !== projectName) {
     return false
@@ -79,9 +60,16 @@ function matchesProjectObservation(
     return true
   }
 
-  if (!workspaceName || runtime.workspaceName !== workspaceName) {
+  const workspace = workspaces.find(
+    (candidate) => candidate.workspaceName === runtime.workspaceName,
+  )
+
+  if (!workspace) {
     return false
   }
 
-  return runtime.scope !== 'module' || moduleNames.includes(runtime.moduleName ?? '')
+  return (
+    runtime.scope !== 'module' ||
+    workspace.modules.some((module) => module.name === runtime.moduleName)
+  )
 }

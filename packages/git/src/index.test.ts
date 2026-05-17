@@ -12,6 +12,7 @@ import {
   RepoNotGitError,
   RepoNotSupportedError,
   inspectRepo,
+  listWorkspaces,
   resolveWorkspacePath,
 } from './index'
 
@@ -174,6 +175,81 @@ describe('resolveWorkspacePath', () => {
   })
 })
 
+describe('listWorkspaces', () => {
+  it('lists default workspace for standard repos', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+
+    await execFileAsync('git', ['init', repoPath])
+
+    await expect(
+      runWorkspacesSuccess(listWorkspaces({ repoPath, kind: 'standard' })),
+    ).resolves.toEqual([
+      {
+        name: 'main',
+        path: repoPath,
+        kind: 'default',
+      },
+    ])
+  })
+
+  it('lists default repo plus linked worktrees for standard repos', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const worktreePath = path.join(tempRoot, 'feature-auth')
+
+    await execFileAsync('git', ['init', repoPath])
+    await writeFile(path.join(repoPath, 'README.md'), 'hello\n', 'utf8')
+    await execFileAsync('git', [
+      '-C',
+      repoPath,
+      '-c',
+      'user.name=Test',
+      '-c',
+      'user.email=test@example.com',
+      'add',
+      'README.md',
+    ])
+    await execFileAsync('git', [
+      '-C',
+      repoPath,
+      '-c',
+      'user.name=Test',
+      '-c',
+      'user.email=test@example.com',
+      'commit',
+      '-m',
+      'init',
+    ])
+    await execFileAsync('git', [
+      '-C',
+      repoPath,
+      'worktree',
+      'add',
+      '-b',
+      'feature/auth',
+      worktreePath,
+    ])
+
+    const expectedWorktreePath = await realpath(worktreePath)
+
+    await expect(
+      runWorkspacesSuccess(listWorkspaces({ repoPath, kind: 'standard' })),
+    ).resolves.toEqual([
+      {
+        name: 'main',
+        path: repoPath,
+        kind: 'default',
+      },
+      {
+        name: 'feature-auth',
+        path: expectedWorktreePath,
+        kind: 'worktree',
+      },
+    ])
+  })
+})
+
 async function runEither(effect: ReturnType<typeof inspectRepo>) {
   return Effect.runPromise(Effect.either(effect))
 }
@@ -185,6 +261,10 @@ async function runSuccess(effect: ReturnType<typeof inspectRepo>) {
 async function runWorkspaceSuccess(
   effect: ReturnType<typeof resolveWorkspacePath>,
 ) {
+  return Effect.runPromise(effect)
+}
+
+async function runWorkspacesSuccess(effect: ReturnType<typeof listWorkspaces>) {
   return Effect.runPromise(effect)
 }
 

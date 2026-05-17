@@ -16,6 +16,7 @@ export const workspaces = sqliteTable('workspaces', {
   projectId: text('project_id')
     .notNull()
     .references(() => projects.id, { onDelete: 'cascade' }),
+  kind: text('kind', { enum: ['default', 'worktree'] }).notNull(),
   name: text('name').notNull(),
   workspacePath: text('workspace_path').notNull().unique(),
   createdAt: integer('created_at').notNull(),

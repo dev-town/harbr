@@ -1,6 +1,6 @@
 import { realpath } from 'node:fs/promises'
 
-type WorktreeEntry = {
+export type WorktreeEntry = {
   path: string
   isBare: boolean
 }

@@ -49,8 +49,7 @@ function formatProjectResult(result: SyncProjectResult) {
   const lines = [
     result.projectName,
     `  repo: ${result.repoKind ?? 'unknown'}`,
-    `  workspace name: ${result.workspaceName ?? 'none'}`,
-    `  workspace: ${result.workspacePath ?? 'none'}`,
+    `  workspaces: ${result.workspaceCount}`,
     `  modules: ${result.moduleCount}`,
     `  runtimes: ${result.runtimeCount}`,
   ]

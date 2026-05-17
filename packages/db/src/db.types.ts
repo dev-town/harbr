@@ -10,6 +10,7 @@ import type {
   RuntimeFact,
   RuntimeIssue,
   RuntimeRecord,
+  WorkspaceKind,
   WorkspaceRecord,
 } from '@harbour/domain'
 import type * as schema from './schema'
@@ -33,20 +34,25 @@ export type DatabaseClientApi = {
   readonly migrate: Effect.Effect<void, DatabaseMigrationError>
 }
 
+export type WorkspaceSnapshotInput = {
+  workspaceName: string
+  workspacePath: string
+  kind: WorkspaceKind
+  modules: ResolvedModule[]
+}
+
 export type ReplaceProjectSnapshotInput = {
   projectName: string
   repoPath: string
   repoKind: RepoKind
-  workspaceName: string | null
-  workspacePath: string | null
-  modules: ResolvedModule[]
+  workspaces: WorkspaceSnapshotInput[]
   runtimes: RuntimeFact[]
   runtimeIssue: RuntimeIssue | null
 }
 
 export type ProjectSnapshot = {
   project: ProjectRecord
-  workspace: WorkspaceRecord | null
+  workspaces: WorkspaceRecord[]
   modules: ModuleRecord[]
   runtimes: RuntimeRecord[]
 }

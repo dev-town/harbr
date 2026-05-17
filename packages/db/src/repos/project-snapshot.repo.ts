@@ -3,13 +3,16 @@ import { randomUUID } from 'node:crypto'
 import type {
   ModuleRecord,
   ProjectRecord,
-  ResolvedModule,
   RuntimeFact,
   RuntimeRecord,
   WorkspaceRecord,
 } from '@harbour/domain'
 import { eq } from 'drizzle-orm'
-import type { HarbourDatabase, ReplaceProjectSnapshotInput } from '../db.types'
+import type {
+  HarbourDatabase,
+  ReplaceProjectSnapshotInput,
+  WorkspaceSnapshotInput,
+} from '../db.types'
 import {
   moduleRowSchema,
   modules,
@@ -98,61 +101,48 @@ export function replaceProjectSnapshot(
     tx.delete(workspaces).where(eq(workspaces.projectId, project.id)).run()
     tx.delete(runtimes).where(eq(runtimes.projectId, project.id)).run()
 
-    if (!input.workspacePath) {
-      const runtimeRecords = insertRuntimes(tx, project.id, null, input.runtimes, now())
+    if (input.workspaces.length === 0) {
+      const runtimeRecords = insertRuntimes(
+        tx,
+        project.id,
+        new Map(),
+        input.runtimes,
+        now(),
+      )
 
       return {
         project,
-        workspace: null,
+        workspaces: [] satisfies WorkspaceRecord[],
         modules: [] satisfies ModuleRecord[],
         runtimes: runtimeRecords,
       }
     }
 
     const createdAt = now()
-    const workspaceId = randomUUID()
-    const workspaceName = input.workspaceName ?? 'main'
+    const workspaceRecords = insertWorkspaces(tx, project.id, input.workspaces, createdAt)
+    const workspacesByName = new Map(workspaceRecords.map((workspace) => [workspace.name, workspace]))
 
-    tx
-      .insert(workspaces)
-      .values({
-        id: workspaceId,
-        projectId: project.id,
-        name: workspaceName,
-        workspacePath: input.workspacePath,
-        createdAt,
-        updatedAt: createdAt,
-      })
-      .run()
+    const moduleRecords = workspaceRecords.flatMap((workspace) => {
+      const source = input.workspaces.find((candidate) => candidate.workspaceName === workspace.name)
 
-    const workspaceRow = tx
-      .select()
-      .from(workspaces)
-      .where(eq(workspaces.id, workspaceId))
-      .get()
+      if (!source || source.modules.length === 0) {
+        return []
+      }
 
-    if (!workspaceRow) {
-      throw new Error(`workspace not found after insert: ${workspaceId}`)
-    }
-
-    const workspace = mapWorkspaceRow(workspaceRowSchema.parse(workspaceRow))
-
-    const moduleRecords =
-      input.modules.length === 0
-        ? []
-        : insertModules(tx, workspace.id, input.modules, createdAt)
+      return insertModules(tx, workspace.id, source.modules, createdAt)
+    })
 
     const runtimeRecords = insertRuntimes(
       tx,
       project.id,
-      workspace.id,
+      workspacesByName,
       input.runtimes,
       createdAt,
     )
 
     return {
       project,
-      workspace,
+      workspaces: workspaceRecords,
       modules: moduleRecords,
       runtimes: runtimeRecords,
     }
@@ -163,10 +153,36 @@ function now() {
   return Date.now()
 }
 
+function insertWorkspaces(
+  db: HarbourDatabase,
+  projectId: string,
+  observedWorkspaces: WorkspaceSnapshotInput[],
+  createdAt: number,
+) {
+  for (const workspace of observedWorkspaces) {
+    db
+      .insert(workspaces)
+      .values({
+        id: randomUUID(),
+        projectId,
+        kind: workspace.kind,
+        name: workspace.workspaceName,
+        workspacePath: workspace.workspacePath,
+        createdAt,
+        updatedAt: createdAt,
+      })
+      .run()
+  }
+
+  const rows = db.select().from(workspaces).where(eq(workspaces.projectId, projectId)).all()
+
+  return rows.map((row) => mapWorkspaceRow(workspaceRowSchema.parse(row)))
+}
+
 function insertModules(
   db: HarbourDatabase,
   workspaceId: string,
-  resolvedModules: ResolvedModule[],
+  resolvedModules: WorkspaceSnapshotInput['modules'],
   now: number,
 ) {
   for (const module of resolvedModules) {
@@ -194,17 +210,20 @@ function insertModules(
 function insertRuntimes(
   db: HarbourDatabase,
   projectId: string,
-  workspaceId: string | null,
+  workspacesByName: Map<string, WorkspaceRecord>,
   runtimeFacts: RuntimeFact[],
   createdAt: number,
 ) {
   for (const runtime of runtimeFacts) {
+    const workspace =
+      runtime.workspaceName === null ? null : workspacesByName.get(runtime.workspaceName) ?? null
+
     db
       .insert(runtimes)
       .values({
         id: randomUUID(),
         projectId,
-        workspaceId: runtime.scope === 'project' ? null : workspaceId,
+        workspaceId: runtime.scope === 'project' ? null : workspace?.id ?? null,
         sessionName: runtime.sessionName,
         scope: runtime.scope,
         modulePath: runtime.scope === 'module' ? runtime.moduleName : null,
@@ -237,6 +256,7 @@ function mapWorkspaceRow(
   return {
     id: row.id,
     projectId: row.projectId,
+    kind: row.kind,
     name: row.name,
     workspacePath: row.workspacePath,
     createdAt: row.createdAt,

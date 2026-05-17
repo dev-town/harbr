@@ -179,14 +179,19 @@ describe('observeProject', () => {
       projectName: 'alpha',
       repoPath,
       repoKind: 'standard',
-      workspaceName: 'main',
-      workspacePath: repoPath,
-      modules: [
+      workspaces: [
         {
-          name: 'apps/cli',
-          path: 'apps/cli',
-          workspacePath: path.join(repoPath, 'apps', 'cli'),
-          selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+          workspaceName: 'main',
+          workspacePath: repoPath,
+          kind: 'default',
+          modules: [
+            {
+              name: 'apps/cli',
+              path: 'apps/cli',
+              workspacePath: path.join(repoPath, 'apps', 'cli'),
+              selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+            },
+          ],
         },
       ],
     })
@@ -206,6 +211,7 @@ describe('observeProject', () => {
           repoPath: '/tmp/alpha.git',
           kind: 'bare',
         }),
+      listWorkspaces: () => Effect.succeed([]),
       resolveWorkspacePath: () => Effect.succeed(null),
     }
 
@@ -240,9 +246,7 @@ describe('observeProject', () => {
       projectName: 'alpha',
       repoPath: '/tmp/alpha.git',
       repoKind: 'bare',
-      workspaceName: null,
-      workspacePath: null,
-      modules: [],
+      workspaces: [],
       runtimes: [
         {
           sessionName: 'alpha',
@@ -323,6 +327,14 @@ describe('observeProject', () => {
                       repoPath,
                       kind: 'standard',
                     }),
+                  listWorkspaces: () =>
+                    Effect.succeed([
+                      {
+                        name: 'main',
+                        path: repoPath,
+                        kind: 'default',
+                      },
+                    ]),
                   resolveWorkspacePath: () => Effect.succeed(repoPath),
                 }),
               ),
@@ -334,14 +346,19 @@ describe('observeProject', () => {
       projectName: 'alpha',
       repoPath,
       repoKind: 'standard',
-      workspaceName: 'main',
-      workspacePath: repoPath,
-      modules: [
+      workspaces: [
         {
-          name: 'apps/cli',
-          path: 'apps/cli',
-          workspacePath: path.join(repoPath, 'apps', 'cli'),
-          selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+          workspaceName: 'main',
+          workspacePath: repoPath,
+          kind: 'default',
+          modules: [
+            {
+              name: 'apps/cli',
+              path: 'apps/cli',
+              workspacePath: path.join(repoPath, 'apps', 'cli'),
+              selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+            },
+          ],
         },
       ],
       runtimes: [

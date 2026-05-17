@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { stat } from 'node:fs/promises'
+import { realpath, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
@@ -11,13 +11,14 @@ import {
   RepoNotSupportedError,
 } from '../git.errors'
 import { GitService, type GitServiceApi } from './git.service'
-import type { RepoInspection } from '../git.types'
-import { parseWorktreeList } from '../git.worktree'
+import type { RepoInspection, WorkspaceTarget } from '../git.types'
+import { parseWorktreeList, type WorktreeEntry } from '../git.worktree'
 
 const execFileAsync = promisify(execFile)
 
 export const GitServiceLive = Layer.succeed(GitService, {
   inspectRepo: inspectRepoLive,
+  listWorkspaces: listWorkspacesLive,
   resolveWorkspacePath: resolveWorkspacePathLive,
 } satisfies GitServiceApi)
 
@@ -35,6 +36,12 @@ export function resolveWorkspacePath(repo: RepoInspection) {
   return Effect.flatMap(GitService, (service) =>
     service.resolveWorkspacePath(repo),
   ).pipe(Effect.provide(makeGitServiceLayer()))
+}
+
+export function listWorkspaces(repo: RepoInspection) {
+  return Effect.flatMap(GitService, (service) => service.listWorkspaces(repo)).pipe(
+    Effect.provide(makeGitServiceLayer()),
+  )
 }
 
 function inspectRepoLive(repoPath: string) {
@@ -81,14 +88,18 @@ function inspectRepoLive(repoPath: string) {
 }
 
 function resolveWorkspacePathLive(repo: RepoInspection) {
-  if (repo.kind === 'standard') {
-    return Effect.succeed(repo.repoPath)
-  }
+  return Effect.map(listWorkspacesLive(repo), (workspaces) => workspaces[0]?.path ?? null)
+}
 
+function listWorkspacesLive(repo: RepoInspection) {
   return Effect.tryPromise({
     try: async () => {
-      const worktrees = await listWorktrees(repo.repoPath)
-      return worktrees.find((worktree) => !worktree.isBare)?.path ?? null
+      const [worktrees, canonicalRepoPath] = await Promise.all([
+        listWorktrees(repo),
+        repo.kind === 'standard' ? realpath(repo.repoPath) : Promise.resolve(repo.repoPath),
+      ])
+
+      return mapWorkspaces(repo, canonicalRepoPath, worktrees)
     },
     catch: () =>
       new RepoNotGitError({
@@ -115,16 +126,45 @@ function runGitRevParse(repoPath: string, flag: string) {
   }) as Effect.Effect<string, RepoInspectionError>
 }
 
-async function listWorktrees(repoPath: string) {
-  const { stdout } = await execFileAsync('git', [
-    '--git-dir',
-    repoPath,
-    'worktree',
-    'list',
-    '--porcelain',
-  ])
+async function listWorktrees(repo: RepoInspection) {
+  const args =
+    repo.kind === 'bare'
+      ? ['--git-dir', repo.repoPath, 'worktree', 'list', '--porcelain']
+      : ['-C', repo.repoPath, 'worktree', 'list', '--porcelain']
+
+  const { stdout } = await execFileAsync('git', args)
 
   return parseWorktreeList(stdout)
+}
+
+function mapWorkspaces(
+  repo: RepoInspection,
+  canonicalRepoPath: string,
+  worktrees: WorktreeEntry[],
+): WorkspaceTarget[] {
+  return worktrees
+    .filter((worktree) => !worktree.isBare)
+    .map((worktree) => ({
+      path:
+        repo.kind === 'standard' && worktree.path === canonicalRepoPath
+          ? repo.repoPath
+          : worktree.path,
+      kind:
+        repo.kind === 'standard' && worktree.path === canonicalRepoPath
+          ? 'default'
+          : 'worktree',
+      name:
+        repo.kind === 'standard' && worktree.path === canonicalRepoPath
+          ? 'main'
+          : path.basename(worktree.path),
+    }) satisfies WorkspaceTarget)
+    .sort((left, right) => {
+      if (left.kind !== right.kind) {
+        return left.kind === 'default' ? -1 : 1
+      }
+
+      return left.name.localeCompare(right.name)
+    })
 }
 
 async function isDirectory(targetPath: string) {

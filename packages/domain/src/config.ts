@@ -26,6 +26,8 @@ export type ProjectScan = {
 
 export type RepoKind = 'bare' | 'standard'
 
+export type WorkspaceKind = 'default' | 'worktree'
+
 export type RuntimeScope = 'module' | 'project' | 'workspace'
 
 export type RuntimeStatus = 'open'
@@ -45,11 +47,16 @@ export type ProjectObservation = {
   projectName: string
   repoPath: string
   repoKind: RepoKind
-  workspaceName: string | null
-  workspacePath: string | null
-  modules: ResolvedModule[]
+  workspaces: WorkspaceObservation[]
   runtimes: RuntimeFact[]
   runtimeIssue: RuntimeIssue | null
+}
+
+export type WorkspaceObservation = {
+  workspaceName: string
+  workspacePath: string
+  kind: WorkspaceKind
+  modules: ResolvedModule[]
 }
 
 export type ProjectRecord = {
@@ -64,6 +71,7 @@ export type ProjectRecord = {
 export type WorkspaceRecord = {
   id: string
   projectId: string
+  kind: WorkspaceKind
   name: string
   workspacePath: string
   createdAt: number
@@ -96,8 +104,7 @@ export type SyncProjectResult = {
   projectName: string
   repoPath: string
   repoKind: RepoKind | null
-  workspaceName: string | null
-  workspacePath: string | null
+  workspaceCount: number
   moduleCount: number
   runtimeCount: number
   status: 'error' | 'no_workspace' | 'synced'
