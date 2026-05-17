@@ -1,6 +1,7 @@
 import type {
   HarbourRow,
   HarbourSection,
+  ModuleRow,
   ProjectRow,
   VisibilityFilter,
   WorkspaceRow,
@@ -14,11 +15,17 @@ export const projectRowsAtom = atom<readonly ProjectRow[]>([])
 export const queryAtom = atom('')
 export const selectedIndexAtom = atom(0)
 export const selectedProjectIdAtom = atom<string | null>(null)
+export const selectedWorkspaceIdAtom = atom<string | null>(null)
 export const visibilityAtom = atom<VisibilityFilter>('active')
+export const moduleRowsAtom = atom<readonly ModuleRow[]>([])
 export const workspaceRowsAtom = atom<readonly WorkspaceRow[]>([])
 
 export const currentRowsAtom = atom<readonly HarbourRow[]>((get) => {
   const currentSection = get(currentSectionAtom)
+
+  if (currentSection === 'modules') {
+    return get(moduleRowsAtom)
+  }
 
   if (currentSection === 'workspaces') {
     return get(workspaceRowsAtom)
@@ -50,16 +57,33 @@ export const footerAtom = atom((get) => {
     return 'Enter drill next · Tab active/all · Ctrl+R refresh · Esc back'
   }
 
+  if (currentSection === 'modules') {
+    return 'Enter attach/create next · Tab active/all · Ctrl+R refresh · Esc back'
+  }
+
   return 'Enter drill next · Tab active/all · Ctrl+R refresh · Esc close'
 })
 
 export const breadcrumbAtom = atom((get) => {
   const selectedProjectId = get(selectedProjectIdAtom)
+  const selectedWorkspaceId = get(selectedWorkspaceIdAtom)
   const currentSection = get(currentSectionAtom)
+  const moduleRows = get(moduleRowsAtom)
   const projectRows = get(projectRowsAtom)
   const projectLabel = projectRows.find((row) => row.projectId === selectedProjectId)?.label
+  const workspaceLabel = get(workspaceRowsAtom).find(
+    (row) => row.workspaceId === selectedWorkspaceId,
+  )?.label
+
+  if (currentSection === 'modules' && projectLabel && workspaceLabel) {
+    return `${projectLabel} › ${workspaceLabel}`
+  }
 
   if (currentSection === 'workspaces' && projectLabel) {
+    return projectLabel
+  }
+
+  if (currentSection === 'modules' && projectLabel && moduleRows.length === 0) {
     return projectLabel
   }
 

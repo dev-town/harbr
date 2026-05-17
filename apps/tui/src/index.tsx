@@ -2,6 +2,8 @@ import { createCliRenderer } from '@opentui/core'
 import { ProjectService, makeProjectServiceLayer } from '@harbour/db'
 import {
   harbourCommandIds,
+  type ModuleRow,
+  type ModuleSummary,
   type ProjectRow,
   type ProjectSummary,
   type WorkspaceRow,
@@ -23,10 +25,12 @@ import {
   footerAtom,
   loadingAtom,
   noticeAtom,
+  moduleRowsAtom,
   projectRowsAtom,
   queryAtom,
   selectedIndexAtom,
   selectedProjectIdAtom,
+  selectedWorkspaceIdAtom,
   visibilityAtom,
   workspaceRowsAtom,
   visibleRowsAtom,
@@ -125,7 +129,7 @@ function App({ options }: { options: TuiOptions }) {
         onSubmit={() => {
           handleSelect()
         }}
-        placeholder={currentSection === 'workspaces' ? 'Filter workspaces' : 'Filter projects'}
+        placeholder={getPlaceholder(currentSection)}
         value={query}
       />
       <box flexGrow={1} marginTop={1}>
@@ -160,9 +164,11 @@ async function loadProjects(options: TuiOptions) {
 
   const summaries = await listProjectSummaries(options.dbPath)
   store.set(projectRowsAtom, summaries.map(mapProjectSummaryToRow))
+  store.set(moduleRowsAtom, [])
   store.set(workspaceRowsAtom, [])
   store.set(currentSectionAtom, 'projects')
   store.set(selectedProjectIdAtom, null)
+  store.set(selectedWorkspaceIdAtom, null)
   store.set(selectedIndexAtom, 0)
   store.set(loadingAtom, false)
   store.set(
@@ -182,6 +188,14 @@ async function listProjectSummaries(dbPath?: string) {
 async function listWorkspaceSummaries(projectId: string, dbPath?: string) {
   return Effect.runPromise(
     Effect.flatMap(ProjectService, (service) => service.listWorkspaceSummaries(projectId)).pipe(
+      Effect.provide(makeProjectServiceLayer(dbPath)),
+    ),
+  )
+}
+
+async function listModuleSummaries(workspaceId: string, dbPath?: string) {
+  return Effect.runPromise(
+    Effect.flatMap(ProjectService, (service) => service.listModuleSummaries(workspaceId)).pipe(
       Effect.provide(makeProjectServiceLayer(dbPath)),
     ),
   )
@@ -211,8 +225,19 @@ function handleEscape() {
 
   if (store.get(currentSectionAtom) === 'workspaces') {
     store.set(currentSectionAtom, 'projects')
+    store.set(moduleRowsAtom, [])
     store.set(workspaceRowsAtom, [])
     store.set(selectedProjectIdAtom, null)
+    store.set(selectedWorkspaceIdAtom, null)
+    store.set(selectedIndexAtom, 0)
+    store.set(noticeAtom, null)
+    return
+  }
+
+  if (store.get(currentSectionAtom) === 'modules') {
+    store.set(currentSectionAtom, 'workspaces')
+    store.set(moduleRowsAtom, [])
+    store.set(selectedWorkspaceIdAtom, null)
     store.set(selectedIndexAtom, 0)
     store.set(noticeAtom, null)
     return
@@ -230,7 +255,7 @@ function handleSelect() {
 
   if (row.kind === 'workspace') {
     if (row.hasModules) {
-      store.set(noticeAtom, `${row.label}: modules view next`)
+      void openModules(row.projectId, row.workspaceId)
       return
     }
 
@@ -239,6 +264,10 @@ function handleSelect() {
   }
 
   if (row.kind !== 'project') {
+    if (row.kind === 'module') {
+      store.set(noticeAtom, `${row.label}: attach/create module session next`)
+    }
+
     return
   }
 
@@ -261,9 +290,30 @@ async function openWorkspaces(projectId: string) {
 
   try {
     const summaries = await listWorkspaceSummaries(projectId, options.dbPath)
+    store.set(moduleRowsAtom, [])
     store.set(workspaceRowsAtom, summaries.map(mapWorkspaceSummaryToRow))
     store.set(selectedProjectIdAtom, projectId)
+    store.set(selectedWorkspaceIdAtom, null)
     store.set(currentSectionAtom, 'workspaces')
+    store.set(selectedIndexAtom, 0)
+    store.set(queryAtom, '')
+  } catch (error) {
+    store.set(noticeAtom, formatError(error))
+  } finally {
+    store.set(loadingAtom, false)
+  }
+}
+
+async function openModules(projectId: string, workspaceId: string) {
+  store.set(loadingAtom, true)
+  store.set(noticeAtom, null)
+
+  try {
+    const summaries = await listModuleSummaries(workspaceId, options.dbPath)
+    store.set(moduleRowsAtom, summaries.map(mapModuleSummaryToRow))
+    store.set(selectedProjectIdAtom, projectId)
+    store.set(selectedWorkspaceIdAtom, workspaceId)
+    store.set(currentSectionAtom, 'modules')
     store.set(selectedIndexAtom, 0)
     store.set(queryAtom, '')
   } catch (error) {
@@ -302,6 +352,20 @@ function mapWorkspaceSummaryToRow(summary: WorkspaceSummary): WorkspaceRow {
   }
 }
 
+function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
+  return {
+    id: summary.id,
+    kind: 'module',
+    label: summary.name,
+    projectId: summary.projectId,
+    workspaceId: summary.workspaceId,
+    moduleId: summary.id,
+    isActive: summary.hasActiveSession,
+    metadata: summary.hasActiveSession ? 'session' : 'no session',
+    hasSession: summary.hasActiveSession,
+  }
+}
+
 function formatSessionMetadata(activeSessionCount: number) {
   if (activeSessionCount === 0) {
     return 'no sessions'
@@ -337,4 +401,16 @@ function formatError(error: unknown) {
 function readArgValue(args: string[], flag: string) {
   const flagIndex = args.indexOf(flag)
   return flagIndex >= 0 ? args[flagIndex + 1] : undefined
+}
+
+function getPlaceholder(currentSection: string) {
+  if (currentSection === 'modules') {
+    return 'Filter modules'
+  }
+
+  if (currentSection === 'workspaces') {
+    return 'Filter workspaces'
+  }
+
+  return 'Filter projects'
 }
