@@ -2,6 +2,10 @@
   "name": "@harbour/keymap",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@harbour/domain": "workspace:*",
+    "@opentui/keymap": "^0.2.12"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

@@ -2,6 +2,11 @@
   "name": "@harbour/ui",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@harbour/domain": "workspace:*",
+    "@opentui/react": "^0.2.12",
+    "react": "^19.2.0"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

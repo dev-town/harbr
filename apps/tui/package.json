@@ -2,12 +2,26 @@
   "name": "@harbour/tui",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@harbour/db": "workspace:*",
+    "@harbour/domain": "workspace:*",
+    "@harbour/keymap": "workspace:*",
+    "@harbour/reconciler": "workspace:*",
+    "@harbour/ui": "workspace:*",
+    "@opentui/core": "^0.2.12",
+    "@opentui/keymap": "^0.2.12",
+    "@opentui/react": "^0.2.12",
+    "effect": "^3.21.2",
+    "jotai": "^2.15.1",
+    "react": "^19.2.0"
+  },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.tsx"
   },
   "scripts": {
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
+    "start": "bun src/index.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }
