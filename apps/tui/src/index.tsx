@@ -4,6 +4,8 @@ import {
   harbourCommandIds,
   type ProjectRow,
   type ProjectSummary,
+  type WorkspaceRow,
+  type WorkspaceSummary,
 } from '@harbour/domain'
 import { makeBrowseKeymap } from '@harbour/keymap'
 import { sync } from '@harbour/reconciler'
@@ -15,6 +17,7 @@ import { Provider, createStore, useAtomValue, useSetAtom } from 'jotai'
 import { useEffect } from 'react'
 
 import {
+  breadcrumbAtom,
   currentSectionAtom,
   effectiveVisibilityAtom,
   footerAtom,
@@ -23,7 +26,9 @@ import {
   projectRowsAtom,
   queryAtom,
   selectedIndexAtom,
+  selectedProjectIdAtom,
   visibilityAtom,
+  workspaceRowsAtom,
   visibleRowsAtom,
 } from './state'
 
@@ -88,6 +93,7 @@ createRoot(renderer).render(
 )
 
 function App({ options }: { options: TuiOptions }) {
+  const breadcrumb = useAtomValue(breadcrumbAtom)
   const currentSection = useAtomValue(currentSectionAtom)
   const footer = useAtomValue(footerAtom)
   const isLoading = useAtomValue(loadingAtom)
@@ -116,12 +122,15 @@ function App({ options }: { options: TuiOptions }) {
           setSelectedIndex(0)
           store.set(noticeAtom, null)
         }}
-        placeholder="Filter projects"
+        onSubmit={() => {
+          handleSelect()
+        }}
+        placeholder={currentSection === 'workspaces' ? 'Filter workspaces' : 'Filter projects'}
         value={query}
       />
       <box flexGrow={1} marginTop={1}>
         <HarbourPopover
-          breadcrumb="Harbour"
+          breadcrumb={breadcrumb}
           footer={footer}
           isLoading={isLoading}
           notice={notice}
@@ -151,6 +160,9 @@ async function loadProjects(options: TuiOptions) {
 
   const summaries = await listProjectSummaries(options.dbPath)
   store.set(projectRowsAtom, summaries.map(mapProjectSummaryToRow))
+  store.set(workspaceRowsAtom, [])
+  store.set(currentSectionAtom, 'projects')
+  store.set(selectedProjectIdAtom, null)
   store.set(selectedIndexAtom, 0)
   store.set(loadingAtom, false)
   store.set(
@@ -162,6 +174,14 @@ async function loadProjects(options: TuiOptions) {
 async function listProjectSummaries(dbPath?: string) {
   return Effect.runPromise(
     Effect.flatMap(ProjectService, (service) => service.listProjectSummaries).pipe(
+      Effect.provide(makeProjectServiceLayer(dbPath)),
+    ),
+  )
+}
+
+async function listWorkspaceSummaries(projectId: string, dbPath?: string) {
+  return Effect.runPromise(
+    Effect.flatMap(ProjectService, (service) => service.listWorkspaceSummaries(projectId)).pipe(
       Effect.provide(makeProjectServiceLayer(dbPath)),
     ),
   )
@@ -189,18 +209,41 @@ function handleEscape() {
     return
   }
 
+  if (store.get(currentSectionAtom) === 'workspaces') {
+    store.set(currentSectionAtom, 'projects')
+    store.set(workspaceRowsAtom, [])
+    store.set(selectedProjectIdAtom, null)
+    store.set(selectedIndexAtom, 0)
+    store.set(noticeAtom, null)
+    return
+  }
+
   renderer.destroy()
 }
 
 function handleSelect() {
   const row = store.get(visibleRowsAtom)[store.get(selectedIndexAtom)]
 
-  if (!row || row.kind !== 'project') {
+  if (!row) {
+    return
+  }
+
+  if (row.kind === 'workspace') {
+    if (row.hasModules) {
+      store.set(noticeAtom, `${row.label}: modules view next`)
+      return
+    }
+
+    store.set(noticeAtom, `${row.label}: open workspace root next`)
+    return
+  }
+
+  if (row.kind !== 'project') {
     return
   }
 
   if (row.hasWorkspaces) {
-    store.set(noticeAtom, `${row.label}: workspaces view next`)
+    void openWorkspaces(row.projectId)
     return
   }
 
@@ -210,6 +253,24 @@ function handleSelect() {
   }
 
   store.set(noticeAtom, `${row.label}: open project root next`)
+}
+
+async function openWorkspaces(projectId: string) {
+  store.set(loadingAtom, true)
+  store.set(noticeAtom, null)
+
+  try {
+    const summaries = await listWorkspaceSummaries(projectId, options.dbPath)
+    store.set(workspaceRowsAtom, summaries.map(mapWorkspaceSummaryToRow))
+    store.set(selectedProjectIdAtom, projectId)
+    store.set(currentSectionAtom, 'workspaces')
+    store.set(selectedIndexAtom, 0)
+    store.set(queryAtom, '')
+  } catch (error) {
+    store.set(noticeAtom, formatError(error))
+  } finally {
+    store.set(loadingAtom, false)
+  }
 }
 
 function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
@@ -223,6 +284,21 @@ function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
     activeSessionCount: summary.activeSessionCount,
     hasModules: summary.hasModules,
     hasWorkspaces: summary.hasWorkspaces,
+  }
+}
+
+function mapWorkspaceSummaryToRow(summary: WorkspaceSummary): WorkspaceRow {
+  return {
+    id: summary.id,
+    kind: 'workspace',
+    label: summary.name,
+    projectId: summary.projectId,
+    workspaceId: summary.id,
+    isActive: summary.activeSessionCount > 0,
+    metadata: formatSessionMetadata(summary.activeSessionCount),
+    activeSessionCount: summary.activeSessionCount,
+    hasModules: summary.hasModules,
+    isDefault: summary.isDefault,
   }
 }
 

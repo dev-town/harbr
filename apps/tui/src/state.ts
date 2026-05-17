@@ -3,23 +3,33 @@ import type {
   HarbourSection,
   ProjectRow,
   VisibilityFilter,
+  WorkspaceRow,
 } from '@harbour/domain'
 import { atom } from 'jotai'
 
 export const currentSectionAtom = atom<HarbourSection>('projects')
-export const footerAtom = atom(
-  'Enter drill next · Tab active/all · Ctrl+R refresh · Esc clear/close',
-)
 export const loadingAtom = atom(true)
 export const noticeAtom = atom<string | null>(null)
 export const projectRowsAtom = atom<readonly ProjectRow[]>([])
 export const queryAtom = atom('')
 export const selectedIndexAtom = atom(0)
+export const selectedProjectIdAtom = atom<string | null>(null)
 export const visibilityAtom = atom<VisibilityFilter>('active')
+export const workspaceRowsAtom = atom<readonly WorkspaceRow[]>([])
+
+export const currentRowsAtom = atom<readonly HarbourRow[]>((get) => {
+  const currentSection = get(currentSectionAtom)
+
+  if (currentSection === 'workspaces') {
+    return get(workspaceRowsAtom)
+  }
+
+  return get(projectRowsAtom)
+})
 
 export const effectiveVisibilityAtom = atom((get) => {
   const visibility = get(visibilityAtom)
-  const rows = get(projectRowsAtom)
+  const rows = get(currentRowsAtom)
 
   if (visibility === 'all') {
     return visibility
@@ -28,10 +38,38 @@ export const effectiveVisibilityAtom = atom((get) => {
   return rows.some((row) => row.isActive) ? 'active' : 'all'
 })
 
+export const footerAtom = atom((get) => {
+  const query = get(queryAtom)
+  const currentSection = get(currentSectionAtom)
+
+  if (query.length > 0) {
+    return 'Enter drill next · Tab active/all · Esc clear query'
+  }
+
+  if (currentSection === 'workspaces') {
+    return 'Enter drill next · Tab active/all · Ctrl+R refresh · Esc back'
+  }
+
+  return 'Enter drill next · Tab active/all · Ctrl+R refresh · Esc close'
+})
+
+export const breadcrumbAtom = atom((get) => {
+  const selectedProjectId = get(selectedProjectIdAtom)
+  const currentSection = get(currentSectionAtom)
+  const projectRows = get(projectRowsAtom)
+  const projectLabel = projectRows.find((row) => row.projectId === selectedProjectId)?.label
+
+  if (currentSection === 'workspaces' && projectLabel) {
+    return projectLabel
+  }
+
+  return 'Harbour'
+})
+
 export const visibleRowsAtom = atom<readonly HarbourRow[]>((get) => {
   const visibility = get(effectiveVisibilityAtom)
   const query = get(queryAtom).trim().toLowerCase()
-  const baseRows = get(projectRowsAtom)
+  const baseRows = get(currentRowsAtom)
   const scopedRows =
     visibility === 'active'
       ? baseRows.filter((row) => row.isActive)
@@ -42,16 +80,13 @@ export const visibleRowsAtom = atom<readonly HarbourRow[]>((get) => {
   }
 
   return scopedRows
-    .map((row) => ({
-      row,
-      score: getRowScore(row, query),
-    }))
+    .map((row) => ({ row, score: getRowScore(row, query) }))
     .filter((entry) => entry.score >= 0)
     .sort((left, right) => left.score - right.score)
     .map((entry) => entry.row)
 })
 
-function getRowScore(row: ProjectRow, query: string) {
+function getRowScore(row: HarbourRow, query: string) {
   const label = row.label.toLowerCase()
   const metadata = row.metadata?.toLowerCase() ?? ''
   const labelIndex = label.indexOf(query)
