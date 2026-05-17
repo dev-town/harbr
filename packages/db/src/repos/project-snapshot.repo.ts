@@ -1,11 +1,14 @@
 import { randomUUID } from 'node:crypto'
 
 import type {
+  ModuleSummary,
   ModuleRecord,
+  ProjectSummary,
   ProjectRecord,
   RuntimeFact,
   RuntimeRecord,
   WorkspaceRecord,
+  WorkspaceSummary,
 } from '@harbour/domain'
 import { eq } from 'drizzle-orm'
 import type {
@@ -35,6 +38,144 @@ export function getProjectByName(
     .get()
 
   return row ? mapProjectRow(projectRowSchema.parse(row)) : null
+}
+
+export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
+  const projectRows = db
+    .select()
+    .from(projects)
+    .all()
+    .map((row) => projectRowSchema.parse(row))
+  const workspaceRows = db
+    .select()
+    .from(workspaces)
+    .all()
+    .map((row) => workspaceRowSchema.parse(row))
+  const moduleRows = db
+    .select()
+    .from(modules)
+    .all()
+    .map((row) => moduleRowSchema.parse(row))
+  const runtimeRows = db
+    .select()
+    .from(runtimes)
+    .all()
+    .map((row) => runtimeRowSchema.parse(row))
+
+  return projectRows
+    .map((project) => {
+      const projectWorkspaces = workspaceRows.filter(
+        (workspace) => workspace.projectId === project.id,
+      )
+      const workspaceIds = new Set(projectWorkspaces.map((workspace) => workspace.id))
+
+      return {
+        id: project.id,
+        name: project.name,
+        repoPath: project.repoPath,
+        repoKind: project.repoKind,
+        activeSessionCount: runtimeRows.filter((runtime) => runtime.projectId === project.id)
+          .length,
+        workspaceCount: projectWorkspaces.length,
+        hasModules: moduleRows.some((module) => workspaceIds.has(module.workspaceId)),
+        hasWorkspaces:
+          projectWorkspaces.length > 1 ||
+          projectWorkspaces.some((workspace) => workspace.kind === 'worktree'),
+      } satisfies ProjectSummary
+    })
+    .sort((left, right) => left.name.localeCompare(right.name))
+}
+
+export function listWorkspaceSummaries(
+  db: HarbourDatabase,
+  projectId: string,
+): WorkspaceSummary[] {
+  const workspaceRows = db
+    .select()
+    .from(workspaces)
+    .where(eq(workspaces.projectId, projectId))
+    .all()
+    .map((row) => workspaceRowSchema.parse(row))
+  const moduleRows = db
+    .select()
+    .from(modules)
+    .all()
+    .map((row) => moduleRowSchema.parse(row))
+  const runtimeRows = db
+    .select()
+    .from(runtimes)
+    .all()
+    .map((row) => runtimeRowSchema.parse(row))
+
+  return workspaceRows
+    .map((workspace) => {
+      const workspaceModules = moduleRows.filter(
+        (module) => module.workspaceId === workspace.id,
+      )
+
+      return {
+        id: workspace.id,
+        projectId: workspace.projectId,
+        kind: workspace.kind,
+        name: workspace.name,
+        workspacePath: workspace.workspacePath,
+        activeSessionCount: runtimeRows.filter(
+          (runtime) => runtime.workspaceId === workspace.id,
+        ).length,
+        moduleCount: workspaceModules.length,
+        hasModules: workspaceModules.length > 0,
+        isDefault: workspace.kind === 'default',
+      } satisfies WorkspaceSummary
+    })
+    .sort((left, right) => {
+      if (left.isDefault !== right.isDefault) {
+        return left.isDefault ? -1 : 1
+      }
+
+      return left.name.localeCompare(right.name)
+    })
+}
+
+export function listModuleSummaries(
+  db: HarbourDatabase,
+  workspaceId: string,
+): ModuleSummary[] {
+  const workspaceRow = db
+    .select()
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .get()
+
+  if (!workspaceRow) {
+    return []
+  }
+
+  const workspace = workspaceRowSchema.parse(workspaceRow)
+  const moduleRows = db
+    .select()
+    .from(modules)
+    .where(eq(modules.workspaceId, workspaceId))
+    .all()
+    .map((row) => moduleRowSchema.parse(row))
+  const runtimeRows = db
+    .select()
+    .from(runtimes)
+    .where(eq(runtimes.workspaceId, workspaceId))
+    .all()
+    .map((row) => runtimeRowSchema.parse(row))
+
+  return moduleRows
+    .map((module) => ({
+      id: module.id,
+      projectId: workspace.projectId,
+      workspaceId: module.workspaceId,
+      name: module.name,
+      path: module.modulePath,
+      hasActiveSession: runtimeRows.some(
+        (runtime) => runtime.scope === 'module' && runtime.modulePath === module.modulePath,
+      ),
+    }))
+    .sort((left, right) => left.path.localeCompare(right.path))
 }
 
 export function upsertProject(

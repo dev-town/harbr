@@ -100,6 +100,38 @@ export type RuntimeRecord = {
   updatedAt: number
 }
 
+export type ProjectSummary = {
+  id: string
+  name: string
+  repoPath: string
+  repoKind: RepoKind
+  activeSessionCount: number
+  workspaceCount: number
+  hasModules: boolean
+  hasWorkspaces: boolean
+}
+
+export type WorkspaceSummary = {
+  id: string
+  projectId: string
+  kind: WorkspaceKind
+  name: string
+  workspacePath: string
+  activeSessionCount: number
+  moduleCount: number
+  hasModules: boolean
+  isDefault: boolean
+}
+
+export type ModuleSummary = {
+  id: string
+  projectId: string
+  workspaceId: string
+  name: string
+  path: string
+  hasActiveSession: boolean
+}
+
 export type SyncProjectResult = {
   projectName: string
   repoPath: string

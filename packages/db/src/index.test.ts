@@ -6,7 +6,13 @@ import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
 import { migrateDatabase } from './migrate'
 import { openDatabase } from './client'
-import { getProjectByName, replaceProjectSnapshot } from './repos/project-snapshot.repo'
+import {
+  getProjectByName,
+  listModuleSummaries,
+  listProjectSummaries,
+  listWorkspaceSummaries,
+  replaceProjectSnapshot,
+} from './repos/project-snapshot.repo'
 import { modules, projects, runtimes, workspaces } from './schema'
 
 const tempRoots: string[] = []
@@ -264,6 +270,184 @@ describe('db', () => {
       expect(moduleRows).toHaveLength(0)
       expect(runtimeRows).toHaveLength(1)
       expect(runtimeRows[0]?.sessionName).toBe('alpha')
+    } finally {
+      database.sqlite.close()
+    }
+  })
+
+  it('lists project, workspace, and module summaries with active status', async () => {
+    const tempRoot = await createTempRoot()
+    const databasePath = path.join(tempRoot, 'harbour.db')
+    const database = await openDatabase(databasePath)
+
+    try {
+      await migrateDatabase(database)
+
+      const alphaSnapshot = await replaceProjectSnapshot(database.db, {
+        projectName: 'alpha',
+        repoPath: '/tmp/alpha.git',
+        repoKind: 'standard',
+        workspaces: [
+          {
+            workspaceName: 'main',
+            workspacePath: '/tmp/alpha-main',
+            kind: 'default',
+            modules: [
+              {
+                name: 'apps/cli',
+                path: 'apps/cli',
+                workspacePath: '/tmp/alpha-main/apps/cli',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+              {
+                name: 'apps/tui',
+                path: 'apps/tui',
+                workspacePath: '/tmp/alpha-main/apps/tui',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+            ],
+          },
+          {
+            workspaceName: 'feature-auth',
+            workspacePath: '/tmp/alpha-feature-auth',
+            kind: 'worktree',
+            modules: [
+              {
+                name: 'apps/cli',
+                path: 'apps/cli',
+                workspacePath: '/tmp/alpha-feature-auth/apps/cli',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+              {
+                name: 'apps/web',
+                path: 'apps/web',
+                workspacePath: '/tmp/alpha-feature-auth/apps/web',
+                selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+              },
+            ],
+          },
+        ],
+        runtimes: [
+          {
+            sessionName: 'alpha',
+            scope: 'project',
+            projectName: 'alpha',
+            workspaceName: null,
+            moduleName: null,
+            status: 'open',
+          },
+          {
+            sessionName: 'alpha__main',
+            scope: 'workspace',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: null,
+            status: 'open',
+          },
+          {
+            sessionName: 'alpha__main__apps/cli',
+            scope: 'module',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: 'apps/cli',
+            status: 'open',
+          },
+          {
+            sessionName: 'alpha__feature-auth__apps/web',
+            scope: 'module',
+            projectName: 'alpha',
+            workspaceName: 'feature-auth',
+            moduleName: 'apps/web',
+            status: 'open',
+          },
+        ],
+        runtimeIssue: null,
+      })
+
+      await replaceProjectSnapshot(database.db, {
+        projectName: 'beta',
+        repoPath: '/tmp/beta.git',
+        repoKind: 'bare',
+        workspaces: [],
+        runtimes: [],
+        runtimeIssue: null,
+      })
+
+      const mainWorkspaceId = alphaSnapshot.workspaces.find(
+        (workspace) => workspace.name === 'main',
+      )?.id
+      const featureWorkspaceId = alphaSnapshot.workspaces.find(
+        (workspace) => workspace.name === 'feature-auth',
+      )?.id
+
+      expect(listProjectSummaries(database.db)).toEqual([
+        {
+          id: alphaSnapshot.project.id,
+          name: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          repoKind: 'standard',
+          activeSessionCount: 4,
+          workspaceCount: 2,
+          hasModules: true,
+          hasWorkspaces: true,
+        },
+        {
+          id: expect.any(String),
+          name: 'beta',
+          repoPath: '/tmp/beta.git',
+          repoKind: 'bare',
+          activeSessionCount: 0,
+          workspaceCount: 0,
+          hasModules: false,
+          hasWorkspaces: false,
+        },
+      ])
+
+      expect(listWorkspaceSummaries(database.db, alphaSnapshot.project.id)).toEqual([
+        {
+          id: mainWorkspaceId,
+          projectId: alphaSnapshot.project.id,
+          kind: 'default',
+          name: 'main',
+          workspacePath: '/tmp/alpha-main',
+          activeSessionCount: 2,
+          moduleCount: 2,
+          hasModules: true,
+          isDefault: true,
+        },
+        {
+          id: featureWorkspaceId,
+          projectId: alphaSnapshot.project.id,
+          kind: 'worktree',
+          name: 'feature-auth',
+          workspacePath: '/tmp/alpha-feature-auth',
+          activeSessionCount: 1,
+          moduleCount: 2,
+          hasModules: true,
+          isDefault: false,
+        },
+      ])
+
+      expect(mainWorkspaceId).toBeDefined()
+
+      expect(listModuleSummaries(database.db, mainWorkspaceId ?? 'missing')).toEqual([
+        {
+          id: expect.any(String),
+          projectId: alphaSnapshot.project.id,
+          workspaceId: mainWorkspaceId,
+          name: 'apps/cli',
+          path: 'apps/cli',
+          hasActiveSession: true,
+        },
+        {
+          id: expect.any(String),
+          projectId: alphaSnapshot.project.id,
+          workspaceId: mainWorkspaceId,
+          name: 'apps/tui',
+          path: 'apps/tui',
+          hasActiveSession: false,
+        },
+      ])
     } finally {
       database.sqlite.close()
     }

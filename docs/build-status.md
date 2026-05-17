@@ -54,3 +54,4 @@ Build the first read-only TUI next.
 
 - [x] `docs/next-task-module-expansion.md` is complete now
 - [x] keep tmux read-side first; defer write-heavy orchestration until browse flow works
+- [ ] revisit `db` summary reads later: current project/workspace/module status summaries derive counts in JS after broad reads; replace with tighter Drizzle/SQL summary queries once TUI read shape settles

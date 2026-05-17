@@ -7,6 +7,9 @@ import {
 import { makeDatabaseClientLayer } from '../infra/database-client.live'
 import {
   getProjectByName as getProjectByNameRaw,
+  listModuleSummaries as listModuleSummariesRaw,
+  listProjectSummaries as listProjectSummariesRaw,
+  listWorkspaceSummaries as listWorkspaceSummariesRaw,
   replaceProjectSnapshot as replaceProjectSnapshotRaw,
 } from '../repos/project-snapshot.repo'
 import type { ProjectServiceApi } from '../db.types'
@@ -24,6 +27,32 @@ export const ProjectServiceLive = Layer.effect(
           catch: (error) =>
             new ProjectServiceError({
               operation: 'findByName',
+              message: error instanceof Error ? error.message : String(error),
+            }),
+        }),
+      listProjectSummaries: Effect.try({
+        try: () => listProjectSummariesRaw(database.db),
+        catch: (error) =>
+          new ProjectServiceError({
+            operation: 'listProjectSummaries',
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      }),
+      listWorkspaceSummaries: (projectId) =>
+        Effect.try({
+          try: () => listWorkspaceSummariesRaw(database.db, projectId),
+          catch: (error) =>
+            new ProjectServiceError({
+              operation: 'listWorkspaceSummaries',
+              message: error instanceof Error ? error.message : String(error),
+            }),
+        }),
+      listModuleSummaries: (workspaceId) =>
+        Effect.try({
+          try: () => listModuleSummariesRaw(database.db, workspaceId),
+          catch: (error) =>
+            new ProjectServiceError({
+              operation: 'listModuleSummaries',
               message: error instanceof Error ? error.message : String(error),
             }),
         }),

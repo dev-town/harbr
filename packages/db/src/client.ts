@@ -1,5 +1,3 @@
-/// <reference path="./sqlite-shims.d.ts" />
-
 import { mkdir } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import path from 'node:path'
@@ -48,6 +46,7 @@ export function getDefaultDatabasePath() {
 }
 
 function importBunSqlite() {
+  // @ts-expect-error bun runtime module only exists when Bun is available
   return import('bun:sqlite') as Promise<{
     Database: new (
       filename: string,
@@ -63,6 +62,7 @@ function importBunSqlite() {
 }
 
 function importBetterSqlite3() {
+  // @ts-expect-error package ships without local types here
   return import('better-sqlite3') as Promise<{
     default: new (filename: string) => {
       close(): void

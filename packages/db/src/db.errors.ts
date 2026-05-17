@@ -14,7 +14,12 @@ export class DatabaseMigrationError extends Data.TaggedError(
 export class ProjectServiceError extends Data.TaggedError(
   'ProjectServiceError',
 )<{
-  operation: 'findByName' | 'syncSnapshot'
+  operation:
+    | 'findByName'
+    | 'listModuleSummaries'
+    | 'listProjectSummaries'
+    | 'listWorkspaceSummaries'
+    | 'syncSnapshot'
   message: string
 }> {}
 
