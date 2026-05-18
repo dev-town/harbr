@@ -1,11 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { Effect, Layer } from 'effect'
 
-import type { CurrentRuntime, RuntimeDiscovery } from './runtime-tmux.types'
-import { parseSessionName } from './session-name.util'
+import type {
+  CurrentRuntime,
+  RuntimeDiscovery,
+  RuntimeTarget,
+} from './runtime-tmux.types'
+import {
+  findMatchingRuntime,
+  formatSessionName,
+  formatSessionTarget,
+  parseSessionName,
+} from './session-name.util'
 import {
   getCurrentRuntime,
   listRuntimes,
+  openOrCreateRuntime,
   RuntimeTmuxService,
   RuntimeTmuxServiceLive,
 } from './index'
@@ -22,9 +32,9 @@ describe('parseSessionName', () => {
     })
   })
 
-  it('parses workspace and module names with double underscore separators', () => {
-    expect(parseSessionName('alpha__main__apps/cli')).toEqual({
-      sessionName: 'alpha__main__apps/cli',
+  it('parses workspace and module names with canonical separators', () => {
+    expect(parseSessionName('alpha~~main~~apps/cli')).toEqual({
+      sessionName: 'alpha~~main~~apps/cli',
       scope: 'module',
       projectName: 'alpha',
       workspaceName: 'main',
@@ -33,20 +43,55 @@ describe('parseSessionName', () => {
     })
   })
 
-  it('parses slash session names and preserves module path rest', () => {
-    expect(parseSessionName('alpha/main/apps/cli')).toEqual({
-      sessionName: 'alpha/main/apps/cli',
+  it('round-trips encoded segments containing separators', () => {
+    const sessionName = formatSessionName({
+      projectName: 'alpha',
+      workspaceName: 'feature/__fixtures:main',
+      moduleName: 'apps/__generated.test%ok',
+    })
+
+    expect(sessionName).toBe('alpha~~feature/__fixtures~3amain~~apps/__generated~2etest~25ok')
+    expect(parseSessionName(sessionName)).toEqual({
+      sessionName,
       scope: 'module',
       projectName: 'alpha',
-      workspaceName: 'main',
-      moduleName: 'apps/cli',
+      workspaceName: 'feature/__fixtures:main',
+      moduleName: 'apps/__generated.test%ok',
       status: 'open',
     })
   })
 
   it('ignores invalid session names', () => {
-    expect(parseSessionName('alpha__')).toBeNull()
+    expect(parseSessionName('alpha~~')).toBeNull()
     expect(parseSessionName('')).toBeNull()
+  })
+})
+
+describe('session helpers', () => {
+  it('finds matching runtimes by semantic target, not exact raw name format', () => {
+    expect(
+      findMatchingRuntime(
+        [
+          {
+            sessionName: 'alpha~~main~~apps/cli',
+            scope: 'module',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: 'apps/cli',
+            status: 'open',
+          },
+        ],
+        {
+          projectName: 'alpha',
+          workspaceName: 'main',
+          moduleName: 'apps/cli',
+        },
+      ),
+    )?.toMatchObject({ sessionName: 'alpha~~main~~apps/cli' })
+  })
+
+  it('formats exact tmux targets', () => {
+    expect(formatSessionTarget('alpha~~main')).toBe('=alpha~~main')
   })
 })
 
@@ -55,7 +100,7 @@ describe('listRuntimes', () => {
     const discovery: RuntimeDiscovery = {
       runtimes: [
         {
-          sessionName: 'alpha__main',
+          sessionName: 'alpha~~main',
           scope: 'workspace',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -69,6 +114,7 @@ describe('listRuntimes', () => {
     const layer = Layer.succeed(RuntimeTmuxService, {
       listRuntimes: Effect.succeed(discovery),
       getCurrentRuntime: Effect.succeed(null),
+      openOrCreateRuntime: (_target: RuntimeTarget) => Effect.void,
     })
 
     await expect(
@@ -89,7 +135,7 @@ describe('listRuntimes', () => {
 describe('getCurrentRuntime', () => {
   it('returns provided current runtime from the service layer', async () => {
     const currentRuntime: CurrentRuntime = {
-      sessionName: 'alpha/main/apps/cli',
+      sessionName: 'alpha~~main~~apps/cli',
       scope: 'module',
       projectName: 'alpha',
       workspaceName: 'main',
@@ -100,6 +146,7 @@ describe('getCurrentRuntime', () => {
     const layer = Layer.succeed(RuntimeTmuxService, {
       listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
       getCurrentRuntime: Effect.succeed(currentRuntime),
+      openOrCreateRuntime: (_target: RuntimeTarget) => Effect.void,
     })
 
     await expect(
@@ -113,5 +160,6 @@ describe('getCurrentRuntime', () => {
 
   it('exports a usable current runtime program symbol', () => {
     expect(getCurrentRuntime).toBeTypeOf('function')
+    expect(openOrCreateRuntime).toBeTypeOf('function')
   })
 })

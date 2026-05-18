@@ -12,12 +12,13 @@ import {
 } from '@harbour/domain'
 import { makeBrowseKeymap } from '@harbour/keymap'
 import { sync } from '@harbour/reconciler'
-import { getCurrentRuntime } from '@harbour/runtime-tmux'
+import { getCurrentRuntime, openOrCreateRuntime } from '@harbour/runtime-tmux'
 import { HarbourPopover } from '@harbour/ui'
 import { KeymapProvider } from '@opentui/keymap/react'
 import { createRoot } from '@opentui/react'
 import { Effect, Either } from 'effect'
 import { Provider, createStore, useAtomValue, useSetAtom } from 'jotai'
+import { join } from 'node:path'
 import { useEffect } from 'react'
 
 import {
@@ -33,6 +34,7 @@ import {
   selectedIndexAtom,
   selectedProjectIdAtom,
   selectedWorkspaceIdAtom,
+  selectedWorkspaceImplicitAtom,
   visibilityAtom,
   workspaceRowsAtom,
   visibleRowsAtom,
@@ -173,6 +175,7 @@ async function loadProjects(options: TuiOptions) {
   store.set(currentSectionAtom, 'projects')
   store.set(selectedProjectIdAtom, null)
   store.set(selectedWorkspaceIdAtom, null)
+  store.set(selectedWorkspaceImplicitAtom, false)
   store.set(selectedIndexAtom, 0)
   store.set(loadingAtom, false)
 
@@ -262,15 +265,24 @@ function handleEscape() {
     store.set(workspaceRowsAtom, [])
     store.set(selectedProjectIdAtom, null)
     store.set(selectedWorkspaceIdAtom, null)
+    store.set(selectedWorkspaceImplicitAtom, false)
     store.set(selectedIndexAtom, 0)
     store.set(noticeAtom, null)
     return
   }
 
   if (store.get(currentSectionAtom) === 'modules') {
-    store.set(currentSectionAtom, 'workspaces')
+    if (store.get(selectedWorkspaceImplicitAtom)) {
+      store.set(currentSectionAtom, 'projects')
+      store.set(workspaceRowsAtom, [])
+      store.set(selectedProjectIdAtom, null)
+    } else {
+      store.set(currentSectionAtom, 'workspaces')
+    }
+
     store.set(moduleRowsAtom, [])
     store.set(selectedWorkspaceIdAtom, null)
+    store.set(selectedWorkspaceImplicitAtom, false)
     store.set(selectedIndexAtom, 0)
     store.set(noticeAtom, null)
     return
@@ -292,23 +304,13 @@ function handleSelect() {
       return
     }
 
-    void persistContext({
-      projectId: row.projectId,
-      workspaceId: row.workspaceId,
-    })
-    store.set(noticeAtom, `${row.label}: open workspace root next`)
+    void openWorkspaceRoot(row)
     return
   }
 
   if (row.kind !== 'project') {
     if (row.kind === 'module') {
-      void persistContext({
-        projectId: row.projectId,
-        workspaceId: row.workspaceId,
-        moduleId: row.moduleId,
-      })
-      // TODO: replace this notice with runtime attach/create once write-side tmux flow exists.
-      store.set(noticeAtom, `${row.label}: attach/create module session next`)
+      void openModuleRuntime(row)
     }
 
     return
@@ -324,9 +326,7 @@ function handleSelect() {
     return
   }
 
-  void persistContext({ projectId: row.projectId })
-  // TODO: replace this notice with project-root attach/create once runtime actions exist.
-  store.set(noticeAtom, `${row.label}: open project root next`)
+  void openProjectRoot(row)
 }
 
 async function openWorkspaces(projectId: string) {
@@ -339,6 +339,7 @@ async function openWorkspaces(projectId: string) {
     store.set(workspaceRowsAtom, summaries.map(mapWorkspaceSummaryToRow))
     store.set(selectedProjectIdAtom, projectId)
     store.set(selectedWorkspaceIdAtom, null)
+    store.set(selectedWorkspaceImplicitAtom, false)
     store.set(currentSectionAtom, 'workspaces')
     store.set(selectedIndexAtom, 0)
     store.set(queryAtom, '')
@@ -349,15 +350,30 @@ async function openWorkspaces(projectId: string) {
   }
 }
 
-async function openModules(projectId: string, workspaceId: string) {
+async function openModules(
+  projectId: string,
+  workspaceId: string,
+  openOptions?: {
+    implicitWorkspace?: boolean
+    workspaceSummaries?: readonly WorkspaceSummary[]
+  },
+) {
   store.set(loadingAtom, true)
   store.set(noticeAtom, null)
 
   try {
-    const summaries = await listModuleSummaries(workspaceId, options.dbPath)
-    store.set(moduleRowsAtom, summaries.map(mapModuleSummaryToRow))
+    const [workspaceSummaries, moduleSummaries] = await Promise.all([
+      openOptions?.workspaceSummaries
+        ? Promise.resolve(openOptions.workspaceSummaries)
+        : listWorkspaceSummaries(projectId, options.dbPath),
+      listModuleSummaries(workspaceId, options.dbPath),
+    ])
+
+    store.set(workspaceRowsAtom, workspaceSummaries.map(mapWorkspaceSummaryToRow))
+    store.set(moduleRowsAtom, moduleSummaries.map(mapModuleSummaryToRow))
     store.set(selectedProjectIdAtom, projectId)
     store.set(selectedWorkspaceIdAtom, workspaceId)
+    store.set(selectedWorkspaceImplicitAtom, openOptions?.implicitWorkspace === true)
     store.set(currentSectionAtom, 'modules')
     store.set(selectedIndexAtom, 0)
     store.set(queryAtom, '')
@@ -378,7 +394,10 @@ async function openDefaultWorkspaceModules(projectId: string) {
     return
   }
 
-  await openModules(projectId, defaultWorkspace.id)
+  await openModules(projectId, defaultWorkspace.id, {
+    implicitWorkspace: true,
+    workspaceSummaries: summaries,
+  })
 }
 
 async function restoreUiContext(
@@ -475,7 +494,10 @@ async function restoreCurrentRuntime(
     return true
   }
 
-  await openModules(project.id, workspace.id)
+  await openModules(project.id, workspace.id, {
+    implicitWorkspace: workspace.isDefault && !project.hasWorkspaces,
+    workspaceSummaries: workspaces,
+  })
 
   const moduleRows = store.get(moduleRowsAtom)
   const moduleIndex = moduleRows.findIndex(
@@ -498,6 +520,95 @@ async function persistContext(context: HarbourContext) {
   }
 }
 
+async function openProjectRoot(row: ProjectRow) {
+  await openRuntimeForTarget(
+    {
+      projectName: row.label,
+      workspaceName: null,
+      moduleName: null,
+      cwd: row.repoPath,
+    },
+    { projectId: row.projectId },
+  )
+}
+
+async function openWorkspaceRoot(row: WorkspaceRow) {
+  const project = getSelectedProjectRow(row.projectId)
+
+  if (!project) {
+    store.set(noticeAtom, 'Project not found')
+    return
+  }
+
+  await openRuntimeForTarget(
+    {
+      projectName: project.label,
+      workspaceName: row.label,
+      moduleName: null,
+      cwd: row.workspacePath,
+    },
+    {
+      projectId: row.projectId,
+      workspaceId: row.workspaceId,
+    },
+  )
+}
+
+async function openModuleRuntime(row: ModuleRow) {
+  const project = getSelectedProjectRow(row.projectId)
+  const workspace = getSelectedWorkspaceRow(row.workspaceId)
+
+  if (!project || !workspace) {
+    store.set(noticeAtom, 'Workspace context missing')
+    return
+  }
+
+  await openRuntimeForTarget(
+    {
+      projectName: project.label,
+      workspaceName: workspace.label,
+      moduleName: row.modulePath,
+      cwd: join(workspace.workspacePath, row.modulePath),
+    },
+    {
+      projectId: row.projectId,
+      workspaceId: row.workspaceId,
+      moduleId: row.moduleId,
+    },
+  )
+}
+
+async function openRuntimeForTarget(
+  target: {
+    cwd: string
+    moduleName: string | null
+    projectName: string
+    workspaceName: string | null
+  },
+  context: HarbourContext,
+) {
+  store.set(loadingAtom, true)
+  store.set(noticeAtom, null)
+
+  try {
+    await persistContext(context)
+    await Effect.runPromise(openOrCreateRuntime(target))
+    renderer.destroy()
+  } catch (error) {
+    store.set(noticeAtom, formatError(error))
+  } finally {
+    store.set(loadingAtom, false)
+  }
+}
+
+function getSelectedProjectRow(projectId: string) {
+  return store.get(projectRowsAtom).find((row) => row.projectId === projectId) ?? null
+}
+
+function getSelectedWorkspaceRow(workspaceId: string) {
+  return store.get(workspaceRowsAtom).find((row) => row.workspaceId === workspaceId) ?? null
+}
+
 function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
   return {
     id: summary.id,
@@ -509,6 +620,7 @@ function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
     activeSessionCount: summary.activeSessionCount,
     hasModules: summary.hasModules,
     hasWorkspaces: summary.hasWorkspaces,
+    repoPath: summary.repoPath,
   }
 }
 
@@ -524,6 +636,7 @@ function mapWorkspaceSummaryToRow(summary: WorkspaceSummary): WorkspaceRow {
     activeSessionCount: summary.activeSessionCount,
     hasModules: summary.hasModules,
     isDefault: summary.isDefault,
+    workspacePath: summary.workspacePath,
   }
 }
 
@@ -538,6 +651,7 @@ function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
     isActive: summary.hasActiveSession,
     metadata: summary.hasActiveSession ? 'session' : 'no session',
     hasSession: summary.hasActiveSession,
+    modulePath: summary.path,
   }
 }
 

@@ -38,6 +38,7 @@ export type ProjectRow = BaseRow & {
   activeSessionCount: number
   hasModules: boolean
   hasWorkspaces: boolean
+  repoPath: string
 }
 
 export type WorkspaceRow = BaseRow & {
@@ -47,6 +48,7 @@ export type WorkspaceRow = BaseRow & {
   activeSessionCount: number
   hasModules: boolean
   isDefault: boolean
+  workspacePath: string
 }
 
 export type ModuleRow = BaseRow & {
@@ -55,6 +57,7 @@ export type ModuleRow = BaseRow & {
   workspaceId: string
   moduleId: string
   hasSession: boolean
+  modulePath: string
 }
 
 export type ActionRow = BaseRow & {

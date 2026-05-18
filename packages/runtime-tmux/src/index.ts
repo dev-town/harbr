@@ -1,4 +1,5 @@
 export * from './runtime-tmux.errors'
+export * from './session-name.util'
 export * from './runtime-tmux.types'
 export * from './services/runtime-tmux.live'
 export * from './services/runtime-tmux.service'

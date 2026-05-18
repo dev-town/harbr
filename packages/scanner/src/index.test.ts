@@ -230,6 +230,7 @@ describe('observeProject', () => {
         ],
         runtimeIssue: 'tmux_not_found',
       }),
+      openOrCreateRuntime: () => Effect.void,
     }
 
     await expect(
@@ -314,6 +315,7 @@ describe('observeProject', () => {
         ],
         runtimeIssue: null,
       }),
+      openOrCreateRuntime: () => Effect.void,
     }
 
     await expect(

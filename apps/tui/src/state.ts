@@ -16,6 +16,7 @@ export const queryAtom = atom('')
 export const selectedIndexAtom = atom(0)
 export const selectedProjectIdAtom = atom<string | null>(null)
 export const selectedWorkspaceIdAtom = atom<string | null>(null)
+export const selectedWorkspaceImplicitAtom = atom(false)
 export const visibilityAtom = atom<VisibilityFilter>('active')
 export const moduleRowsAtom = atom<readonly ModuleRow[]>([])
 export const workspaceRowsAtom = atom<readonly WorkspaceRow[]>([])
@@ -67,23 +68,23 @@ export const footerAtom = atom((get) => {
 export const breadcrumbAtom = atom((get) => {
   const selectedProjectId = get(selectedProjectIdAtom)
   const selectedWorkspaceId = get(selectedWorkspaceIdAtom)
+  const selectedWorkspaceImplicit = get(selectedWorkspaceImplicitAtom)
   const currentSection = get(currentSectionAtom)
-  const moduleRows = get(moduleRowsAtom)
   const projectRows = get(projectRowsAtom)
   const projectLabel = projectRows.find((row) => row.projectId === selectedProjectId)?.label
   const workspaceLabel = get(workspaceRowsAtom).find(
     (row) => row.workspaceId === selectedWorkspaceId,
   )?.label
 
-  if (currentSection === 'modules' && projectLabel && workspaceLabel) {
+  if (currentSection === 'modules' && projectLabel && workspaceLabel && !selectedWorkspaceImplicit) {
     return `${projectLabel} › ${workspaceLabel}`
   }
 
-  if (currentSection === 'workspaces' && projectLabel) {
+  if (currentSection === 'modules' && projectLabel) {
     return projectLabel
   }
 
-  if (currentSection === 'modules' && projectLabel && moduleRows.length === 0) {
+  if (currentSection === 'workspaces' && projectLabel) {
     return projectLabel
   }
 
