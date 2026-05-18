@@ -7,6 +7,13 @@ import type {
 } from './config.errors'
 
 export function normalizeModuleSelector(selector: string) {
+  if (selector === '.' || selector === './') {
+    return {
+      path: '.',
+      mode: 'explicit',
+    } as const
+  }
+
   const mode = selector.endsWith('/') ? 'children' : 'explicit'
   const trimmedSelector = mode === 'children' ? selector.slice(0, -1) : selector
 

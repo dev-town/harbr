@@ -38,6 +38,18 @@ export const configSchema = z
       seenProjects.add(project.name)
 
       for (const [moduleIndex, moduleSelector] of project.modules.entries()) {
+        if (moduleSelector === '/') {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['projects', projectIndex, 'modules', moduleIndex],
+            message: 'module selector `/` is not supported; use `.` for repo root',
+            params: {
+              issueCode: 'module_path_not_relative',
+            },
+          })
+          continue
+        }
+
         if (path.isAbsolute(moduleSelector)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,

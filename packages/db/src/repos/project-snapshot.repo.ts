@@ -217,10 +217,13 @@ export function listModuleSummaries(
       id: module.id,
       projectId: workspace.projectId,
       workspaceId: module.workspaceId,
-      name: module.name,
+      name: module.modulePath === '.' ? '/' : module.name,
       path: module.modulePath,
       hasActiveSession: runtimeRows.some(
-        (runtime) => runtime.scope === 'module' && runtime.modulePath === module.modulePath,
+        (runtime) =>
+          module.modulePath === '.'
+            ? runtime.scope === 'workspace'
+            : runtime.scope === 'module' && runtime.modulePath === module.modulePath,
       ),
     }))
     .sort((left, right) => left.path.localeCompare(right.path))

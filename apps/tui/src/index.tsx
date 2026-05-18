@@ -555,6 +555,18 @@ async function openWorkspaceRoot(row: WorkspaceRow) {
 }
 
 async function openModuleRuntime(row: ModuleRow) {
+  if (row.modulePath === '.') {
+    const workspace = getSelectedWorkspaceRow(row.workspaceId)
+
+    if (!workspace) {
+      store.set(noticeAtom, 'Workspace context missing')
+      return
+    }
+
+    await openWorkspaceRoot(workspace)
+    return
+  }
+
   const project = getSelectedProjectRow(row.projectId)
   const workspace = getSelectedWorkspaceRow(row.workspaceId)
 

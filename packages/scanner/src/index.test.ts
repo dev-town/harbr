@@ -49,6 +49,24 @@ describe('resolveProjectModules', () => {
       ])
   })
 
+  it('resolves root selectors to workspace root', async () => {
+    const tempRoot = await createTempRoot()
+    const workspacePath = path.join(tempRoot, 'workspace')
+
+    await mkdir(workspacePath, { recursive: true })
+
+    const project = createProject([{ raw: '.', path: '.', mode: 'explicit' }])
+
+    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves.toEqual([
+      {
+        name: '/',
+        path: '.',
+        workspacePath,
+        selector: { raw: '.', path: '.', mode: 'explicit' },
+      },
+    ])
+  })
+
   it('expands children selectors to immediate child dirs only', async () => {
     const tempRoot = await createTempRoot()
     const workspacePath = path.join(tempRoot, 'workspace')
@@ -153,6 +171,34 @@ describe('scanProject', () => {
           path: 'apps/cli',
           workspacePath: path.join(workspacePath, 'apps', 'cli'),
           selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+        },
+      ],
+    })
+  })
+
+  it('includes root module labels in scan output', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const workspacePath = path.join(tempRoot, 'workspace')
+
+    await mkdir(repoPath, { recursive: true })
+
+    const project: ProjectConfig = {
+      name: 'alpha',
+      repo: repoPath,
+      modules: [{ raw: '.', path: '.', mode: 'explicit' }],
+    }
+
+    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual({
+      projectName: 'alpha',
+      repoPath,
+      workspacePath,
+      modules: [
+        {
+          name: '/',
+          path: '.',
+          workspacePath,
+          selector: { raw: '.', path: '.', mode: 'explicit' },
         },
       ],
     })

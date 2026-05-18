@@ -220,6 +220,77 @@ describe('loadConfigAtPath', () => {
     )
   })
 
+  it('normalizes root selectors from dot forms', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: ['.', './', './docs', 'docs/'],
+        },
+      ],
+    })
+
+    await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [
+            { raw: '.', path: '.', mode: 'explicit' },
+            { raw: './', path: '.', mode: 'explicit' },
+            { raw: './docs', path: 'docs', mode: 'explicit' },
+            { raw: 'docs/', path: 'docs', mode: 'children' },
+          ],
+        },
+      ],
+    })
+  })
+
+  it('rejects slash root selector with clearer guidance', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: ['/'],
+        },
+      ],
+    })
+
+    const result = await runEither(loadConfigAtPath(configPath))
+
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
+      return
+    }
+
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
+      return
+    }
+
+    expect(result.left.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'module_path_not_relative',
+          message: 'module selector `/` is not supported; use `.` for repo root',
+        }),
+      ]),
+    )
+  })
+
   it('normalizes a valid config', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo.git')

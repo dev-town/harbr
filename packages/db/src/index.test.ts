@@ -455,6 +455,63 @@ describe('db', () => {
     }
   })
 
+  it('lists configured root modules as slash labels with workspace activity', async () => {
+    const tempRoot = await createTempRoot()
+    const databasePath = path.join(tempRoot, 'harbour.db')
+    const database = await openDatabase(databasePath)
+
+    try {
+      await migrateDatabase(database)
+
+      const snapshot = await replaceProjectSnapshot(database.db, {
+        projectName: 'alpha',
+        repoPath: '/tmp/alpha.git',
+        repoKind: 'standard',
+        workspaces: [
+          {
+            workspaceName: 'main',
+            workspacePath: '/tmp/alpha-main',
+            kind: 'default',
+            modules: [
+              {
+                name: '/',
+                path: '.',
+                workspacePath: '/tmp/alpha-main',
+                selector: { raw: '.', path: '.', mode: 'explicit' },
+              },
+            ],
+          },
+        ],
+        runtimes: [
+          {
+            sessionName: 'alpha~~main',
+            scope: 'workspace',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: null,
+            status: 'open',
+          },
+        ],
+        runtimeIssue: null,
+      })
+
+      const workspaceId = snapshot.workspaces[0]?.id
+
+      expect(listModuleSummaries(database.db, workspaceId ?? 'missing')).toEqual([
+        {
+          id: expect.any(String),
+          projectId: snapshot.project.id,
+          workspaceId,
+          name: '/',
+          path: '.',
+          hasActiveSession: true,
+        },
+      ])
+    } finally {
+      database.sqlite.close()
+    }
+  })
+
   it('persists sticky ui context across project, workspace, and module selection', async () => {
     const tempRoot = await createTempRoot()
     const databasePath = path.join(tempRoot, 'harbour.db')

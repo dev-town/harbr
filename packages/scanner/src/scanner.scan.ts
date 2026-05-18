@@ -47,6 +47,15 @@ function resolveExplicitModule(
   selector: ProjectConfig['modules'][number],
   workspacePath: string,
 ): ResolvedModule {
+  if (selector.path === '.') {
+    return {
+      name: '/',
+      path: '.',
+      workspacePath,
+      selector,
+    }
+  }
+
   return {
     name: selector.path,
     path: selector.path,
