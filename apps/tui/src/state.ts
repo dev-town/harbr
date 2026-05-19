@@ -11,6 +11,8 @@ import { atom } from 'jotai'
 export const currentSectionAtom = atom<HarbourSection>('projects')
 export const loadingAtom = atom(true)
 export const noticeAtom = atom<string | null>(null)
+export const focusSearchNonceAtom = atom(0)
+export const hoveredIndexAtom = atom<number | null>(null)
 export const projectRowsAtom = atom<readonly ProjectRow[]>([])
 export const queryAtom = atom('')
 export const selectedIndexAtom = atom(0)
@@ -46,23 +48,42 @@ export const effectiveVisibilityAtom = atom((get) => {
   return rows.some((row) => row.isActive) ? 'active' : 'all'
 })
 
-export const footerAtom = atom((get) => {
+export const footerHintsAtom = atom((get) => {
   const query = get(queryAtom)
   const currentSection = get(currentSectionAtom)
 
   if (query.length > 0) {
-    return 'Enter drill next · Tab active/all · Esc clear query'
+    return [
+      { key: 'Enter', label: 'drill next' },
+      { key: 'Tab', label: 'active/all' },
+      { key: 'Esc', label: 'clear query' },
+    ]
   }
 
   if (currentSection === 'workspaces') {
-    return 'Enter drill next · Tab active/all · Ctrl+R refresh · Esc back'
+    return [
+      { key: 'Enter', label: 'drill next' },
+      { key: 'Tab', label: 'active/all' },
+      { key: 'Ctrl+R', label: 'refresh' },
+      { key: 'Esc', label: 'back' },
+    ]
   }
 
   if (currentSection === 'modules') {
-    return 'Enter attach/create next · Tab active/all · Ctrl+R refresh · Esc back'
+    return [
+      { key: 'Enter', label: 'attach/create' },
+      { key: 'Tab', label: 'active/all' },
+      { key: 'Ctrl+R', label: 'refresh' },
+      { key: 'Esc', label: 'back' },
+    ]
   }
 
-  return 'Enter drill next · Tab active/all · Ctrl+R refresh · Esc close'
+  return [
+    { key: 'Enter', label: 'drill next' },
+    { key: 'Tab', label: 'active/all' },
+    { key: 'Ctrl+R', label: 'refresh' },
+    { key: 'Esc', label: 'close' },
+  ]
 })
 
 export const breadcrumbAtom = atom((get) => {
@@ -71,12 +92,19 @@ export const breadcrumbAtom = atom((get) => {
   const selectedWorkspaceImplicit = get(selectedWorkspaceImplicitAtom)
   const currentSection = get(currentSectionAtom)
   const projectRows = get(projectRowsAtom)
-  const projectLabel = projectRows.find((row) => row.projectId === selectedProjectId)?.label
+  const projectLabel = projectRows.find(
+    (row) => row.projectId === selectedProjectId,
+  )?.label
   const workspaceLabel = get(workspaceRowsAtom).find(
     (row) => row.workspaceId === selectedWorkspaceId,
   )?.label
 
-  if (currentSection === 'modules' && projectLabel && workspaceLabel && !selectedWorkspaceImplicit) {
+  if (
+    currentSection === 'modules' &&
+    projectLabel &&
+    workspaceLabel &&
+    !selectedWorkspaceImplicit
+  ) {
     return `${projectLabel} › ${workspaceLabel}`
   }
 
@@ -88,7 +116,7 @@ export const breadcrumbAtom = atom((get) => {
     return projectLabel
   }
 
-  return 'Harbour'
+  return ''
 })
 
 export const visibleRowsAtom = atom<readonly HarbourRow[]>((get) => {

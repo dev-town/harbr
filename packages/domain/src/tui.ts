@@ -12,6 +12,7 @@ export const harbourCommandIds = {
   appQuit: 'app.quit',
   browseBack: 'browse.back',
   browseDown: 'browse.down',
+  browseFocusSearch: 'browse.focus_search',
   browseOpenActions: 'browse.open_actions',
   browseRefresh: 'browse.refresh',
   browseSelect: 'browse.select',

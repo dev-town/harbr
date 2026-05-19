@@ -25,7 +25,8 @@ import {
   breadcrumbAtom,
   currentSectionAtom,
   effectiveVisibilityAtom,
-  footerAtom,
+  focusSearchNonceAtom,
+  hoveredIndexAtom,
   loadingAtom,
   noticeAtom,
   moduleRowsAtom,
@@ -88,6 +89,9 @@ const keymap = makeBrowseKeymap(renderer, {
       case harbourCommandIds.browseOpenActions:
         store.set(noticeAtom, 'Actions menu next')
         return
+      case harbourCommandIds.browseFocusSearch:
+        store.set(focusSearchNonceAtom, (current) => current + 1)
+        return
     }
   },
 })
@@ -103,8 +107,9 @@ createRoot(renderer).render(
 function App({ options }: { options: TuiOptions }) {
   const breadcrumb = useAtomValue(breadcrumbAtom)
   const currentSection = useAtomValue(currentSectionAtom)
-  const footer = useAtomValue(footerAtom)
   const isLoading = useAtomValue(loadingAtom)
+  const focusSearchNonce = useAtomValue(focusSearchNonceAtom)
+  const hoveredIndex = useAtomValue(hoveredIndexAtom)
   const notice = useAtomValue(noticeAtom)
   const query = useAtomValue(queryAtom)
   const selectedIndex = useAtomValue(selectedIndexAtom)
@@ -123,25 +128,30 @@ function App({ options }: { options: TuiOptions }) {
 
   return (
     <box flexDirection="column" height="100%" padding={1} width="100%">
-      <input
-        focused
-        onInput={(value) => {
-          setQuery(value)
-          setSelectedIndex(0)
-          store.set(noticeAtom, null)
-        }}
-        onSubmit={() => {
-          handleSelect()
-        }}
-        placeholder={getPlaceholder(currentSection)}
-        value={query}
-      />
-      <box flexGrow={1} marginTop={1}>
+      <box flexGrow={1}>
         <HarbourPopover
           breadcrumb={breadcrumb}
-          footer={footer}
           isLoading={isLoading}
           notice={notice}
+          focusSearchNonce={focusSearchNonce}
+          hoveredIndex={hoveredIndex}
+          onQueryChange={(value) => {
+            setQuery(value)
+            setSelectedIndex(0)
+            store.set(noticeAtom, null)
+          }}
+          onQuerySubmit={() => {
+            handleSelect()
+          }}
+          onRowClick={(index) => {
+            store.set(selectedIndexAtom, index)
+            store.set(focusSearchNonceAtom, (current) => current + 1)
+            handleSelect()
+          }}
+          onRowHover={(index) => {
+            store.set(hoveredIndexAtom, index)
+          }}
+          placeholder={getPlaceholder(currentSection)}
           query={query}
           rows={rows}
           sectionLabel={capitalize(currentSection)}

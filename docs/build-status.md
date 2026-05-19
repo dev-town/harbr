@@ -14,22 +14,22 @@
 - [x] `keymap`: Harbour browse keymap over `@opentui/keymap`
 - [x] `ui`: minimal popover renderer for project/workspace/module lists
 - [x] `apps/cli`: thin sync entrypoint
-- [x] `apps/tui`: read-only popover with project -> workspace -> module drilldown
+- [x] `apps/tui`: popover with project -> workspace -> module drilldown and leaf open/attach behavior
 
 ### Not Built Yet
 
 - [ ] `events`: append-only event recording
 - [ ] `observability`: logs/spans/diagnostics baseline
 - [ ] TUI actions menu shell
-- [ ] TUI direct open/attach behavior for project/workspace/module leaves
-- [ ] write-side runtime/session creation flows
+- [x] TUI direct open/attach behavior for project/workspace/module leaves
+- [x] write-side runtime/session creation flows
 - [ ] write-side actions: create workspace, create/jump runtime, restore layout
 
 ## Next Up
 
 ### Target
 
-Turn the read-only popover into a usable control surface by adding actions shell and real leaf behavior.
+Turn the browse popover into a fuller control surface by adding actions shell and workspace/worktree creation flows.
 
 ### Scope
 
@@ -41,13 +41,15 @@ Turn the read-only popover into a usable control surface by adding actions shell
 - [x] support scoped query filtering and active/all toggle
 - [x] restore context from current tmux session first
 - [x] persist fallback sticky db context for leaf selections
+- [x] open/attach project, workspace, and module leaves from `apps/tui`
+- [x] derive canonical tmux session names from project/workspace/module context
+- [x] create missing tmux sessions on leaf open and switch the active client
 
 ### Why
 
-- current read model covers config, git, modules, and persistence
-- current TUI browse flow works, but it still stops at read-only notices
-- biggest missing product capability is turning a selected leaf into a real open/attach action
-- next UX gap after that is contextual actions and worktree creation flows
+- current browse/open flow now covers config, git, modules, persistence, and tmux resume/create
+- biggest remaining UX gap is contextual actions and worktree creation flows
+- next product step is moving beyond default open/attach into explicit project/workspace/module actions
 
 ## Suggested Order
 
@@ -58,8 +60,8 @@ Turn the read-only popover into a usable control surface by adding actions shell
 5. [x] reconcile runtime state
 6. [x] build read-only `apps/tui` nested selector
 7. [ ] build TUI actions menu shell
-8. [ ] replace read-only project/workspace/module notices with real open/attach behavior
-9. [ ] add write-side worktree/session creation flows
+8. [x] replace read-only project/workspace/module notices with real open/attach behavior
+9. [ ] add write-side worktree/session creation flows beyond default open/create
 
 ## Notes
 
@@ -67,6 +69,9 @@ Turn the read-only popover into a usable control surface by adding actions shell
 - [x] keep tmux read-side first; defer write-heavy orchestration until browse flow works
 - [x] TUI restore now prefers current tmux session context; db sticky context is fallback only
 - [x] sticky context only persists committed leaf-like selections, not transient browse movement
+- [x] TUI leaf open now derives canonical tmux session names from semantic context; it does not depend on db-stored session-name identity
+- [x] canonical tmux session naming now uses `~~` between project/workspace/module segments and escapes only tmux-dangerous characters inside each segment
+- [x] default workspace breadcrumb/back behavior now respects implicit workspace skipping in module mode
 - [ ] revisit `db` summary reads later: current project/workspace/module status summaries derive counts in JS after broad reads; replace with tighter Drizzle/SQL summary queries once TUI read shape settles
-- [ ] default-workspace handling is partially in place: project -> modules skip works, but UI still renders the default workspace name when that layer is shown
-- [ ] actions menu, runtime attach/open, and worktree creation still need explicit design/command-handler wiring in `apps/tui`
+- [x] default-workspace handling now skips the workspace breadcrumb/back hop when module mode came through the implicit default workspace
+- [ ] actions menu and worktree creation still need explicit design/command-handler wiring in `apps/tui`

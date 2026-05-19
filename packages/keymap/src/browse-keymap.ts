@@ -24,6 +24,7 @@ export function makeBrowseKeymap(
       { key: 'up', cmd: harbourCommandIds.browseUp },
       { key: 'down', cmd: harbourCommandIds.browseDown },
       { key: 'enter', cmd: harbourCommandIds.browseSelect },
+      { key: '/', cmd: harbourCommandIds.browseFocusSearch },
       { key: 'tab', cmd: harbourCommandIds.browseToggleVisibility },
       { key: 'escape', cmd: harbourCommandIds.browseBack },
       { key: 'ctrl+r', cmd: harbourCommandIds.browseRefresh },
