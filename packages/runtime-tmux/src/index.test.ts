@@ -43,6 +43,17 @@ describe('parseSessionName', () => {
     })
   })
 
+  it('parses root module session names', () => {
+    expect(parseSessionName('alpha~~main~~/')).toEqual({
+      sessionName: 'alpha~~main~~/',
+      scope: 'module',
+      projectName: 'alpha',
+      workspaceName: 'main',
+      moduleName: '/',
+      status: 'open',
+    })
+  })
+
   it('round-trips encoded segments containing separators', () => {
     const sessionName = formatSessionName({
       projectName: 'alpha',
@@ -92,6 +103,16 @@ describe('session helpers', () => {
 
   it('formats exact tmux targets', () => {
     expect(formatSessionTarget('alpha~~main')).toBe('=alpha~~main')
+  })
+
+  it('formats root module session names', () => {
+    expect(
+      formatSessionName({
+        projectName: 'alpha',
+        workspaceName: 'main',
+        moduleName: '/',
+      }),
+    ).toBe('alpha~~main~~/')
   })
 })
 

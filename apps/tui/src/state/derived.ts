@@ -1,27 +1,9 @@
-import type {
-  HarbourRow,
-  HarbourSection,
-  ModuleRow,
-  ProjectRow,
-  VisibilityFilter,
-  WorkspaceRow,
-} from '@harbour/domain'
+import type { HarbourRow } from '@harbour/domain'
 import { atom } from 'jotai'
 
-export const currentSectionAtom = atom<HarbourSection>('projects')
-export const loadingAtom = atom(true)
-export const noticeAtom = atom<string | null>(null)
-export const focusSearchNonceAtom = atom(0)
-export const hoveredIndexAtom = atom<number | null>(null)
-export const projectRowsAtom = atom<readonly ProjectRow[]>([])
-export const queryAtom = atom('')
-export const selectedIndexAtom = atom(0)
-export const selectedProjectIdAtom = atom<string | null>(null)
-export const selectedWorkspaceIdAtom = atom<string | null>(null)
-export const selectedWorkspaceImplicitAtom = atom(false)
-export const visibilityAtom = atom<VisibilityFilter>('active')
-export const moduleRowsAtom = atom<readonly ModuleRow[]>([])
-export const workspaceRowsAtom = atom<readonly WorkspaceRow[]>([])
+import { currentSectionAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom } from './navigation'
+import { visibilityAtom, queryAtom } from './app'
+import { moduleRowsAtom, projectRowsAtom, workspaceRowsAtom } from './rows'
 
 export const currentRowsAtom = atom<readonly HarbourRow[]>((get) => {
   const currentSection = get(currentSectionAtom)
@@ -92,12 +74,8 @@ export const breadcrumbAtom = atom((get) => {
   const selectedWorkspaceImplicit = get(selectedWorkspaceImplicitAtom)
   const currentSection = get(currentSectionAtom)
   const projectRows = get(projectRowsAtom)
-  const projectLabel = projectRows.find(
-    (row) => row.projectId === selectedProjectId,
-  )?.label
-  const workspaceLabel = get(workspaceRowsAtom).find(
-    (row) => row.workspaceId === selectedWorkspaceId,
-  )?.label
+  const projectLabel = projectRows.find((row) => row.projectId === selectedProjectId)?.label
+  const workspaceLabel = get(workspaceRowsAtom).find((row) => row.workspaceId === selectedWorkspaceId)?.label
 
   if (
     currentSection === 'modules' &&
@@ -123,10 +101,7 @@ export const visibleRowsAtom = atom<readonly HarbourRow[]>((get) => {
   const visibility = get(effectiveVisibilityAtom)
   const query = get(queryAtom).trim().toLowerCase()
   const baseRows = get(currentRowsAtom)
-  const scopedRows =
-    visibility === 'active'
-      ? baseRows.filter((row) => row.isActive)
-      : [...baseRows]
+  const scopedRows = visibility === 'active' ? baseRows.filter((row) => row.isActive) : [...baseRows]
 
   if (!query) {
     return scopedRows

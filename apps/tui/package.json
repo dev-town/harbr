@@ -8,7 +8,6 @@
     "@harbour/keymap": "workspace:*",
     "@harbour/reconciler": "workspace:*",
     "@harbour/runtime-tmux": "workspace:*",
-    "@harbour/ui": "workspace:*",
     "@opentui/core": "^0.2.12",
     "@opentui/keymap": "^0.2.12",
     "@opentui/react": "^0.2.12",

@@ -1,0 +1,18 @@
+export const theme = {
+  backdrop: '#11111b',
+  panel: '#181825',
+  panelSoft: '#1e1e2e',
+  border: '#89b4fa',
+  borderSoft: '#313244',
+  text: '#cdd6f4',
+  muted: '#9399b2',
+  accent: '#89b4fa',
+  active: '#a6e3a1',
+  idle: '#a6adc8',
+  warning: '#f9e2af',
+  error: '#f38ba8',
+  violet: '#cba6f7',
+  selection: '#313a5b',
+  selectionEdge: '#45475a',
+  search: '#11111b',
+} as const

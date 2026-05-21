@@ -222,7 +222,7 @@ export function listModuleSummaries(
       hasActiveSession: runtimeRows.some(
         (runtime) =>
           module.modulePath === '.'
-            ? runtime.scope === 'workspace'
+            ? runtime.scope === 'workspace' || (runtime.scope === 'module' && runtime.modulePath === '.')
             : runtime.scope === 'module' && runtime.modulePath === module.modulePath,
       ),
     }))
@@ -430,7 +430,12 @@ function insertRuntimes(
         workspaceId: runtime.scope === 'project' ? null : workspace?.id ?? null,
         sessionName: runtime.sessionName,
         scope: runtime.scope,
-        modulePath: runtime.scope === 'module' ? runtime.moduleName : null,
+        modulePath:
+          runtime.scope === 'module'
+            ? runtime.moduleName === '/'
+              ? '.'
+              : runtime.moduleName
+            : null,
         status: runtime.status,
         createdAt,
         updatedAt: createdAt,

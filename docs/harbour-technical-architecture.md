@@ -204,7 +204,6 @@ Depends on:
 @harbour/events
 @harbour/observability
 @harbour/keymap
-@harbour/ui
 ```
 
 Must not contain:

@@ -8,9 +8,6 @@ Use this doc when deciding whether an import, package dependency, or file move i
 apps/*
   -> packages/*
 
-ui
-  -> domain
-
 keymap
   -> domain
 
@@ -59,11 +56,6 @@ test-utils
 
 ```text
 domain -> anything
-ui -> db
-ui -> git
-ui -> runtime-tmux
-ui -> scanner
-ui -> reconciler
 keymap -> db
 db -> scanner
 db -> reconciler
@@ -75,7 +67,7 @@ git -> db
 ### Practical rules
 
 - `domain` must stay dependency-free.
-- `ui` renders and dispatches; it does not talk directly to adapters, db, scanner, or reconciler.
+- App-local components render and dispatch; they do not talk directly to adapters, db, scanner, or reconciler.
 - `scanner` reads external state and emits normalized facts. It does not own tmux orchestration or durable belief.
 - `reconciler` can consume scanner facts and persist Harbour belief. Do not push this logic back into UI or db.
 - `db` stores Harbour state; it should not reach outward into scanner or reconciler logic.
@@ -96,8 +88,8 @@ When reviewing a change:
 
 ### Common fixes
 
-- If `ui` needs data from `db`, expose derived state through app/service wiring instead of importing `db` into UI.
-- If `ui` needs a Git or tmux action, dispatch a command and let app/service code call adapters.
+- If app-local components need data from `db`, expose derived state through app/service wiring instead of importing `db` into UI.
+- If app-local components need a Git or tmux action, dispatch a command and let app/service code call adapters.
 - If `scanner` wants to mutate durable state, split read-side fact collection from reconciler write-side updates.
 - If `db` needs domain interpretation, move that decision into `reconciler` or a domain-level helper.
 - If a package exposes a repo or client to another package, first ask whether a public service or program boundary is the better export.

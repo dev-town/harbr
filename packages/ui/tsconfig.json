@@ -1,8 +1,0 @@
-{
-  "extends": "@harbour/config-typescript/library.json",
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "@opentui/react"
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
-}

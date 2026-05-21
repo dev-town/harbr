@@ -440,6 +440,113 @@ describe('observeProject', () => {
       runtimeIssue: null,
     })
   })
+
+  it('keeps root module runtimes when slash module exists', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+
+    await execFileAsync('git', ['init', repoPath])
+
+    const project: ProjectConfig = {
+      name: 'alpha',
+      repo: repoPath,
+      modules: [{ raw: '.', path: '.', mode: 'explicit' }],
+    }
+
+    const runtimeTmux: RuntimeTmuxServiceApi = {
+      getCurrentRuntime: Effect.succeed(null),
+      listRuntimes: Effect.succeed({
+        runtimes: [
+          {
+            sessionName: 'alpha~~main',
+            scope: 'workspace',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: null,
+            status: 'open',
+          },
+          {
+            sessionName: 'alpha~~main~~/',
+            scope: 'module',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: '/',
+            status: 'open',
+          },
+        ],
+        runtimeIssue: null,
+      }),
+      openOrCreateRuntime: () => Effect.void,
+    }
+
+    await expect(
+      Effect.runPromise(
+        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
+          Effect.provide(
+            ScannerServiceLive.pipe(
+              Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+              Layer.provide(
+                Layer.succeed(GitService, {
+                  inspectRepo: () =>
+                    Effect.succeed({
+                      repoPath,
+                      kind: 'standard',
+                    }),
+                  listWorkspaces: () =>
+                    Effect.succeed([
+                      {
+                        name: 'main',
+                        path: repoPath,
+                        kind: 'default',
+                      },
+                    ]),
+                  resolveWorkspacePath: () => Effect.succeed(repoPath),
+                }),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ).resolves.toEqual({
+      projectName: 'alpha',
+      repoPath,
+      repoKind: 'standard',
+      workspaces: [
+        {
+          workspaceName: 'main',
+          workspacePath: repoPath,
+          kind: 'default',
+          modules: [
+            {
+              name: '/',
+              path: '.',
+              workspacePath: repoPath,
+              selector: { raw: '.', path: '.', mode: 'explicit' },
+            },
+          ],
+        },
+      ],
+      runtimes: [
+        {
+          sessionName: 'alpha~~main',
+          scope: 'workspace',
+          projectName: 'alpha',
+          workspaceName: 'main',
+          moduleName: null,
+          status: 'open',
+        },
+        {
+          sessionName: 'alpha~~main~~/',
+          scope: 'module',
+          projectName: 'alpha',
+          workspaceName: 'main',
+          moduleName: '/',
+          status: 'open',
+        },
+      ],
+      runtimeIssue: null,
+    })
+  })
 })
 
 async function runSuccess(effect: ReturnType<typeof resolveProjectModules>) {

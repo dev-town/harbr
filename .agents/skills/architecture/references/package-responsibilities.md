@@ -64,9 +64,9 @@ Use this doc to decide where new code belongs.
 - Owns keybinding contexts and command routing.
 - Translate input into command ids. Do not embed deep product logic here.
 
-### `ui`
+### app-local components
 
-- Owns presentational components and view-state display concerns.
+- Own presentational components and view-state display concerns when no shared package is warranted.
 - Render Harbour state. Keep raw shell, db, and reconciliation logic out.
 - Consume app-provided state and commands, not internal package wiring.
 
@@ -99,7 +99,6 @@ Depends on:
 @harbour/events
 @harbour/observability
 @harbour/keymap
-@harbour/ui
 ```
 
 Must not contain:
