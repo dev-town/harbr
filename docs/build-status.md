@@ -20,10 +20,10 @@
 
 - [ ] `events`: append-only event recording
 - [ ] `observability`: logs/spans/diagnostics baseline
-- [ ] TUI actions menu shell
+- [x] TUI actions menu shell
 - [x] TUI direct open/attach behavior for project/workspace/module leaves
 - [x] write-side runtime/session creation flows
-- [ ] write-side actions: create workspace, create/jump runtime, restore layout
+- [ ] write-side actions: create workspace/worktree, advanced create/jump runtime, restore layout
 
 ## Next Up
 
@@ -44,6 +44,8 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 - [x] open/attach project, workspace, and module leaves from `apps/tui`
 - [x] derive canonical tmux session names from project/workspace/module context
 - [x] create missing tmux sessions on leaf open and switch the active client
+- [x] add contextual actions modal for project/workspace/module secondary actions
+- [x] route TUI commands through active surface + global layer semantics
 
 ### Why
 
@@ -59,7 +61,7 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 4. [x] persist runtime state in `db`
 5. [x] reconcile runtime state
 6. [x] build read-only `apps/tui` nested selector
-7. [ ] build TUI actions menu shell
+7. [x] build TUI actions menu shell
 8. [x] replace read-only project/workspace/module notices with real open/attach behavior
 9. [ ] add write-side worktree/session creation flows beyond default open/create
 
@@ -74,4 +76,10 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 - [x] default workspace breadcrumb/back behavior now respects implicit workspace skipping in module mode
 - [ ] revisit `db` summary reads later: current project/workspace/module status summaries derive counts in JS after broad reads; replace with tighter Drizzle/SQL summary queries once TUI read shape settles
 - [x] default-workspace handling now skips the workspace breadcrumb/back hop when module mode came through the implicit default workspace
-- [ ] actions menu and worktree creation still need explicit design/command-handler wiring in `apps/tui`
+- [x] actions menu now renders as a compact modal with project/workspace/module open actions
+- [x] current built actions are:
+  - project: open project root
+  - workspace: open workspace root, open project root
+  - module: open module session, open workspace root, open project root
+- [x] TUI command routing now uses active surface handlers over global keymap commands
+- [ ] worktree creation flow and other write-side actions still need explicit command-handler wiring in `apps/tui`

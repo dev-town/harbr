@@ -2,26 +2,55 @@ import { harbourCommandIds } from '@harbour/domain'
 
 import type { TuiAppContext } from '../app-context'
 import { clampIndex } from '../helpers/selection'
-import { currentSectionAtom, focusSearchNonceAtom, noticeAtom, queryAtom, selectedIndexAtom, selectedProjectIdAtom, selectedWorkspaceImplicitAtom, visibilityAtom, visibleRowsAtom, workspaceRowsAtom } from '../state'
-import { openDefaultWorkspaceModules, openModules, openWorkspaces } from './drilldown'
-import { loadProjects } from './refresh'
-import { openModuleRuntime, openProjectRoot, openWorkspaceRoot } from './runtime'
-import { clearNotice, resetProjectScope, resetSelection, resetWorkspaceScope } from './state'
+import {
+  currentSectionAtom,
+  currentRowsAtom,
+  focusSearchNonceAtom,
+  queryAtom,
+  selectedIndexAtom,
+  selectedProjectIdAtom,
+  selectedWorkspaceImplicitAtom,
+  visibilityAtom,
+  workspaceRowsAtom,
+} from '../state'
+import {
+  openDefaultWorkspaceModules,
+  openModules,
+  openWorkspaces,
+} from './drilldown'
+import { dispatchCommand } from './dispatch'
+import {
+  openModuleRuntime,
+  openProjectRoot,
+  openWorkspaceRoot,
+} from './runtime'
+import {
+  clearNotice,
+  resetProjectScope,
+  resetSelection,
+  resetWorkspaceScope,
+} from './state'
 
-export function moveSelection(context: TuiAppContext, delta: number) {
+export function moveBrowseSelection(context: TuiAppContext, delta: number) {
   const nextIndex = context.store.get(selectedIndexAtom) + delta
-  context.store.set(selectedIndexAtom, clampIndex(nextIndex, context.store.get(visibleRowsAtom).length))
+  context.store.set(
+    selectedIndexAtom,
+    clampIndex(nextIndex, context.store.get(currentRowsAtom).length),
+  )
   clearNotice(context)
 }
 
-export function toggleVisibility(context: TuiAppContext) {
-  context.store.set(visibilityAtom, (current) => (current === 'active' ? 'all' : 'active'))
+export function toggleBrowseVisibility(context: TuiAppContext) {
+  context.store.set(visibilityAtom, (current) =>
+    current === 'active' ? 'all' : 'active',
+  )
   resetSelection(context)
   clearNotice(context)
 }
 
-export function handleEscape(context: TuiAppContext) {
+export function handleBrowseBack(context: TuiAppContext) {
   const query = context.store.get(queryAtom)
+  const currentSection = context.store.get(currentSectionAtom)
 
   if (query.length > 0) {
     context.store.set(queryAtom, '')
@@ -30,12 +59,12 @@ export function handleEscape(context: TuiAppContext) {
     return
   }
 
-  if (context.store.get(currentSectionAtom) === 'workspaces') {
+  if (currentSection === 'workspaces') {
     resetProjectScope(context)
     return
   }
 
-  if (context.store.get(currentSectionAtom) === 'modules') {
+  if (currentSection === 'modules') {
     if (context.store.get(selectedWorkspaceImplicitAtom)) {
       context.store.set(currentSectionAtom, 'projects')
       context.store.set(workspaceRowsAtom, [])
@@ -51,8 +80,9 @@ export function handleEscape(context: TuiAppContext) {
   context.renderer.destroy()
 }
 
-export function handleSelect(context: TuiAppContext) {
-  const row = context.store.get(visibleRowsAtom)[context.store.get(selectedIndexAtom)]
+export function handleBrowseSelect(context: TuiAppContext) {
+  const row =
+    context.store.get(currentRowsAtom)[context.store.get(selectedIndexAtom)]
 
   if (!row) {
     return
@@ -89,36 +119,14 @@ export function handleSelect(context: TuiAppContext) {
   void openProjectRoot(context, row)
 }
 
+export function focusBrowseSearch(context: TuiAppContext) {
+  context.store.set(focusSearchNonceAtom, (current) => current + 1)
+}
+
 export function createBrowseCommandHandler(context: TuiAppContext) {
-  return (commandId: string) => {
-    switch (commandId) {
-      case harbourCommandIds.appQuit:
-        context.renderer.destroy()
-        return
-      case harbourCommandIds.browseUp:
-        moveSelection(context, -1)
-        return
-      case harbourCommandIds.browseDown:
-        moveSelection(context, 1)
-        return
-      case harbourCommandIds.browseToggleVisibility:
-        toggleVisibility(context)
-        return
-      case harbourCommandIds.browseRefresh:
-        void loadProjects(context)
-        return
-      case harbourCommandIds.browseBack:
-        handleEscape(context)
-        return
-      case harbourCommandIds.browseSelect:
-        handleSelect(context)
-        return
-      case harbourCommandIds.browseOpenActions:
-        context.store.set(noticeAtom, 'Actions menu next')
-        return
-      case harbourCommandIds.browseFocusSearch:
-        context.store.set(focusSearchNonceAtom, (current) => current + 1)
-        return
-    }
-  }
+  return (commandId: string) =>
+    dispatchCommand(
+      context,
+      commandId as (typeof harbourCommandIds)[keyof typeof harbourCommandIds],
+    )
 }

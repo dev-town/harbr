@@ -1,3 +1,4 @@
+import type { HarbourRow } from '@harbour/domain'
 import { useAtomValue } from 'jotai'
 import { useEffect, useRef } from 'react'
 
@@ -5,18 +6,24 @@ import { handleRowClick, handleRowHover } from '../../actions'
 import { useTuiContext } from '../../app-context'
 import { theme } from '../../config/theme'
 import { capitalize } from '../../helpers/labels'
-import { currentSectionAtom, hoveredIndexAtom, loadingAtom, selectedIndexAtom, visibleRowsAtom } from '../../state'
+import { currentSectionAtom, hoveredIndexAtom, loadingAtom, selectedIndexAtom } from '../../state'
 import { RowLine } from '../row-line'
 import { StatusLine } from '../status-line'
 
-export function ResultsList() {
+type ResultsListProps = {
+  emptyLabel?: string
+  isLoading?: boolean
+  rows: readonly HarbourRow[]
+}
+
+export function ResultsList({ emptyLabel, isLoading: forceLoading = false, rows }: ResultsListProps) {
   const context = useTuiContext()
   const currentSection = useAtomValue(currentSectionAtom)
   const hoveredIndex = useAtomValue(hoveredIndexAtom)
   const isLoading = useAtomValue(loadingAtom)
-  const rows = useAtomValue(visibleRowsAtom)
   const selectedIndex = useAtomValue(selectedIndexAtom)
   const scrollboxRef = useRef<{ scrollChildIntoView?: (childId: string) => void } | null>(null)
+  const showLoading = forceLoading || isLoading
 
   useEffect(() => {
     const row = rows[selectedIndex]
@@ -44,15 +51,15 @@ export function ResultsList() {
         wrapperOptions: { backgroundColor: theme.panel },
       }}
     >
-      {isLoading ? <StatusLine color={theme.accent} icon="" text="Refreshing Harbour view..." /> : null}
-      {!isLoading && rows.length === 0 ? (
+      {showLoading ? <StatusLine color={theme.accent} icon="" text="Refreshing Harbour view..." /> : null}
+      {!showLoading && rows.length === 0 ? (
         <StatusLine
           color={theme.muted}
           icon="󰮗"
-          text={`No ${capitalize(currentSection).toLowerCase()} match current filters`}
+          text={emptyLabel ?? `No ${capitalize(currentSection).toLowerCase()} match current filters`}
         />
       ) : null}
-      {!isLoading
+      {!showLoading
         ? rows.map((row, index) => (
             <box id={`row:${row.id}`} key={row.id} width="100%">
               <RowLine

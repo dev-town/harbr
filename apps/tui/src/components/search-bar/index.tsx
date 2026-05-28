@@ -5,21 +5,33 @@ import { handleQueryChange, handleQuerySubmit } from '../../actions'
 import { theme } from '../../config/theme'
 import { useTuiContext } from '../../app-context'
 import { getPlaceholder } from '../../helpers/labels'
-import { currentSectionAtom, effectiveVisibilityAtom, focusSearchNonceAtom, queryAtom, selectedIndexAtom, visibleRowsAtom } from '../../state'
+import { actionsOpenAtom, currentRowsAtom, currentSectionAtom, effectiveVisibilityAtom, type FocusTargetRef, focusSearchNonceAtom, queryAtom, selectedIndexAtom } from '../../state'
 
-export function SearchBar() {
+export function SearchBar({
+  focused = true,
+  inputRef: providedInputRef,
+}: {
+  focused?: boolean
+  inputRef?: FocusTargetRef
+}) {
   const context = useTuiContext()
+  const actionsOpen = useAtomValue(actionsOpenAtom)
   const currentSection = useAtomValue(currentSectionAtom)
   const focusSearchNonce = useAtomValue(focusSearchNonceAtom)
   const query = useAtomValue(queryAtom)
   const selectedIndex = useAtomValue(selectedIndexAtom)
   const visibility = useAtomValue(effectiveVisibilityAtom)
-  const rows = useAtomValue(visibleRowsAtom)
-  const inputRef = useRef<{ focus?: () => void } | null>(null)
+  const rows = useAtomValue(currentRowsAtom)
+  const localInputRef = useRef<FocusTargetRef['current']>(null)
+  const inputRef = providedInputRef ?? localInputRef
 
   useEffect(() => {
+    if (!focused) {
+      return
+    }
+
     inputRef.current?.focus?.()
-  }, [focusSearchNonce, selectedIndex, visibility, rows.length])
+  }, [focusSearchNonce, focused, selectedIndex, visibility, rows.length])
 
   return (
     <box
@@ -34,11 +46,11 @@ export function SearchBar() {
     >
       <box style={{ justifyContent: 'center' }} width="100%">
         <input
-          focused
+          focused={focused}
           ref={inputRef}
           onInput={(value) => handleQueryChange(context, value)}
           onSubmit={() => handleQuerySubmit(context)}
-          placeholder={getPlaceholder(currentSection)}
+          placeholder={getPlaceholder(currentSection, actionsOpen)}
           value={query}
         />
       </box>

@@ -1,4 +1,4 @@
-import { createCliRenderer } from '@opentui/core'
+import { ConsolePosition, createCliRenderer } from '@opentui/core'
 import { makeBrowseKeymap } from '@harbour/keymap'
 import { KeymapProvider } from '@opentui/keymap/react'
 import { createRoot } from '@opentui/react'
@@ -24,7 +24,15 @@ const options: TuiOptions = {
 const renderer = await createCliRenderer({
   clearOnShutdown: false,
   exitOnCtrlC: false,
+  // Debug
+  consoleOptions: {
+    position: ConsolePosition.BOTTOM,
+    sizePercent: 30,
+  },
 })
+
+// Show the debugger
+renderer.console.toggle()
 
 const context: TuiAppContext = {
   options,

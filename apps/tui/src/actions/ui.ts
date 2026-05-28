@@ -1,6 +1,8 @@
 import type { TuiAppContext } from '../app-context'
 import { clampIndex } from '../helpers/selection'
 import {
+  actionSelectedIndexAtom,
+  actionsOpenAtom,
   focusSearchNonceAtom,
   hoveredIndexAtom,
   noticeAtom,
@@ -8,22 +10,26 @@ import {
   selectedIndexAtom,
 } from '../state'
 
-import { handleSelect, loadProjects } from './index'
+import { handleBrowseSelect, loadProjects } from './index'
 
 export function handleQueryChange(context: TuiAppContext, value: string) {
   context.store.set(queryAtom, value)
-  context.store.set(selectedIndexAtom, 0)
+
+  if (!context.store.get(actionsOpenAtom)) {
+    context.store.set(selectedIndexAtom, 0)
+  }
+
   context.store.set(noticeAtom, null)
 }
 
 export function handleQuerySubmit(context: TuiAppContext) {
-  handleSelect(context)
+  handleBrowseSelect(context)
 }
 
 export function handleRowClick(context: TuiAppContext, index: number) {
   context.store.set(selectedIndexAtom, index)
   context.store.set(focusSearchNonceAtom, (current) => current + 1)
-  handleSelect(context)
+  handleBrowseSelect(context)
 }
 
 export function handleRowHover(context: TuiAppContext, index: number | null) {
@@ -31,6 +37,11 @@ export function handleRowHover(context: TuiAppContext, index: number | null) {
 }
 
 export function clampSelectedIndex(context: TuiAppContext, rowCount: number) {
+  if (context.store.get(actionsOpenAtom)) {
+    context.store.set(actionSelectedIndexAtom, (current) => clampIndex(current, rowCount))
+    return
+  }
+
   context.store.set(selectedIndexAtom, (current) => clampIndex(current, rowCount))
 }
 
