@@ -1,12 +1,12 @@
-import { ConsolePosition, createCliRenderer } from '@opentui/core'
-import { makeBrowseKeymap } from '@harbour/keymap'
+import { createCliRenderer } from '@opentui/core'
+import { makeAppKeymap } from '@harbour/keymap'
 import { KeymapProvider } from '@opentui/keymap/react'
 import { createRoot } from '@opentui/react'
 import { Provider, createStore } from 'jotai'
 
-import { createBrowseCommandHandler } from './actions'
+import { createSurfaceCommandHandler } from './actions/dispatch'
 import { App } from './app'
-import { TuiContextProvider, type TuiAppContext } from './app-context'
+import { TuiServicesProvider, type TuiServices } from './app-context'
 import { readArgValue } from './helpers/args'
 import type { TuiOptions } from './types'
 
@@ -25,31 +25,30 @@ const renderer = await createCliRenderer({
   clearOnShutdown: false,
   exitOnCtrlC: false,
   // Debug
-  consoleOptions: {
-    position: ConsolePosition.BOTTOM,
-    sizePercent: 30,
-  },
+  // consoleOptions: {
+  //   position: ConsolePosition.BOTTOM,
+  //   sizePercent: 30,
+  // },
 })
 
 // Show the debugger
-renderer.console.toggle()
+// renderer.console.toggle()
 
-const context: TuiAppContext = {
+const services: TuiServices = {
   options,
   renderer,
-  store,
 }
 
-const keymap = makeBrowseKeymap(renderer, {
-  onCommand: createBrowseCommandHandler(context),
+const keymap = makeAppKeymap(renderer, {
+  onCommand: createSurfaceCommandHandler(services, store),
 })
 
 createRoot(renderer).render(
   <Provider store={store}>
-    <TuiContextProvider value={context}>
+    <TuiServicesProvider value={services}>
       <KeymapProvider keymap={keymap}>
-        <App context={context} />
+        <App />
       </KeymapProvider>
-    </TuiContextProvider>
+    </TuiServicesProvider>
   </Provider>,
 )

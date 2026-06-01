@@ -1,39 +1,38 @@
+import type { ScrollBoxRenderable } from '@opentui/core'
 import type { HarbourRow } from '@harbour/domain'
-import { useAtomValue } from 'jotai'
 import { useEffect, useRef } from 'react'
 
-import { handleRowClick, handleRowHover } from '../../actions'
-import { useTuiContext } from '../../app-context'
 import { theme } from '../../config/theme'
+import { useBrowseList } from '../../hooks/useBrowseList'
 import { capitalize } from '../../helpers/labels'
-import { currentSectionAtom, hoveredIndexAtom, loadingAtom, selectedIndexAtom } from '../../state'
 import { RowLine } from '../row-line'
 import { StatusLine } from '../status-line'
 
 type ResultsListProps = {
   emptyLabel?: string
   isLoading?: boolean
+  onRowSelect: () => void
   rows: readonly HarbourRow[]
 }
 
-export function ResultsList({ emptyLabel, isLoading: forceLoading = false, rows }: ResultsListProps) {
-  const context = useTuiContext()
-  const currentSection = useAtomValue(currentSectionAtom)
-  const hoveredIndex = useAtomValue(hoveredIndexAtom)
-  const isLoading = useAtomValue(loadingAtom)
-  const selectedIndex = useAtomValue(selectedIndexAtom)
-  const scrollboxRef = useRef<{ scrollChildIntoView?: (childId: string) => void } | null>(null)
+export function ResultsList({
+  emptyLabel,
+  isLoading: forceLoading = false,
+  onRowSelect,
+  rows,
+}: ResultsListProps) {
+  const { currentSection, hoveredId, isLoading, onHoverRow, onSelectRow, selectedId } =
+    useBrowseList()
+  const scrollboxRef = useRef<ScrollBoxRenderable | null>(null)
   const showLoading = forceLoading || isLoading
 
   useEffect(() => {
-    const row = rows[selectedIndex]
-
-    if (!row) {
+    if (!selectedId) {
       return
     }
 
-    scrollboxRef.current?.scrollChildIntoView?.(`row:${row.id}`)
-  }, [rows, selectedIndex])
+    scrollboxRef.current?.scrollChildIntoView?.(`row:${selectedId}`)
+  }, [selectedId])
 
   return (
     <scrollbox
@@ -60,14 +59,16 @@ export function ResultsList({ emptyLabel, isLoading: forceLoading = false, rows 
         />
       ) : null}
       {!showLoading
-        ? rows.map((row, index) => (
+        ? rows.map((row) => (
             <box id={`row:${row.id}`} key={row.id} width="100%">
               <RowLine
-                hoveredIndex={hoveredIndex}
-                index={index}
-                isSelected={index === selectedIndex}
-                onRowClick={(rowIndex) => handleRowClick(context, rowIndex)}
-                onRowHover={(rowIndex) => handleRowHover(context, rowIndex)}
+                isHovered={hoveredId === row.id}
+                isSelected={selectedId === row.id}
+                onRowClick={() => {
+                  onSelectRow(row.id)
+                  onRowSelect()
+                }}
+                onRowHover={onHoverRow}
                 row={row}
               />
             </box>

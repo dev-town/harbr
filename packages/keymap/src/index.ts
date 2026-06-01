@@ -1,1 +1,1 @@
-export * from './browse-keymap'
+export * from './app-keymap'

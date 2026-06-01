@@ -6,17 +6,15 @@ import { getKindChip } from './utils/get-kind-chip'
 import { getStatusChip } from './utils/get-status-chip'
 
 type RowLineProps = {
-  hoveredIndex: number | null
-  index: number
+  isHovered: boolean
   isSelected: boolean
-  onRowClick: (index: number) => void
-  onRowHover: (index: number | null) => void
+  onRowClick: () => void
+  onRowHover: (rowId: string | null) => void
   row: HarbourRow
 }
 
 export function RowLine({
-  hoveredIndex,
-  index,
+  isHovered,
   isSelected,
   onRowClick,
   onRowHover,
@@ -25,7 +23,6 @@ export function RowLine({
   const status = getStatusChip(row)
   const kind = getKindChip(row)
   const label = truncate(row.label, 44)
-  const isHovered = hoveredIndex === index
   const backgroundColor = isSelected
     ? theme.selection
     : isHovered
@@ -34,9 +31,9 @@ export function RowLine({
 
   return (
     <box
-      onMouseDown={() => onRowClick(index)}
+      onMouseDown={onRowClick}
       onMouseOut={() => onRowHover(null)}
-      onMouseOver={() => onRowHover(index)}
+      onMouseOver={() => onRowHover(row.id)}
       paddingLeft={1}
       paddingRight={1}
       style={{ backgroundColor }}

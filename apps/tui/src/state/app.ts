@@ -1,12 +1,13 @@
 import type { VisibilityFilter } from '@harbour/domain'
 import { atom } from 'jotai'
 
-export const loadingAtom = atom(true)
+export const isLoadingAtom = atom(true)
 export const noticeAtom = atom<string | null>(null)
-export const actionsOpenAtom = atom(false)
-export const actionSelectedIndexAtom = atom(0)
-export const focusSearchNonceAtom = atom(0)
-export const hoveredIndexAtom = atom<number | null>(null)
-export const queryAtom = atom('')
-export const selectedIndexAtom = atom(0)
-export const visibilityAtom = atom<VisibilityFilter>('active')
+export const isActionsOpenAtom = atom(false)
+export const selectedActionRowIdAtom = atom<string | null>(null)
+export const browseSearchFocusNonceAtom = atom(0)
+export const hoveredActionRowIdAtom = atom<string | null>(null)
+export const browseQueryAtom = atom('')
+export const selectedBrowseRowIdAtom = atom<string | null>(null)
+export const hoveredBrowseRowIdAtom = atom<string | null>(null)
+export const browseVisibilityAtom = atom<VisibilityFilter>('active')

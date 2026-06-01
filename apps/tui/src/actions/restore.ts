@@ -1,14 +1,14 @@
 import type { HarbourContext, ProjectSummary } from '@harbour/domain'
 
-import type { TuiAppContext } from '../app-context'
+import type { TuiServices, TuiStore } from '../app-context'
 import { listWorkspaceSummaries, loadCurrentRuntime } from '../data'
-import { clampIndex } from '../helpers/selection'
-import { currentSectionAtom, moduleRowsAtom, selectedIndexAtom, selectedProjectIdAtom, workspaceRowsAtom } from '../state'
+import { currentSectionAtom, moduleRowsAtom, selectedBrowseRowIdAtom, selectedProjectIdAtom, workspaceRowsAtom } from '../state'
 import { mapWorkspaceSummaryToRow } from '../transforms'
 import { openDefaultWorkspaceModules, openModules, openWorkspaces } from './drilldown'
 
 export async function restoreUiContext(
-  context: TuiAppContext,
+  services: TuiServices,
+  store: TuiStore,
   savedContext: HarbourContext,
   projects: readonly ProjectSummary[],
 ) {
@@ -20,19 +20,17 @@ export async function restoreUiContext(
     return
   }
 
-  const projectIndex = projects.findIndex((candidate) => candidate.id === project.id)
-  context.store.set(selectedIndexAtom, clampIndex(projectIndex, projects.length))
+  store.set(selectedBrowseRowIdAtom, project.id)
 
   if (savedContext.workspaceId && project.hasModules) {
     // TODO: prefer workspaces view instead when sticky context points at a project that no longer has module config.
-    await openModules(context, project.id, savedContext.workspaceId)
+    await openModules(services, store, project.id, savedContext.workspaceId)
 
     if (savedContext.moduleId) {
-      const moduleRows = context.store.get(moduleRowsAtom)
-      const moduleIndex = moduleRows.findIndex((row) => row.moduleId === savedContext.moduleId)
+      const moduleRow = store.get(moduleRowsAtom).find((row) => row.moduleId === savedContext.moduleId)
 
-      if (moduleIndex >= 0) {
-        context.store.set(selectedIndexAtom, moduleIndex)
+      if (moduleRow) {
+        store.set(selectedBrowseRowIdAtom, moduleRow.id)
       }
     }
 
@@ -40,14 +38,13 @@ export async function restoreUiContext(
   }
 
   if (project.hasWorkspaces) {
-    await openWorkspaces(context, project.id)
+    await openWorkspaces(services, store, project.id)
 
     if (savedContext.workspaceId) {
-      const workspaceRows = context.store.get(workspaceRowsAtom)
-      const workspaceIndex = workspaceRows.findIndex((row) => row.workspaceId === savedContext.workspaceId)
+      const workspaceRow = store.get(workspaceRowsAtom).find((row) => row.workspaceId === savedContext.workspaceId)
 
-      if (workspaceIndex >= 0) {
-        context.store.set(selectedIndexAtom, workspaceIndex)
+      if (workspaceRow) {
+        store.set(selectedBrowseRowIdAtom, workspaceRow.id)
       }
     }
 
@@ -55,12 +52,13 @@ export async function restoreUiContext(
   }
 
   if (project.hasModules) {
-    await openDefaultWorkspaceModules(context, project.id)
+    await openDefaultWorkspaceModules(services, store, project.id)
   }
 }
 
 export async function restoreCurrentRuntime(
-  context: TuiAppContext,
+  services: TuiServices,
+  store: TuiStore,
   currentRuntime: Awaited<ReturnType<typeof loadCurrentRuntime>>,
   projects: readonly ProjectSummary[],
 ) {
@@ -74,14 +72,13 @@ export async function restoreCurrentRuntime(
     return false
   }
 
-  const projectIndex = projects.findIndex((candidate) => candidate.id === project.id)
-  context.store.set(selectedIndexAtom, clampIndex(projectIndex, projects.length))
+  store.set(selectedBrowseRowIdAtom, project.id)
 
   if (currentRuntime.scope === 'project') {
     return true
   }
 
-  const workspaces = await listWorkspaceSummaries(project.id, context.options.dbPath)
+  const workspaces = await listWorkspaceSummaries(project.id, services.options.dbPath)
   const workspace = currentRuntime.workspaceName
     ? workspaces.find((candidate) => candidate.name === currentRuntime.workspaceName)
     : undefined
@@ -90,27 +87,26 @@ export async function restoreCurrentRuntime(
     return false
   }
 
-  context.store.set(workspaceRowsAtom, workspaces.map(mapWorkspaceSummaryToRow))
-  context.store.set(selectedProjectIdAtom, project.id)
-  context.store.set(currentSectionAtom, 'workspaces')
+  store.set(workspaceRowsAtom, workspaces.map(mapWorkspaceSummaryToRow))
+  store.set(selectedProjectIdAtom, project.id)
+  store.set(currentSectionAtom, 'workspaces')
 
-  const workspaceIndex = workspaces.findIndex((candidate) => candidate.id === workspace.id)
-  context.store.set(selectedIndexAtom, clampIndex(workspaceIndex, workspaces.length))
+  store.set(selectedBrowseRowIdAtom, workspace.id)
 
   if (currentRuntime.scope === 'workspace') {
     return true
   }
 
-  await openModules(context, project.id, workspace.id, {
+  await openModules(services, store, project.id, workspace.id, {
     implicitWorkspace: workspace.isDefault && !project.hasWorkspaces,
     workspaceSummaries: workspaces,
   })
 
-  const moduleRows = context.store.get(moduleRowsAtom)
-  const moduleIndex = moduleRows.findIndex((row) => row.label === currentRuntime.moduleName)
+  const moduleRows = store.get(moduleRowsAtom)
+  const moduleRow = moduleRows.find((row) => row.label === currentRuntime.moduleName)
 
-  if (moduleIndex >= 0) {
-    context.store.set(selectedIndexAtom, moduleIndex)
+  if (moduleRow) {
+    store.set(selectedBrowseRowIdAtom, moduleRow.id)
     return true
   }
 

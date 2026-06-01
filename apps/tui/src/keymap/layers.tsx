@@ -1,86 +1,49 @@
-import { useAtomValue } from 'jotai'
+import { useAtomValue, useStore } from 'jotai'
 import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 
-import { useTuiContext } from '../app-context'
-import type { FocusTargetRef, SurfaceHandlers, SurfaceId } from '../state'
-import { activeSurfaceAtom, globalHandlersAtom, surfaceStackAtom } from '../state'
-
-export function GlobalLayer({ handlers }: { handlers: SurfaceHandlers }) {
-  const context = useTuiContext()
-  const tokenRef = useRef<symbol | null>(null)
-
-  if (!tokenRef.current) {
-    tokenRef.current = Symbol('global-layer')
-  }
-
-  useEffect(() => {
-    const token = tokenRef.current!
-
-    context.store.set(globalHandlersAtom, (current) => [
-      ...current.filter((entry) => entry.token !== token),
-      { token, handlers },
-    ])
-
-    return () => {
-      context.store.set(globalHandlersAtom, (current) =>
-        current.filter((entry) => entry.token !== token),
-      )
-    }
-  }, [context, handlers])
-
-  return null
-}
+import { useTuiServices } from '../hooks/useTuiServices'
+import type { FocusTargetRef, SurfaceId } from '../state'
+import {
+  actionsFocusTargetRefAtom,
+  activeFocusTargetAtom,
+  browserFocusTargetRefAtom,
+} from '../state'
 
 export function Surface({
   active,
   children,
   focusTargetRef,
-  handlers,
   id,
 }: {
   active: boolean
   children?: ReactNode
   focusTargetRef?: FocusTargetRef
-  handlers: SurfaceHandlers
   id: SurfaceId
 }) {
-  const context = useTuiContext()
-  const tokenRef = useRef<symbol | null>(null)
-
-  if (!tokenRef.current) {
-    tokenRef.current = Symbol(id)
-  }
+  const store = useStore()
 
   useEffect(() => {
-    const token = tokenRef.current!
+    const focusTargetAtom = id === 'actions' ? actionsFocusTargetRefAtom : browserFocusTargetRefAtom
 
     if (!active) {
-      context.store.set(surfaceStackAtom, (current) => current.filter((entry) => entry.token !== token))
+      store.set(focusTargetAtom, null)
       return
     }
 
-    context.store.set(surfaceStackAtom, (current) => [
-      ...current.filter((entry) => entry.token !== token),
-      {
-        token,
-        id,
-        handlers,
-        ...(focusTargetRef ? { focusTargetRef } : {}),
-      },
-    ])
+    store.set(focusTargetAtom, focusTargetRef ?? null)
 
     return () => {
-      context.store.set(surfaceStackAtom, (current) => current.filter((entry) => entry.token !== token))
+      store.set(focusTargetAtom, null)
     }
-  }, [active, context, focusTargetRef, handlers, id])
+  }, [active, focusTargetRef, id, store])
 
   return active ? <>{children}</> : null
 }
 
 export function SurfaceFocusManager() {
-  const context = useTuiContext()
-  const activeSurface = useAtomValue(activeSurfaceAtom)
+  const services = useTuiServices()
+  const activeFocusTarget = useAtomValue(activeFocusTargetAtom)
   const previousTargetRef = useRef<FocusTargetRef['current']>(null)
 
   useEffect(() => {
@@ -89,10 +52,10 @@ export function SurfaceFocusManager() {
     if (previousTarget && !previousTarget.isDestroyed) {
       previousTarget.blur?.()
     } else {
-      context.renderer.currentFocusedRenderable?.blur?.()
+      services.renderer.currentFocusedRenderable?.blur?.()
     }
 
-    const nextTarget = activeSurface?.focusTargetRef?.current ?? null
+    const nextTarget = activeFocusTarget
     previousTargetRef.current = nextTarget
 
     if (!nextTarget || nextTarget.isDestroyed) {
@@ -108,7 +71,7 @@ export function SurfaceFocusManager() {
     return () => {
       clearTimeout(timeout)
     }
-  }, [activeSurface, context.renderer])
+  }, [activeFocusTarget, services.renderer])
 
   return null
 }

@@ -10,14 +10,14 @@ export type HarbourContext = {
 
 export const harbourCommandIds = {
   appQuit: 'app.quit',
-  browseBack: 'browse.back',
-  browseDown: 'browse.down',
-  browseFocusSearch: 'browse.focus_search',
-  browseOpenActions: 'browse.open_actions',
-  browseRefresh: 'browse.refresh',
-  browseSelect: 'browse.select',
-  browseToggleVisibility: 'browse.toggle_visibility',
-  browseUp: 'browse.up',
+  surfaceBack: 'surface.back',
+  surfaceDown: 'surface.down',
+  surfaceFocusSearch: 'surface.focus_search',
+  surfaceOpenActions: 'surface.open_actions',
+  surfaceRefresh: 'surface.refresh',
+  surfaceSelect: 'surface.select',
+  surfaceToggleVisibility: 'surface.toggle_visibility',
+  surfaceUp: 'surface.up',
 } as const
 
 export type HarbourCommandId =

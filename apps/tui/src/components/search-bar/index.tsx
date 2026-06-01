@@ -1,37 +1,24 @@
-import { useAtomValue } from 'jotai'
-import { useEffect, useRef } from 'react'
+import type { InputRenderable } from '@opentui/core'
+import { useRef } from 'react'
 
-import { handleQueryChange, handleQuerySubmit } from '../../actions'
 import { theme } from '../../config/theme'
-import { useTuiContext } from '../../app-context'
-import { getPlaceholder } from '../../helpers/labels'
-import { actionsOpenAtom, currentRowsAtom, currentSectionAtom, effectiveVisibilityAtom, type FocusTargetRef, focusSearchNonceAtom, queryAtom, selectedIndexAtom } from '../../state'
+import { useSearchState } from '../../hooks/useSearchState'
 
 export function SearchBar({
   focused = true,
   inputRef: providedInputRef,
+  onSubmit,
 }: {
   focused?: boolean
-  inputRef?: FocusTargetRef
+  inputRef?: { current: InputRenderable | null }
+  onSubmit: () => void
 }) {
-  const context = useTuiContext()
-  const actionsOpen = useAtomValue(actionsOpenAtom)
-  const currentSection = useAtomValue(currentSectionAtom)
-  const focusSearchNonce = useAtomValue(focusSearchNonceAtom)
-  const query = useAtomValue(queryAtom)
-  const selectedIndex = useAtomValue(selectedIndexAtom)
-  const visibility = useAtomValue(effectiveVisibilityAtom)
-  const rows = useAtomValue(currentRowsAtom)
-  const localInputRef = useRef<FocusTargetRef['current']>(null)
+  const localInputRef = useRef<InputRenderable | null>(null)
   const inputRef = providedInputRef ?? localInputRef
-
-  useEffect(() => {
-    if (!focused) {
-      return
-    }
-
-    inputRef.current?.focus?.()
-  }, [focusSearchNonce, focused, selectedIndex, visibility, rows.length])
+  const { onChangeQuery, placeholder, query } = useSearchState({
+    focused,
+    inputRef,
+  })
 
   return (
     <box
@@ -48,9 +35,9 @@ export function SearchBar({
         <input
           focused={focused}
           ref={inputRef}
-          onInput={(value) => handleQueryChange(context, value)}
-          onSubmit={() => handleQuerySubmit(context)}
-          placeholder={getPlaceholder(currentSection, actionsOpen)}
+          onInput={onChangeQuery}
+          onSubmit={onSubmit}
+          placeholder={placeholder}
           value={query}
         />
       </box>

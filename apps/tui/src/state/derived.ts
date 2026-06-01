@@ -2,7 +2,15 @@ import type { HarbourRow } from '@harbour/domain'
 import { atom } from 'jotai'
 
 import { currentSectionAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom } from './navigation'
-import { actionsOpenAtom, visibilityAtom, queryAtom } from './app'
+import {
+  browseQueryAtom,
+  browseVisibilityAtom,
+  hoveredActionRowIdAtom,
+  hoveredBrowseRowIdAtom,
+  isActionsOpenAtom,
+  selectedActionRowIdAtom,
+  selectedBrowseRowIdAtom,
+} from './app'
 import { actionRowsAtom, moduleRowsAtom, projectRowsAtom, workspaceRowsAtom } from './rows'
 
 export const browseRowsAtom = atom<readonly HarbourRow[]>((get) => {
@@ -20,8 +28,8 @@ export const browseRowsAtom = atom<readonly HarbourRow[]>((get) => {
 })
 
 export const visibleBrowseRowsAtom = atom<readonly HarbourRow[]>((get) => {
-  const visibility = get(visibilityAtom)
-  const query = get(queryAtom).trim().toLowerCase()
+  const visibility = get(browseVisibilityAtom)
+  const query = get(browseQueryAtom).trim().toLowerCase()
   const baseRows = get(browseRowsAtom)
   const scopedRows = visibility === 'active' ? baseRows.filter((row) => row.isActive) : [...baseRows]
 
@@ -37,15 +45,33 @@ export const visibleBrowseRowsAtom = atom<readonly HarbourRow[]>((get) => {
 })
 
 export const currentRowsAtom = atom<readonly HarbourRow[]>((get) =>
-  get(actionsOpenAtom) ? get(actionRowsAtom) : get(visibleBrowseRowsAtom),
+  get(isActionsOpenAtom) ? get(actionRowsAtom) : get(visibleBrowseRowsAtom),
+)
+
+export const currentRowCountAtom = atom((get) => get(currentRowsAtom).length)
+
+export const selectedBrowseRowAtom = atom(
+  (get) => get(visibleBrowseRowsAtom).find((row) => row.id === get(selectedBrowseRowIdAtom)) ?? null,
+)
+
+export const hoveredBrowseRowAtom = atom(
+  (get) => get(visibleBrowseRowsAtom).find((row) => row.id === get(hoveredBrowseRowIdAtom)) ?? null,
+)
+
+export const selectedActionRowAtom = atom(
+  (get) => get(actionRowsAtom).find((row) => row.id === get(selectedActionRowIdAtom)) ?? null,
+)
+
+export const hoveredActionRowAtom = atom(
+  (get) => get(actionRowsAtom).find((row) => row.id === get(hoveredActionRowIdAtom)) ?? null,
 )
 
 export const effectiveVisibilityAtom = atom((get) => {
-  if (get(actionsOpenAtom)) {
+  if (get(isActionsOpenAtom)) {
     return 'all'
   }
 
-  const visibility = get(visibilityAtom)
+  const visibility = get(browseVisibilityAtom)
   const rows = get(browseRowsAtom)
 
   if (visibility === 'all') {
@@ -56,10 +82,10 @@ export const effectiveVisibilityAtom = atom((get) => {
 })
 
 export const footerHintsAtom = atom((get) => {
-  const query = get(queryAtom)
+  const query = get(browseQueryAtom)
   const currentSection = get(currentSectionAtom)
 
-  if (get(actionsOpenAtom)) {
+  if (get(isActionsOpenAtom)) {
     return [
       { key: '↑↓', label: 'move' },
       { key: 'Enter', label: 'run action' },

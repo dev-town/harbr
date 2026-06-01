@@ -1,33 +1,34 @@
-import type { TuiAppContext } from '../app-context'
+import type { TuiServices, TuiStore } from '../app-context'
 import { listModuleSummaries, listWorkspaceSummaries } from '../data'
 import { formatError } from '../helpers/errors'
 import { currentSectionAtom, moduleRowsAtom, noticeAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom, workspaceRowsAtom } from '../state'
 import { mapModuleSummaryToRow, mapWorkspaceSummaryToRow } from '../transforms'
-import { clearNotice, resetQuery, resetSelection, setLoading } from './state'
+import { clearNotice, resetQuery, resetSelection, setLoading } from './store'
 
-export async function openWorkspaces(context: TuiAppContext, projectId: string) {
-  setLoading(context, true)
-  clearNotice(context)
+export async function openWorkspaces(services: TuiServices, store: TuiStore, projectId: string) {
+  setLoading(store, true)
+  clearNotice(store)
 
   try {
-    const summaries = await listWorkspaceSummaries(projectId, context.options.dbPath)
-    context.store.set(moduleRowsAtom, [])
-    context.store.set(workspaceRowsAtom, summaries.map(mapWorkspaceSummaryToRow))
-    context.store.set(selectedProjectIdAtom, projectId)
-    context.store.set(selectedWorkspaceIdAtom, null)
-    context.store.set(selectedWorkspaceImplicitAtom, false)
-    context.store.set(currentSectionAtom, 'workspaces')
-    resetSelection(context)
-    resetQuery(context)
+    const summaries = await listWorkspaceSummaries(projectId, services.options.dbPath)
+    store.set(moduleRowsAtom, [])
+    store.set(workspaceRowsAtom, summaries.map(mapWorkspaceSummaryToRow))
+    store.set(selectedProjectIdAtom, projectId)
+    store.set(selectedWorkspaceIdAtom, null)
+    store.set(selectedWorkspaceImplicitAtom, false)
+    store.set(currentSectionAtom, 'workspaces')
+    resetSelection(store)
+    resetQuery(store)
   } catch (error) {
-    context.store.set(noticeAtom, formatError(error))
+    store.set(noticeAtom, formatError(error))
   } finally {
-    setLoading(context, false)
+    setLoading(store, false)
   }
 }
 
 export async function openModules(
-  context: TuiAppContext,
+  services: TuiServices,
+  store: TuiStore,
   projectId: string,
   workspaceId: string,
   openOptions?: {
@@ -35,44 +36,53 @@ export async function openModules(
     workspaceSummaries?: Awaited<ReturnType<typeof listWorkspaceSummaries>>
   },
 ) {
-  setLoading(context, true)
-  clearNotice(context)
+  setLoading(store, true)
+  clearNotice(store)
 
   try {
     const [workspaceSummaries, moduleSummaries] = await Promise.all([
       openOptions?.workspaceSummaries
         ? Promise.resolve(openOptions.workspaceSummaries)
-        : listWorkspaceSummaries(projectId, context.options.dbPath),
-      listModuleSummaries(workspaceId, context.options.dbPath),
+        : listWorkspaceSummaries(projectId, services.options.dbPath),
+      listModuleSummaries(workspaceId, services.options.dbPath),
     ])
 
-    context.store.set(workspaceRowsAtom, workspaceSummaries.map(mapWorkspaceSummaryToRow))
-    context.store.set(moduleRowsAtom, moduleSummaries.map(mapModuleSummaryToRow))
-    context.store.set(selectedProjectIdAtom, projectId)
-    context.store.set(selectedWorkspaceIdAtom, workspaceId)
-    context.store.set(selectedWorkspaceImplicitAtom, openOptions?.implicitWorkspace === true)
-    context.store.set(currentSectionAtom, 'modules')
-    resetSelection(context)
-    resetQuery(context)
+    store.set(workspaceRowsAtom, workspaceSummaries.map(mapWorkspaceSummaryToRow))
+    store.set(moduleRowsAtom, moduleSummaries.map(mapModuleSummaryToRow))
+    store.set(selectedProjectIdAtom, projectId)
+    store.set(selectedWorkspaceIdAtom, workspaceId)
+    store.set(selectedWorkspaceImplicitAtom, openOptions?.implicitWorkspace === true)
+    store.set(currentSectionAtom, 'modules')
+    resetSelection(store)
+    resetQuery(store)
   } catch (error) {
-    context.store.set(noticeAtom, formatError(error))
+    store.set(noticeAtom, formatError(error))
   } finally {
-    setLoading(context, false)
+    setLoading(store, false)
   }
 }
 
-export async function openDefaultWorkspaceModules(context: TuiAppContext, projectId: string) {
-  const summaries = await listWorkspaceSummaries(projectId, context.options.dbPath)
-  const defaultWorkspace = summaries.find((workspace) => workspace.isDefault)
+export async function openDefaultWorkspaceModules(services: TuiServices, store: TuiStore, projectId: string) {
+  setLoading(store, true)
+  clearNotice(store)
 
-  if (!defaultWorkspace) {
-    // TODO: surface a clearer empty-state when project module config exists but no default workspace was persisted.
-    context.store.set(noticeAtom, 'No default workspace found')
-    return
+  try {
+    const summaries = await listWorkspaceSummaries(projectId, services.options.dbPath)
+    const defaultWorkspace = summaries.find((workspace) => workspace.isDefault)
+
+    if (!defaultWorkspace) {
+      // TODO: surface a clearer empty-state when project module config exists but no default workspace was persisted.
+      store.set(noticeAtom, 'No default workspace found')
+      return
+    }
+
+    await openModules(services, store, projectId, defaultWorkspace.id, {
+      implicitWorkspace: true,
+      workspaceSummaries: summaries,
+    })
+  } catch (error) {
+    store.set(noticeAtom, formatError(error))
+  } finally {
+    setLoading(store, false)
   }
-
-  await openModules(context, projectId, defaultWorkspace.id, {
-    implicitWorkspace: true,
-    workspaceSummaries: summaries,
-  })
 }

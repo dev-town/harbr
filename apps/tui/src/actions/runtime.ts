@@ -3,23 +3,24 @@ import { openOrCreateRuntime } from '@harbour/runtime-tmux'
 import { Effect } from 'effect'
 import { join } from 'node:path'
 
-import type { TuiAppContext } from '../app-context'
+import type { TuiServices, TuiStore } from '../app-context'
 import { saveUiContext } from '../data'
 import { formatError } from '../helpers/errors'
 import { noticeAtom, projectRowsAtom, workspaceRowsAtom } from '../state'
-import { clearNotice, setLoading } from './state'
+import { clearNotice, setLoading } from './store'
 
-export async function persistContext(context: TuiAppContext, nextContext: HarbourContext) {
+export async function persistContext(services: TuiServices, nextContext: HarbourContext) {
   try {
-    await saveUiContext(nextContext, context.options.dbPath)
+    await saveUiContext(nextContext, services.options.dbPath)
   } catch {
     // TODO: route persistence failures through observability once that package is wired into the TUI.
   }
 }
 
-export async function openProjectRoot(context: TuiAppContext, row: ProjectRow) {
+export async function openProjectRoot(services: TuiServices, store: TuiStore, row: ProjectRow) {
   await openRuntimeForTarget(
-    context,
+    services,
+    store,
     {
       projectName: row.label,
       workspaceName: null,
@@ -30,16 +31,17 @@ export async function openProjectRoot(context: TuiAppContext, row: ProjectRow) {
   )
 }
 
-export async function openWorkspaceRoot(context: TuiAppContext, row: WorkspaceRow) {
-  const project = getSelectedProjectRow(context, row.projectId)
+export async function openWorkspaceRoot(services: TuiServices, store: TuiStore, row: WorkspaceRow) {
+  const project = getSelectedProjectRow(store, row.projectId)
 
   if (!project) {
-    context.store.set(noticeAtom, 'Project not found')
+    store.set(noticeAtom, 'Project not found')
     return
   }
 
   await openRuntimeForTarget(
-    context,
+    services,
+    store,
     {
       projectName: project.label,
       workspaceName: row.label,
@@ -53,17 +55,18 @@ export async function openWorkspaceRoot(context: TuiAppContext, row: WorkspaceRo
   )
 }
 
-export async function openModuleRuntime(context: TuiAppContext, row: ModuleRow) {
-  const project = getSelectedProjectRow(context, row.projectId)
-  const workspace = getSelectedWorkspaceRow(context, row.workspaceId)
+export async function openModuleRuntime(services: TuiServices, store: TuiStore, row: ModuleRow) {
+  const project = getSelectedProjectRow(store, row.projectId)
+  const workspace = getSelectedWorkspaceRow(store, row.workspaceId)
 
   if (!project || !workspace) {
-    context.store.set(noticeAtom, 'Workspace context missing')
+    store.set(noticeAtom, 'Workspace context missing')
     return
   }
 
   await openRuntimeForTarget(
-    context,
+    services,
+    store,
     {
       projectName: project.label,
       workspaceName: workspace.label,
@@ -79,7 +82,8 @@ export async function openModuleRuntime(context: TuiAppContext, row: ModuleRow) 
 }
 
 export async function openRuntimeForTarget(
-  context: TuiAppContext,
+  services: TuiServices,
+  store: TuiStore,
   target: {
     cwd: string
     moduleName: string | null
@@ -88,24 +92,24 @@ export async function openRuntimeForTarget(
   },
   nextContext: HarbourContext,
 ) {
-  setLoading(context, true)
-  clearNotice(context)
+  setLoading(store, true)
+  clearNotice(store)
 
   try {
-    await persistContext(context, nextContext)
+    await persistContext(services, nextContext)
     await Effect.runPromise(openOrCreateRuntime(target))
-    context.renderer.destroy()
+    services.renderer.destroy()
   } catch (error) {
-    context.store.set(noticeAtom, formatError(error))
+    store.set(noticeAtom, formatError(error))
   } finally {
-    setLoading(context, false)
+    setLoading(store, false)
   }
 }
 
-function getSelectedProjectRow(context: TuiAppContext, projectId: string) {
-  return context.store.get(projectRowsAtom).find((row) => row.projectId === projectId) ?? null
+function getSelectedProjectRow(store: TuiStore, projectId: string) {
+  return store.get(projectRowsAtom).find((row) => row.projectId === projectId) ?? null
 }
 
-function getSelectedWorkspaceRow(context: TuiAppContext, workspaceId: string) {
-  return context.store.get(workspaceRowsAtom).find((row) => row.workspaceId === workspaceId) ?? null
+function getSelectedWorkspaceRow(store: TuiStore, workspaceId: string) {
+  return store.get(workspaceRowsAtom).find((row) => row.workspaceId === workspaceId) ?? null
 }
