@@ -5,6 +5,7 @@ import { theme } from '../../config/theme'
 import { useBrowserSurface } from '../../hooks/useBrowserSurface'
 import { Surface } from '../../keymap/layers'
 import { ActionsModal } from '../actions-modal'
+import { CreateWorkspaceModal } from '../create-workspace-modal'
 import { ListHeader } from '../list-header'
 import { ResultsList } from '../results-list'
 import { SearchBar } from '../search-bar'
@@ -37,6 +38,7 @@ export function Browser() {
           </box>
         </box>
         <ActionsModal onSelectAction={onActionSelect} />
+        <CreateWorkspaceModal />
       </box>
     </Surface>
   )

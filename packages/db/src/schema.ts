@@ -5,6 +5,7 @@ import { createSelectSchema } from 'drizzle-zod'
 export const projects = sqliteTable('projects', {
   id: text('id').primaryKey(),
   name: text('name').notNull().unique(),
+  projectIssue: text('project_issue'),
   repoPath: text('repo_path').notNull(),
   repoKind: text('repo_kind', { enum: ['bare', 'standard'] }).notNull(),
   createdAt: integer('created_at').notNull(),
@@ -16,6 +17,7 @@ export const workspaces = sqliteTable('workspaces', {
   projectId: text('project_id')
     .notNull()
     .references(() => projects.id, { onDelete: 'cascade' }),
+  branchName: text('branch_name'),
   kind: text('kind', { enum: ['default', 'worktree'] }).notNull(),
   name: text('name').notNull(),
   workspacePath: text('workspace_path').notNull().unique(),

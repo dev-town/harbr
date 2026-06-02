@@ -75,6 +75,7 @@ export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
       return {
         id: project.id,
         name: project.name,
+        projectIssue: project.projectIssue,
         repoPath: project.repoPath,
         repoKind: project.repoKind,
         activeSessionCount: runtimeRows.filter((runtime) => runtime.projectId === project.id)
@@ -162,6 +163,7 @@ export function listWorkspaceSummaries(
       )
 
       return {
+        branchName: workspace.branchName,
         id: workspace.id,
         projectId: workspace.projectId,
         kind: workspace.kind,
@@ -231,7 +233,7 @@ export function listModuleSummaries(
 
 export function upsertProject(
   db: HarbourDatabase,
-  input: Pick<ReplaceProjectSnapshotInput, 'projectName' | 'repoKind' | 'repoPath'>,
+  input: Pick<ReplaceProjectSnapshotInput, 'projectIssue' | 'projectName' | 'repoKind' | 'repoPath'>,
 ) {
   const now = Date.now()
   const existing = db
@@ -244,6 +246,7 @@ export function upsertProject(
     db
       .update(projects)
       .set({
+        projectIssue: input.projectIssue ?? null,
         repoPath: input.repoPath,
         repoKind: input.repoKind,
         updatedAt: now,
@@ -267,6 +270,7 @@ export function upsertProject(
     .values({
       id: projectId,
       name: input.projectName,
+      projectIssue: input.projectIssue ?? null,
       repoPath: input.repoPath,
       repoKind: input.repoKind,
       createdAt: now,
@@ -369,6 +373,7 @@ function insertWorkspaces(
       .values({
         id: randomUUID(),
         projectId,
+        branchName: workspace.branchName ?? null,
         kind: workspace.kind,
         name: workspace.workspaceName,
         workspacePath: workspace.workspacePath,
@@ -451,6 +456,7 @@ function insertRuntimes(
 function mapProjectRow(row: ReturnType<typeof projectRowSchema.parse>): ProjectRecord {
   return {
     id: row.id,
+    projectIssue: row.projectIssue ?? null,
     name: row.name,
     repoPath: row.repoPath,
     repoKind: row.repoKind,
@@ -463,6 +469,7 @@ function mapWorkspaceRow(
   row: ReturnType<typeof workspaceRowSchema.parse>,
 ): WorkspaceRecord {
   return {
+    branchName: row.branchName,
     id: row.id,
     projectId: row.projectId,
     kind: row.kind,

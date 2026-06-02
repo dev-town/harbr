@@ -1,11 +1,20 @@
 import type { TuiServices, TuiStore } from '../app-context'
 import { listModuleSummaries, listWorkspaceSummaries } from '../data'
+import type { VisibilityFilter } from '@harbour/domain'
 import { formatError } from '../helpers/errors'
-import { currentSectionAtom, moduleRowsAtom, noticeAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom, workspaceRowsAtom } from '../state'
+import { browseVisibilityAtom, currentSectionAtom, moduleRowsAtom, noticeAtom, selectedBrowseRowIdAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom, workspaceRowsAtom } from '../state'
 import { mapModuleSummaryToRow, mapWorkspaceSummaryToRow } from '../transforms'
 import { clearNotice, resetQuery, resetSelection, setLoading } from './store'
 
-export async function openWorkspaces(services: TuiServices, store: TuiStore, projectId: string) {
+export async function openWorkspaces(
+  services: TuiServices,
+  store: TuiStore,
+  projectId: string,
+  openOptions?: {
+    selectedWorkspaceName?: string
+    visibility?: VisibilityFilter
+  },
+) {
   setLoading(store, true)
   clearNotice(store)
 
@@ -16,8 +25,20 @@ export async function openWorkspaces(services: TuiServices, store: TuiStore, pro
     store.set(selectedProjectIdAtom, projectId)
     store.set(selectedWorkspaceIdAtom, null)
     store.set(selectedWorkspaceImplicitAtom, false)
+    store.set(browseVisibilityAtom, openOptions?.visibility ?? 'active')
     store.set(currentSectionAtom, 'workspaces')
     resetSelection(store)
+
+    if (openOptions?.selectedWorkspaceName) {
+      const selectedWorkspace = summaries.find(
+        (workspace) => workspace.name === openOptions.selectedWorkspaceName,
+      )
+
+      if (selectedWorkspace) {
+        store.set(selectedBrowseRowIdAtom, selectedWorkspace.id)
+      }
+    }
+
     resetQuery(store)
   } catch (error) {
     store.set(noticeAtom, formatError(error))

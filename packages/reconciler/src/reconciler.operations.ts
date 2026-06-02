@@ -62,6 +62,7 @@ export function refreshConfiguredProject(
     const observation = yield* scanner.observeProject(project)
 
     yield* projectService.syncSnapshot({
+      projectIssue: observation.projectIssue ?? null,
       projectName: observation.projectName,
       repoPath: observation.repoPath,
       repoKind: observation.repoKind,

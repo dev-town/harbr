@@ -210,7 +210,7 @@ describe('observeProject', () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
 
-    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
     await mkdir(path.join(repoPath, 'apps', 'cli'), { recursive: true })
 
     const project: ProjectConfig = {
@@ -222,11 +222,13 @@ describe('observeProject', () => {
     const observation = await runObservation(observeProject(project))
 
     expect(observation).toMatchObject({
+      projectIssue: null,
       projectName: 'alpha',
       repoPath,
       repoKind: 'standard',
       workspaces: [
         {
+          branchName: 'main',
           workspaceName: 'main',
           workspacePath: repoPath,
           kind: 'default',
@@ -252,6 +254,9 @@ describe('observeProject', () => {
     }
 
     const git: GitServiceApi = {
+      createWorktree: () => Effect.die('not used'),
+      getDefaultBranch: () => Effect.die('not used'),
+      getDefaultBranchIssue: () => Effect.succeed(null),
       inspectRepo: () =>
         Effect.succeed({
           repoPath: '/tmp/alpha.git',
@@ -291,6 +296,7 @@ describe('observeProject', () => {
         ),
       ),
     ).resolves.toEqual({
+      projectIssue: null,
       projectName: 'alpha',
       repoPath: '/tmp/alpha.git',
       repoKind: 'bare',
@@ -313,7 +319,7 @@ describe('observeProject', () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
 
-    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
     await mkdir(path.join(repoPath, 'apps', 'cli'), { recursive: true })
 
     const project: ProjectConfig = {
@@ -372,6 +378,9 @@ describe('observeProject', () => {
               Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
               Layer.provide(
                 Layer.succeed(GitService, {
+                  createWorktree: () => Effect.die('not used'),
+                  getDefaultBranch: () => Effect.die('not used'),
+                  getDefaultBranchIssue: () => Effect.succeed(null),
                   inspectRepo: () =>
                     Effect.succeed({
                       repoPath,
@@ -380,6 +389,7 @@ describe('observeProject', () => {
                   listWorkspaces: () =>
                     Effect.succeed([
                       {
+                        branchName: 'main',
                         name: 'main',
                         path: repoPath,
                         kind: 'default',
@@ -393,11 +403,13 @@ describe('observeProject', () => {
         ),
       ),
     ).resolves.toEqual({
+      projectIssue: null,
       projectName: 'alpha',
       repoPath,
       repoKind: 'standard',
       workspaces: [
         {
+          branchName: 'main',
           workspaceName: 'main',
           workspacePath: repoPath,
           kind: 'default',
@@ -445,7 +457,7 @@ describe('observeProject', () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
 
-    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
 
     const project: ProjectConfig = {
       name: 'alpha',
@@ -487,6 +499,9 @@ describe('observeProject', () => {
               Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
               Layer.provide(
                 Layer.succeed(GitService, {
+                  createWorktree: () => Effect.die('not used'),
+                  getDefaultBranch: () => Effect.die('not used'),
+                  getDefaultBranchIssue: () => Effect.succeed(null),
                   inspectRepo: () =>
                     Effect.succeed({
                       repoPath,
@@ -495,6 +510,7 @@ describe('observeProject', () => {
                   listWorkspaces: () =>
                     Effect.succeed([
                       {
+                        branchName: 'main',
                         name: 'main',
                         path: repoPath,
                         kind: 'default',
@@ -508,11 +524,13 @@ describe('observeProject', () => {
         ),
       ),
     ).resolves.toEqual({
+      projectIssue: null,
       projectName: 'alpha',
       repoPath,
       repoKind: 'standard',
       workspaces: [
         {
+          branchName: 'main',
           workspaceName: 'main',
           workspacePath: repoPath,
           kind: 'default',

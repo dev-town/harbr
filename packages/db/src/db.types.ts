@@ -39,6 +39,7 @@ export type DatabaseClientApi = {
 }
 
 export type WorkspaceSnapshotInput = {
+  branchName?: string | null
   workspaceName: string
   workspacePath: string
   kind: WorkspaceKind
@@ -47,6 +48,7 @@ export type WorkspaceSnapshotInput = {
 
 export type ReplaceProjectSnapshotInput = {
   projectName: string
+  projectIssue?: string | null
   repoPath: string
   repoKind: RepoKind
   workspaces: WorkspaceSnapshotInput[]

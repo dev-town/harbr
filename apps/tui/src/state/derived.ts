@@ -156,6 +156,16 @@ export const breadcrumbAtom = atom((get) => {
   return ''
 })
 
+export const selectedProjectIssueAtom = atom((get) => {
+  const selectedProjectId = get(selectedProjectIdAtom)
+
+  if (!selectedProjectId) {
+    return null
+  }
+
+  return get(projectRowsAtom).find((row) => row.projectId === selectedProjectId)?.projectIssue ?? null
+})
+
 function getRowScore(row: HarbourRow, query: string) {
   const label = row.label.toLowerCase()
   const metadata = row.metadata?.toLowerCase() ?? ''

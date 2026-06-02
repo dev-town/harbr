@@ -1,17 +1,20 @@
 import { harbourCommandIds, type HarbourCommandId } from '@harbour/domain'
 
 import type { TuiServices, TuiStore } from '../app-context'
-import { isActionsOpenAtom } from '../state'
+import { isActionsOpenAtom, isWorktreeFormOpenAtom } from '../state'
 import {
   createActionsCommandHandlers,
   createBrowserCommandHandlers,
   createGlobalCommandHandlers,
+  createWorktreeFormCommandHandlers,
 } from '../keymap/handlers'
 
 export function dispatchCommand(services: TuiServices, store: TuiStore, commandId: HarbourCommandId) {
-  const surfaceHandlers = store.get(isActionsOpenAtom)
-    ? createActionsCommandHandlers(services, store)
-    : createBrowserCommandHandlers(services, store)
+  const surfaceHandlers = store.get(isWorktreeFormOpenAtom)
+    ? createWorktreeFormCommandHandlers(services, store)
+    : store.get(isActionsOpenAtom)
+      ? createActionsCommandHandlers(services, store)
+      : createBrowserCommandHandlers(services, store)
   const surfaceHandler = surfaceHandlers[commandId]
 
   if (surfaceHandler) {

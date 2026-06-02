@@ -8,9 +8,12 @@ import { Either, Effect } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
+  DefaultBranchNotFoundError,
   RepoNotFoundError,
   RepoNotGitError,
   RepoNotSupportedError,
+  createWorktree,
+  getDefaultBranch,
   inspectRepo,
   listWorkspaces,
   resolveWorkspacePath,
@@ -32,7 +35,7 @@ describe('inspectRepo', () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
 
-    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
 
     await expect(runSuccess(inspectRepo(repoPath))).resolves.toEqual({
       repoPath,
@@ -77,7 +80,7 @@ describe('inspectRepo', () => {
     const repoPath = path.join(tempRoot, 'repo')
     const worktreePath = path.join(tempRoot, 'worktree')
 
-    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
     await writeFile(path.join(repoPath, 'README.md'), 'hello\n', 'utf8')
     await execFileAsync('git', [
       '-C',
@@ -119,7 +122,7 @@ describe('resolveWorkspacePath', () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
 
-    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
 
     await expect(
       runWorkspaceSuccess(resolveWorkspacePath({ repoPath, kind: 'standard' })),
@@ -175,17 +178,124 @@ describe('resolveWorkspacePath', () => {
   })
 })
 
+describe('getDefaultBranch', () => {
+  it('returns current head when remote head is missing', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+
+    await execFileAsync('git', ['init', '-b', 'trunk', repoPath])
+
+    await expect(
+      Effect.runPromise(getDefaultBranch({ repoPath, kind: 'standard' })),
+    ).resolves.toBe('trunk')
+  })
+
+  it('fails when repo head is detached', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
+    await execFileAsync('git', [
+      '-C',
+      repoPath,
+      '-c',
+      'user.name=Test',
+      '-c',
+      'user.email=test@example.com',
+      'commit',
+      '--allow-empty',
+      '-m',
+      'init',
+    ])
+    await execFileAsync('git', ['-C', repoPath, 'checkout', 'HEAD~0'])
+
+    const result = await Effect.runPromise(
+      Effect.either(getDefaultBranch({ repoPath, kind: 'standard' })),
+    )
+
+    expectLeft(result, DefaultBranchNotFoundError, { repoPath })
+  })
+
+  it('fails when bare repo head points at a missing branch', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo.git')
+
+    await execFileAsync('git', ['init', '--bare', repoPath])
+
+    const result = await Effect.runPromise(
+      Effect.either(getDefaultBranch({ repoPath, kind: 'bare' })),
+    )
+
+    expectLeft(result, DefaultBranchNotFoundError, {
+      message: `Repo HEAD points to missing branch refs/heads/master`,
+      repoPath,
+    })
+  })
+})
+
+describe('createWorktree', () => {
+  it('creates a linked worktree from workspace and branch names', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+
+    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', [
+      '-C',
+      repoPath,
+      '-c',
+      'user.name=Test',
+      '-c',
+      'user.email=test@example.com',
+      'commit',
+      '--allow-empty',
+      '-m',
+      'init',
+    ])
+
+    const created = await Effect.runPromise(
+      createWorktree(
+        { repoPath, kind: 'standard' },
+        { workspaceName: 'auth', branchName: 'feat/auth' },
+      ),
+    )
+    const defaultBranch = await Effect.runPromise(getDefaultBranch({ repoPath, kind: 'standard' }))
+
+    expect(created).toMatchObject({
+      branchName: 'feat/auth',
+      kind: 'worktree',
+      name: 'auth',
+    })
+    await expect(
+      runWorkspacesSuccess(listWorkspaces({ repoPath, kind: 'standard' })),
+    ).resolves.toEqual([
+      {
+        branchName: defaultBranch,
+        name: 'main',
+        path: repoPath,
+        kind: 'default',
+      },
+      {
+        branchName: 'feat/auth',
+        name: 'auth',
+        path: created.path,
+        kind: 'worktree',
+      },
+    ])
+  })
+})
+
 describe('listWorkspaces', () => {
   it('lists default workspace for standard repos', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
 
-    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
 
     await expect(
       runWorkspacesSuccess(listWorkspaces({ repoPath, kind: 'standard' })),
     ).resolves.toEqual([
       {
+        branchName: 'main',
         name: 'main',
         path: repoPath,
         kind: 'default',
@@ -198,7 +308,7 @@ describe('listWorkspaces', () => {
     const repoPath = path.join(tempRoot, 'repo')
     const worktreePath = path.join(tempRoot, 'feature-auth')
 
-    await execFileAsync('git', ['init', repoPath])
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
     await writeFile(path.join(repoPath, 'README.md'), 'hello\n', 'utf8')
     await execFileAsync('git', [
       '-C',
@@ -237,11 +347,13 @@ describe('listWorkspaces', () => {
       runWorkspacesSuccess(listWorkspaces({ repoPath, kind: 'standard' })),
     ).resolves.toEqual([
       {
+        branchName: 'main',
         name: 'main',
         path: repoPath,
         kind: 'default',
       },
       {
+        branchName: 'feature/auth',
         name: 'feature-auth',
         path: expectedWorktreePath,
         kind: 'worktree',
@@ -268,8 +380,8 @@ async function runWorkspacesSuccess(effect: ReturnType<typeof listWorkspaces>) {
   return Effect.runPromise(effect)
 }
 
-function expectLeft(
-  result: Awaited<ReturnType<typeof runEither>>,
+function expectLeft<TLeft extends Error, TRight>(
+  result: Either.Either<TRight, TLeft>,
   ErrorType: abstract new (...args: never[]) => Error,
   shape: Record<string, unknown>,
 ) {

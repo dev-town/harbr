@@ -12,14 +12,18 @@ export function observeProjectWithGit(
 ) {
   return git.inspectRepo(project.repo).pipe(
     Effect.flatMap((repo) =>
-      git.listWorkspaces(repo).pipe(
-        Effect.flatMap((workspaces) =>
+      Effect.all({
+        projectIssue: git.getDefaultBranchIssue(repo),
+        workspaces: git.listWorkspaces(repo),
+      }).pipe(
+        Effect.flatMap(({ projectIssue, workspaces }) =>
           runtimeTmux.listRuntimes.pipe(
             Effect.flatMap(({ runtimes, runtimeIssue }) =>
               Effect.all(
                 workspaces.map((workspace) =>
                   scanProject(project, workspace.path).pipe(
                     Effect.map((scan) => ({
+                      branchName: workspace.branchName,
                       workspaceName: workspace.name,
                       workspacePath: scan.workspacePath,
                       kind: workspace.kind,
@@ -29,6 +33,7 @@ export function observeProjectWithGit(
                 ),
               ).pipe(
                 Effect.map((observedWorkspaces) => ({
+                  projectIssue,
                   projectName: project.name,
                   repoPath: repo.repoPath,
                   repoKind: repo.kind,

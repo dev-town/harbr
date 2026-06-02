@@ -1,6 +1,7 @@
 import { realpath } from 'node:fs/promises'
 
 export type WorktreeEntry = {
+  branchName: string | null
   path: string
   isBare: boolean
 }
@@ -18,8 +19,10 @@ export async function parseWorktreeList(output: string) {
     }
 
     const worktreePath = worktreeLine.slice('worktree '.length)
+    const branchLine = lines.find((line) => line.startsWith('branch refs/heads/'))
 
     entries.push({
+      branchName: branchLine ? branchLine.slice('branch refs/heads/'.length) : null,
       path: await realpath(worktreePath),
       isBare: lines.includes('bare'),
     })

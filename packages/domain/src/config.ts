@@ -45,6 +45,7 @@ export type RuntimeIssue = 'tmux_not_found'
 
 export type ProjectObservation = {
   projectName: string
+  projectIssue?: string | null
   repoPath: string
   repoKind: RepoKind
   workspaces: WorkspaceObservation[]
@@ -53,6 +54,7 @@ export type ProjectObservation = {
 }
 
 export type WorkspaceObservation = {
+  branchName?: string | null
   workspaceName: string
   workspacePath: string
   kind: WorkspaceKind
@@ -61,6 +63,7 @@ export type WorkspaceObservation = {
 
 export type ProjectRecord = {
   id: string
+  projectIssue?: string | null
   name: string
   repoPath: string
   repoKind: RepoKind
@@ -69,6 +72,7 @@ export type ProjectRecord = {
 }
 
 export type WorkspaceRecord = {
+  branchName?: string | null
   id: string
   projectId: string
   kind: WorkspaceKind
@@ -102,6 +106,7 @@ export type RuntimeRecord = {
 
 export type ProjectSummary = {
   id: string
+  projectIssue?: string | null
   name: string
   repoPath: string
   repoKind: RepoKind
@@ -112,6 +117,7 @@ export type ProjectSummary = {
 }
 
 export type WorkspaceSummary = {
+  branchName?: string | null
   id: string
   projectId: string
   kind: WorkspaceKind

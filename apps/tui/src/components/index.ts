@@ -1,4 +1,5 @@
 export * from './actions-modal'
 export * from './browser'
+export * from './create-workspace-modal'
 export * from './footer-row'
 export * from './notice-line'

@@ -2,6 +2,7 @@ import { harbourCommandIds, type HarbourCommandId } from '@harbour/domain'
 
 import type { TuiServices, TuiStore } from '../app-context'
 import {
+  backWorktreeFormAtom,
   closeActionsMenuAtom,
   focusBrowseSearchAtom,
   moveActionSelectionAtom,
@@ -12,6 +13,7 @@ import {
 import { handleActionSelect } from '../actions/actions'
 import { handleBrowseBack, handleBrowseSelect } from '../actions/browser'
 import { loadProjects } from '../actions/refresh'
+import { handleWorktreeFormSubmit } from '../actions/worktree'
 
 export type CommandHandlers = Partial<Record<HarbourCommandId, () => void | Promise<void>>>
 
@@ -25,6 +27,16 @@ export function createBrowserCommandHandlers(services: TuiServices, store: TuiSt
     [harbourCommandIds.surfaceSelect]: () => handleBrowseSelect(services, store),
     [harbourCommandIds.surfaceOpenActions]: () => store.set(openActionsMenuAtom),
     [harbourCommandIds.surfaceFocusSearch]: () => store.set(focusBrowseSearchAtom),
+  }
+}
+
+export function createWorktreeFormCommandHandlers(
+  services: TuiServices,
+  store: TuiStore,
+): CommandHandlers {
+  return {
+    [harbourCommandIds.surfaceBack]: () => store.set(backWorktreeFormAtom),
+    [harbourCommandIds.surfaceSelect]: () => handleWorktreeFormSubmit(services, store),
   }
 }
 

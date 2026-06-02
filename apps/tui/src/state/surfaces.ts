@@ -1,6 +1,6 @@
 import { atom } from 'jotai'
 
-import { isActionsOpenAtom } from './app'
+import { isActionsOpenAtom, isWorktreeFormOpenAtom } from './app'
 
 export type SurfaceId = 'actions' | 'browser' | 'confirm' | 'worktree-form'
 
@@ -16,6 +16,13 @@ export type FocusTargetRef = {
 
 export const browserFocusTargetRefAtom = atom<FocusTargetRef | null>(null)
 export const actionsFocusTargetRefAtom = atom<FocusTargetRef | null>(null)
+export const worktreeFormFocusTargetRefAtom = atom<FocusTargetRef | null>(null)
 export const activeFocusTargetAtom = atom((get) =>
-  (get(isActionsOpenAtom) ? get(actionsFocusTargetRefAtom) : get(browserFocusTargetRefAtom))?.current ?? null,
+  (
+    get(isWorktreeFormOpenAtom)
+      ? get(worktreeFormFocusTargetRefAtom)
+      : get(isActionsOpenAtom)
+        ? get(actionsFocusTargetRefAtom)
+        : get(browserFocusTargetRefAtom)
+  )?.current ?? null,
 )

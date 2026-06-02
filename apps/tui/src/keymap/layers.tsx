@@ -8,6 +8,7 @@ import {
   actionsFocusTargetRefAtom,
   activeFocusTargetAtom,
   browserFocusTargetRefAtom,
+  worktreeFormFocusTargetRefAtom,
 } from '../state'
 
 export function Surface({
@@ -24,7 +25,12 @@ export function Surface({
   const store = useStore()
 
   useEffect(() => {
-    const focusTargetAtom = id === 'actions' ? actionsFocusTargetRefAtom : browserFocusTargetRefAtom
+    const focusTargetAtom =
+      id === 'actions'
+        ? actionsFocusTargetRefAtom
+        : id === 'worktree-form'
+          ? worktreeFormFocusTargetRefAtom
+          : browserFocusTargetRefAtom
 
     if (!active) {
       store.set(focusTargetAtom, null)

@@ -1,6 +1,8 @@
 import type { ModuleRow, ModuleSummary, ProjectRow, ProjectSummary, WorkspaceRow, WorkspaceSummary } from '@harbour/domain'
 
 export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
+  const projectIssue = summary.projectIssue ?? null
+
   return {
     id: summary.id,
     kind: 'project',
@@ -11,11 +13,14 @@ export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
     activeSessionCount: summary.activeSessionCount,
     hasModules: summary.hasModules,
     hasWorkspaces: summary.hasWorkspaces,
+    projectIssue,
     repoPath: summary.repoPath,
   }
 }
 
 export function mapWorkspaceSummaryToRow(summary: WorkspaceSummary): WorkspaceRow {
+  const branchName = summary.branchName ?? null
+
   return {
     id: summary.id,
     kind: 'workspace',
@@ -23,8 +28,9 @@ export function mapWorkspaceSummaryToRow(summary: WorkspaceSummary): WorkspaceRo
     projectId: summary.projectId,
     workspaceId: summary.id,
     isActive: summary.activeSessionCount > 0,
-    metadata: formatSessionMetadata(summary.activeSessionCount),
+    metadata: formatWorkspaceMetadata(branchName, summary.activeSessionCount),
     activeSessionCount: summary.activeSessionCount,
+    branchName,
     hasModules: summary.hasModules,
     isDefault: summary.isDefault,
     workspacePath: summary.workspacePath,
@@ -56,4 +62,14 @@ function formatSessionMetadata(activeSessionCount: number) {
   }
 
   return `${activeSessionCount} sessions`
+}
+
+function formatWorkspaceMetadata(branchName: string | null, activeSessionCount: number) {
+  const sessionMetadata = formatSessionMetadata(activeSessionCount)
+
+  if (!branchName) {
+    return sessionMetadata
+  }
+
+  return `${branchName} · ${sessionMetadata}`
 }

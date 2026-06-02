@@ -9,6 +9,7 @@ import type { TuiServices, TuiStore } from '../app-context'
 import {
   moduleRowsAtom,
   noticeAtom,
+  openCreateWorkspaceFormAtom,
   projectRowsAtom,
   selectedActionRowAtom,
   workspaceRowsAtom,
@@ -37,6 +38,18 @@ export function handleActionSelect(services: TuiServices, store: TuiStore) {
   }
 
   switch (row.actionId) {
+    case actionIds.createWorkspace:
+      {
+        const project = getProjectRow(store, target.projectId)
+
+        if (!project) {
+          store.set(noticeAtom, 'Project context missing')
+          return
+        }
+
+        store.set(openCreateWorkspaceFormAtom, project.projectId)
+      }
+      return
     case actionIds.openProjectRoot:
       {
         const project = getProjectRow(store, target.projectId)

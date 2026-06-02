@@ -286,6 +286,7 @@ describe('db', () => {
       await migrateDatabase(database)
 
       const alphaSnapshot = await replaceProjectSnapshot(database.db, {
+        projectIssue: 'Repo HEAD points to missing branch refs/heads/master',
         projectName: 'alpha',
         repoPath: '/tmp/alpha.git',
         repoKind: 'standard',
@@ -386,6 +387,7 @@ describe('db', () => {
         {
           id: alphaSnapshot.project.id,
           name: 'alpha',
+          projectIssue: 'Repo HEAD points to missing branch refs/heads/master',
           repoPath: '/tmp/alpha.git',
           repoKind: 'standard',
           activeSessionCount: 4,
@@ -396,6 +398,7 @@ describe('db', () => {
         {
           id: expect.any(String),
           name: 'beta',
+          projectIssue: null,
           repoPath: '/tmp/beta.git',
           repoKind: 'bare',
           activeSessionCount: 0,
@@ -407,6 +410,7 @@ describe('db', () => {
 
       expect(listWorkspaceSummaries(database.db, alphaSnapshot.project.id)).toEqual([
         {
+          branchName: null,
           id: mainWorkspaceId,
           projectId: alphaSnapshot.project.id,
           kind: 'default',
@@ -418,6 +422,7 @@ describe('db', () => {
           isDefault: true,
         },
         {
+          branchName: null,
           id: featureWorkspaceId,
           projectId: alphaSnapshot.project.id,
           kind: 'worktree',

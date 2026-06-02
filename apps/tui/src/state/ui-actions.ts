@@ -18,9 +18,15 @@ import {
   hoveredActionRowIdAtom,
   hoveredBrowseRowIdAtom,
   isActionsOpenAtom,
+  isWorktreeFormOpenAtom,
   noticeAtom,
   selectedActionRowIdAtom,
   selectedBrowseRowIdAtom,
+  worktreeFormBranchNameAtom,
+  worktreeFormProjectIdAtom,
+  worktreeFormShowErrorsAtom,
+  worktreeFormStepAtom,
+  worktreeFormWorkspaceNameAtom,
 } from './app'
 import {
   currentSectionAtom,
@@ -129,6 +135,61 @@ export const closeActionsMenuAtom = atom(null, (_get, set) => {
   set(noticeAtom, null)
 })
 
+export const openCreateWorkspaceFormAtom = atom(null, (_get, set, projectId: string) => {
+  set(isActionsOpenAtom, false)
+  set(actionRowsAtom, [])
+  set(selectedActionRowIdAtom, null)
+  set(hoveredActionRowIdAtom, null)
+  set(worktreeFormProjectIdAtom, projectId)
+  set(worktreeFormWorkspaceNameAtom, '')
+  set(worktreeFormBranchNameAtom, '')
+  set(worktreeFormShowErrorsAtom, false)
+  set(worktreeFormStepAtom, 'workspace')
+  set(isWorktreeFormOpenAtom, true)
+  set(noticeAtom, null)
+})
+
+export const closeWorktreeFormAtom = atom(null, (_get, set) => {
+  set(isWorktreeFormOpenAtom, false)
+  set(worktreeFormProjectIdAtom, null)
+  set(worktreeFormWorkspaceNameAtom, '')
+  set(worktreeFormBranchNameAtom, '')
+  set(worktreeFormShowErrorsAtom, false)
+  set(worktreeFormStepAtom, 'workspace')
+  set(noticeAtom, null)
+})
+
+export const backWorktreeFormAtom = atom(null, (get, set) => {
+  if (get(worktreeFormStepAtom) === 'branch') {
+    set(worktreeFormBranchNameAtom, '')
+    set(worktreeFormShowErrorsAtom, false)
+    set(worktreeFormStepAtom, 'workspace')
+    return
+  }
+
+  set(closeWorktreeFormAtom)
+})
+
+export const advanceWorktreeFormAtom = atom(null, (get, set) => {
+  const workspaceName = get(worktreeFormWorkspaceNameAtom).trim()
+  const branchName = get(worktreeFormBranchNameAtom).trim()
+
+  if (get(worktreeFormStepAtom) === 'workspace') {
+    set(worktreeFormWorkspaceNameAtom, workspaceName)
+
+    if (branchName.length === 0) {
+      set(worktreeFormBranchNameAtom, workspaceName)
+    }
+
+    set(worktreeFormShowErrorsAtom, false)
+    set(worktreeFormStepAtom, 'branch')
+    return
+  }
+
+  set(worktreeFormShowErrorsAtom, false)
+  set(worktreeFormBranchNameAtom, branchName)
+})
+
 function buildActionRows(target: SupportedContextRow): readonly ActionRow[] {
   if (target.kind === 'project') {
     return [
@@ -143,6 +204,12 @@ function buildActionRows(target: SupportedContextRow): readonly ActionRow[] {
 
   if (target.kind === 'workspace') {
     return [
+      makeActionRow(
+        actionIds.createWorkspace,
+        'Create workspace',
+        'git worktree',
+        target,
+      ),
       makeActionRow(
         actionIds.openWorkspaceRoot,
         'Open workspace root',
