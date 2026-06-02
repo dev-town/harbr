@@ -8,7 +8,6 @@ import { Surface } from '../../keymap/layers'
 
 export function CreateWorkspaceModal() {
   const {
-    helperText,
     isOpen,
     onClose,
     onInput,
@@ -47,7 +46,9 @@ export function CreateWorkspaceModal() {
           width="100%"
         />
         <box
-          onMouseUp={(event: { stopPropagation(): void }) => event.stopPropagation()}
+          onMouseUp={(event: { stopPropagation(): void }) =>
+            event.stopPropagation()
+          }
           border
           borderColor={showValidationError ? theme.error : theme.border}
           borderStyle="single"
@@ -57,7 +58,13 @@ export function CreateWorkspaceModal() {
           style={{ backgroundColor: theme.panel }}
           width="42%"
         >
-          <box flexDirection="column" marginBottom={1} paddingLeft={1} paddingRight={1} width="100%">
+          <box
+            flexDirection="column"
+            marginBottom={1}
+            paddingLeft={1}
+            paddingRight={1}
+            width="100%"
+          >
             <text>
               <strong fg={theme.text}>{title}</strong>
             </text>
@@ -76,7 +83,9 @@ export function CreateWorkspaceModal() {
             <box style={{ justifyContent: 'center' }} width="100%">
               <input
                 focused
-                focusedTextColor={showValidationError ? theme.error : theme.text}
+                focusedTextColor={
+                  showValidationError ? theme.error : theme.text
+                }
                 ref={inputRef}
                 onInput={onInput}
                 onSubmit={onSubmit}
@@ -87,10 +96,8 @@ export function CreateWorkspaceModal() {
             </box>
           </box>
           <box height={1} marginTop={1} width="100%">
-            {showValidationError ? (
+            {showValidationError && (
               <text fg={theme.error}>{validationError}</text>
-            ) : (
-              <text fg={theme.muted}>{helperText}</text>
             )}
           </box>
         </box>

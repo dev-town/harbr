@@ -3,7 +3,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@harbour/domain": "workspace:*",
     "@opentui/keymap": "^0.2.12"
   },
   "exports": {

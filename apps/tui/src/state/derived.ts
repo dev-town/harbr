@@ -1,4 +1,4 @@
-import type { HarbourRow } from '@harbour/domain'
+import type { HarbourRow } from '../types/rows'
 import { atom } from 'jotai'
 
 import { currentSectionAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom } from './navigation'

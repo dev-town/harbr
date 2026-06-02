@@ -4,14 +4,17 @@ Use this doc to decide where new code belongs.
 
 ### `domain`
 
-- Owns Harbour language: entities, ids, states, commands, and fact shapes.
-- Should be stable, dependency-free, and broadly reusable.
-- Do not put IO, persistence, UI, or adapter code here.
+- Owns shared Harbour contracts and language at package boundaries.
+- Good homes: shared public inputs/outputs, observations, summaries, sync results, UI context shared across packages.
+- Prefer schema-first contracts here when validation matters; export inferred TS types from schemas.
+- Do not put IO, persistence, UI-only projections, DB rows, or adapter internals here.
 
 ### `config`
 
 - Owns config shape, loading, validation, defaults, and schema-facing intent.
 - Use for user/project intent, not observed reality.
+- Raw config-file schema stays here.
+- Normalize config outputs so they match `domain` contracts where those outputs cross package boundaries.
 - Public config APIs should be service- or program-shaped. Keep low-level parsing helpers internal.
 
 ### `git`
@@ -46,6 +49,8 @@ Use this doc to decide where new code belongs.
 - Owns Drizzle schema, migrations, exported persistence services, internal repos, and SQLite access.
 - Stores Harbour metadata, cache, history, and event-related state.
 - It does not become source of truth for Git or tmux reality.
+- DB row/table types stay local to `db`.
+- Map internal rows into `domain` contracts at the public package boundary.
 - Outside `db`, consume public services, not internal repos or low-level clients.
 - Inside `db`, prefer service -> repo -> client layering when the complexity warrants it.
 
@@ -61,14 +66,17 @@ Use this doc to decide where new code belongs.
 
 ### `keymap`
 
-- Owns keybinding contexts and command routing.
-- Translate input into command ids. Do not embed deep product logic here.
+- Owns generic keybinding contexts and command routing.
+- Keep package-level keymap infra generic when possible.
+- App-specific command ids and bindings should stay in the app unless shared across apps.
+- Do not embed deep product logic here.
 
 ### app-local components
 
 - Own presentational components and view-state display concerns when no shared package is warranted.
 - Render Harbour state. Keep raw shell, db, and reconciliation logic out.
 - Consume app-provided state and commands, not internal package wiring.
+- App-local view models and row projections belong here or in app-local `types/` files, not in `domain`.
 
 ### `apps/tui`
 
@@ -81,11 +89,13 @@ Owns:
 - Jotai store setup
 - keyboard input routing
 - command palette
+- app-specific command ids and key bindings
 - screen layout
 - subscriptions to Harbour state
 - execution of command handlers
 - starting and stopping Effect runtime fibers
 - composing public programs and layer factories from packages
+- TUI-only navigation unions and row/view-model projections
 
 Depends on:
 
@@ -108,6 +118,7 @@ Must not contain:
 - raw git command logic
 - raw tmux command logic
 - reconciliation logic
+- DB row/table shapes shared as app contracts
 
 ### `apps/cli`
 
@@ -119,7 +130,9 @@ Must not contain:
 ## Shared organization conventions
 
 - Public package APIs should usually expose services, programs, and layer factories.
+- Shared cross-package inputs/outputs should usually live in `domain`.
 - Internal implementation details should stay internal to the package.
+- Split app-local types by concern; avoid catch-all files that mix bindings, navigation, and projections.
 - When packages grow, prefer:
 
 ```text

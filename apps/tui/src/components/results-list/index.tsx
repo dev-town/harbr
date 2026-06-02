@@ -1,5 +1,5 @@
 import type { ScrollBoxRenderable } from '@opentui/core'
-import type { HarbourRow } from '@harbour/domain'
+import type { HarbourRow } from '../../types/rows'
 import { useEffect, useRef } from 'react'
 
 import { theme } from '../../config/theme'

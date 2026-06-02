@@ -1,10 +1,11 @@
 import { Context, type Effect } from 'effect'
+import type { CreateWorktreeInput } from '@harbour/domain'
 import type {
   RepoNotGitError,
   RepoInspectionError,
   WorktreeMutationError,
 } from '../git.errors'
-import type { CreateWorktreeInput, RepoInspection, WorkspaceTarget } from '../git.types'
+import type { RepoInspection, WorkspaceTarget } from '../git.types'
 
 export type GitServiceApi = {
   readonly getDefaultBranchIssue: (

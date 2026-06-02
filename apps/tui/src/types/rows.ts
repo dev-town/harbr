@@ -1,27 +1,4 @@
-export type HarbourSection = 'actions' | 'modules' | 'projects' | 'workspaces'
-
-export type VisibilityFilter = 'active' | 'all'
-
-export type HarbourContext = {
-  projectId?: string
-  workspaceId?: string
-  moduleId?: string
-}
-
-export const harbourCommandIds = {
-  appQuit: 'app.quit',
-  surfaceBack: 'surface.back',
-  surfaceDown: 'surface.down',
-  surfaceFocusSearch: 'surface.focus_search',
-  surfaceOpenActions: 'surface.open_actions',
-  surfaceRefresh: 'surface.refresh',
-  surfaceSelect: 'surface.select',
-  surfaceToggleVisibility: 'surface.toggle_visibility',
-  surfaceUp: 'surface.up',
-} as const
-
-export type HarbourCommandId =
-  (typeof harbourCommandIds)[keyof typeof harbourCommandIds]
+import type { HarbourContext } from '@harbour/domain'
 
 export type RowKind = 'action' | 'module' | 'project' | 'workspace'
 

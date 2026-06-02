@@ -9,7 +9,7 @@ apps/*
   -> packages/*
 
 keymap
-  -> domain
+  -> domain optional
 
 db
   -> domain
@@ -66,11 +66,14 @@ git -> db
 
 ### Practical rules
 
-- `domain` must stay dependency-free.
+- `domain` owns shared public contracts between packages.
+- `domain` may use schema/validation libraries for those contracts.
 - App-local components render and dispatch; they do not talk directly to adapters, db, scanner, or reconciler.
 - `scanner` reads external state and emits normalized facts. It does not own tmux orchestration or durable belief.
 - `reconciler` can consume scanner facts and persist Harbour belief. Do not push this logic back into UI or db.
 - `db` stores Harbour state; it should not reach outward into scanner or reconciler logic.
+- Map package-internal shapes to `domain` contracts at public boundaries instead of leaking internals outward.
+- Keep app-specific command ids, key bindings, and view-model projections in the app unless truly shared.
 - Import public package exports, not internal implementation files from other packages.
 - Prefer service-, program-, and layer-shaped public APIs at package boundaries.
 - Keep repos, clients, and low-level wiring internal to the package unless deliberately documented as public.
@@ -92,4 +95,5 @@ When reviewing a change:
 - If app-local components need a Git or tmux action, dispatch a command and let app/service code call adapters.
 - If `scanner` wants to mutate durable state, split read-side fact collection from reconciler write-side updates.
 - If `db` needs domain interpretation, move that decision into `reconciler` or a domain-level helper.
+- If a package has internal row/adapter shapes but exposes shared outputs, add a mapper/transform into `domain` contracts at the package boundary.
 - If a package exposes a repo or client to another package, first ask whether a public service or program boundary is the better export.

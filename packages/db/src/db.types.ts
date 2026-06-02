@@ -5,16 +5,12 @@ import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import type {
   HarbourContext,
   ModuleSummary,
-  ModuleRecord,
   ProjectSummary,
-  ProjectRecord,
   RepoKind,
   ResolvedModule,
   RuntimeFact,
   RuntimeIssue,
-  RuntimeRecord,
   WorkspaceKind,
-  WorkspaceRecord,
   WorkspaceSummary,
 } from '@harbour/domain'
 import type * as schema from './schema'
@@ -39,7 +35,7 @@ export type DatabaseClientApi = {
 }
 
 export type WorkspaceSnapshotInput = {
-  branchName?: string | null
+  branchName?: string | null | undefined
   workspaceName: string
   workspacePath: string
   kind: WorkspaceKind
@@ -54,6 +50,49 @@ export type ReplaceProjectSnapshotInput = {
   workspaces: WorkspaceSnapshotInput[]
   runtimes: RuntimeFact[]
   runtimeIssue: RuntimeIssue | null
+}
+
+export type ProjectRecord = {
+  createdAt: number
+  id: string
+  name: string
+  projectIssue?: string | null
+  repoKind: RepoKind
+  repoPath: string
+  updatedAt: number
+}
+
+export type WorkspaceRecord = {
+  branchName?: string | null
+  createdAt: number
+  id: string
+  kind: WorkspaceKind
+  name: string
+  projectId: string
+  updatedAt: number
+  workspacePath: string
+}
+
+export type ModuleRecord = {
+  createdAt: number
+  id: string
+  name: string
+  path: string
+  selector: ResolvedModule['selector']
+  updatedAt: number
+  workspaceId: string
+}
+
+export type RuntimeRecord = {
+  createdAt: number
+  id: string
+  modulePath: string | null
+  projectId: string
+  scope: RuntimeFact['scope']
+  sessionName: string
+  status: RuntimeFact['status']
+  updatedAt: number
+  workspaceId: string | null
 }
 
 export type ProjectSnapshot = {

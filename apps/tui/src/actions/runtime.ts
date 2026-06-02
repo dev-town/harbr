@@ -1,9 +1,10 @@
-import type { HarbourContext, ModuleRow, ProjectRow, WorkspaceRow } from '@harbour/domain'
+import type { HarbourContext } from '@harbour/domain'
 import { openOrCreateRuntime } from '@harbour/runtime-tmux'
 import { Effect } from 'effect'
 import { join } from 'node:path'
 
 import type { TuiServices, TuiStore } from '../app-context'
+import type { ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
 import { saveUiContext } from '../data'
 import { formatError } from '../helpers/errors'
 import { noticeAtom, projectRowsAtom, workspaceRowsAtom } from '../state'

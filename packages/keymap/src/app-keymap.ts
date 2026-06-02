@@ -1,37 +1,24 @@
 import type { CliRenderer } from '@opentui/core'
-import {
-  harbourCommandIds,
-  type HarbourCommandId,
-} from '@harbour/domain'
 import { createDefaultOpenTuiKeymap } from '@opentui/keymap/opentui'
 
-export type AppKeymapHandlers = {
-  onCommand: (commandId: HarbourCommandId) => void
+export type AppKeymapHandlers<TCommandId extends string = string> = {
+  bindings: readonly { key: string; cmd: TCommandId }[]
+  commands: readonly TCommandId[]
+  onCommand: (commandId: TCommandId) => void
 }
 
-export function makeAppKeymap(
+export function makeAppKeymap<TCommandId extends string>(
   renderer: CliRenderer,
-  handlers: AppKeymapHandlers,
+  handlers: AppKeymapHandlers<TCommandId>,
 ) {
   const keymap = createDefaultOpenTuiKeymap(renderer)
 
   keymap.registerLayer({
-    commands: Object.values(harbourCommandIds).map((name) => ({
+    commands: handlers.commands.map((name) => ({
       name,
       run: () => handlers.onCommand(name),
     })),
-    bindings: [
-      { key: 'up', cmd: harbourCommandIds.surfaceUp },
-      { key: 'down', cmd: harbourCommandIds.surfaceDown },
-      { key: 'return', cmd: harbourCommandIds.surfaceSelect },
-      { key: '/', cmd: harbourCommandIds.surfaceFocusSearch },
-      { key: 'tab', cmd: harbourCommandIds.surfaceToggleVisibility },
-      { key: 'escape', cmd: harbourCommandIds.surfaceBack },
-      { key: 'ctrl+r', cmd: harbourCommandIds.surfaceRefresh },
-      { key: 'ctrl+a', cmd: harbourCommandIds.surfaceOpenActions },
-      { key: '?', cmd: harbourCommandIds.surfaceOpenActions },
-      { key: 'ctrl+c', cmd: harbourCommandIds.appQuit },
-    ],
+    bindings: [...handlers.bindings],
   })
 
   return keymap

@@ -3,6 +3,7 @@ import { realpath, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
+import type { CreateWorktreeInput } from '@harbour/domain'
 import { Effect, Layer } from 'effect'
 import type { RepoInspectionError, WorktreeMutationError } from '../git.errors'
 import {
@@ -14,7 +15,7 @@ import {
   WorktreeCreateError,
 } from '../git.errors'
 import { GitService, type GitServiceApi } from './git.service'
-import type { CreateWorktreeInput, RepoInspection, WorkspaceTarget } from '../git.types'
+import type { RepoInspection, WorkspaceTarget } from '../git.types'
 import { parseWorktreeList, type WorktreeEntry } from '../git.worktree'
 
 const execFileAsync = promisify(execFile)

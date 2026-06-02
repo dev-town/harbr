@@ -1,4 +1,4 @@
-import type { HarbourRow } from '@harbour/domain'
+import type { HarbourRow } from '../../../types/rows'
 
 import { theme } from '../../../config/theme'
 

@@ -2,7 +2,10 @@ import { useAtomValue, useSetAtom, useStore } from 'jotai'
 
 import { handleWorktreeFormSubmit } from '../../actions/worktree'
 import { useTuiServices } from '../useTuiServices'
-import { validateBranchName, validateWorkspaceName } from '../../helpers/worktree-form'
+import {
+  validateBranchName,
+  validateWorkspaceName,
+} from '../../helpers/worktree-form'
 import {
   closeWorktreeFormAtom,
   isWorktreeFormOpenAtom,
@@ -28,14 +31,13 @@ export function useCreateWorkspace() {
 
   const value = step === 'workspace' ? workspaceName : branchName
   const validationError =
-    step === 'workspace' ? validateWorkspaceName(workspaceName) : validateBranchName(branchName)
-  const showValidationError = Boolean(validationError) && (showErrors || value.length > 0)
+    step === 'workspace'
+      ? validateWorkspaceName(workspaceName)
+      : validateBranchName(branchName)
+  const showValidationError =
+    Boolean(validationError) && (showErrors || value.length > 0)
 
   return {
-    helperText:
-      step === 'workspace'
-        ? 'Use letters, numbers, -, _, .'
-        : 'Press Enter to create the workspace',
     isOpen,
     onClose,
     onInput: step === 'workspace' ? setWorkspaceName : setBranchName,

@@ -1,10 +1,9 @@
-import { harbourCommandIds, type HarbourCommandId } from '@harbour/domain'
+import { harbourCommandIds, type HarbourCommandId } from './commands'
 
 import type { TuiServices, TuiStore } from '../app-context'
 import {
   backWorktreeFormAtom,
   closeActionsMenuAtom,
-  focusBrowseSearchAtom,
   moveActionSelectionAtom,
   moveBrowseSelectionAtom,
   openActionsMenuAtom,
@@ -26,7 +25,6 @@ export function createBrowserCommandHandlers(services: TuiServices, store: TuiSt
     [harbourCommandIds.surfaceBack]: () => handleBrowseBack(services, store),
     [harbourCommandIds.surfaceSelect]: () => handleBrowseSelect(services, store),
     [harbourCommandIds.surfaceOpenActions]: () => store.set(openActionsMenuAtom),
-    [harbourCommandIds.surfaceFocusSearch]: () => store.set(focusBrowseSearchAtom),
   }
 }
 

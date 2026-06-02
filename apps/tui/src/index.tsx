@@ -8,6 +8,7 @@ import { createSurfaceCommandHandler } from './actions/dispatch'
 import { App } from './app'
 import { TuiServicesProvider, type TuiServices } from './app-context'
 import { readArgValue } from './helpers/args'
+import { harbourCommandBindings, harbourCommandIds } from './keymap/commands'
 import type { TuiOptions } from './types'
 
 const args = process.argv.slice(2)
@@ -25,10 +26,9 @@ const renderer = await createCliRenderer({
   clearOnShutdown: false,
   exitOnCtrlC: false,
   // Debug
-  // consoleOptions: {
-  //   position: ConsolePosition.BOTTOM,
-  //   sizePercent: 30,
-  // },
+  consoleOptions: {
+    sizePercent: 30,
+  },
 })
 
 // Show the debugger
@@ -40,6 +40,8 @@ const services: TuiServices = {
 }
 
 const keymap = makeAppKeymap(renderer, {
+  bindings: harbourCommandBindings,
+  commands: Object.values(harbourCommandIds),
   onCommand: createSurfaceCommandHandler(services, store),
 })
 

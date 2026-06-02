@@ -1,4 +1,4 @@
-import { harbourCommandIds, type HarbourCommandId } from '@harbour/domain'
+import { harbourCommandIds, type HarbourCommandId } from '../keymap/commands'
 
 import type { TuiServices, TuiStore } from '../app-context'
 import { isActionsOpenAtom, isWorktreeFormOpenAtom } from '../state'

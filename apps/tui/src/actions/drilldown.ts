@@ -1,6 +1,6 @@
 import type { TuiServices, TuiStore } from '../app-context'
 import { listModuleSummaries, listWorkspaceSummaries } from '../data'
-import type { VisibilityFilter } from '@harbour/domain'
+import type { VisibilityFilter } from '../types/navigation'
 import { formatError } from '../helpers/errors'
 import { browseVisibilityAtom, currentSectionAtom, moduleRowsAtom, noticeAtom, selectedBrowseRowIdAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom, workspaceRowsAtom } from '../state'
 import { mapModuleSummaryToRow, mapWorkspaceSummaryToRow } from '../transforms'

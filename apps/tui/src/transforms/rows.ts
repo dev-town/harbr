@@ -1,4 +1,10 @@
-import type { ModuleRow, ModuleSummary, ProjectRow, ProjectSummary, WorkspaceRow, WorkspaceSummary } from '@harbour/domain'
+import type {
+  ModuleSummary,
+  ProjectSummary,
+  WorkspaceSummary,
+} from '@harbour/domain'
+
+import type { ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
 
 export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
   const projectIssue = summary.projectIssue ?? null

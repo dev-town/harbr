@@ -1,5 +1,6 @@
-import type { VisibilityFilter } from '@harbour/domain'
 import { atom } from 'jotai'
+
+import type { VisibilityFilter } from '../types/navigation'
 
 export type WorktreeFormStep = 'branch' | 'workspace'
 

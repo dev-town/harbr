@@ -1,5 +1,6 @@
-import type { HarbourSection } from '@harbour/domain'
 import { atom } from 'jotai'
+
+import type { HarbourSection } from '../types/navigation'
 
 export const currentSectionAtom = atom<HarbourSection>('projects')
 export const selectedProjectIdAtom = atom<string | null>(null)

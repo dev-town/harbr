@@ -1,12 +1,13 @@
 import type {
   ActionRow,
   HarbourRow,
-  HarbourSection,
   ModuleRow,
   ProjectRow,
   WorkspaceRow,
-} from '@harbour/domain'
+} from '../types/rows'
 import { atom, type Getter, type Setter } from 'jotai'
+
+import type { HarbourSection } from '../types/navigation'
 
 import { actionIds } from '../actions/action-ids'
 import { clampIndex } from '../helpers/selection'

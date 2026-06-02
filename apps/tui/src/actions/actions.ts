@@ -3,7 +3,7 @@ import type {
   ModuleRow,
   ProjectRow,
   WorkspaceRow,
-} from '@harbour/domain'
+} from '../types/rows'
 
 import type { TuiServices, TuiStore } from '../app-context'
 import {

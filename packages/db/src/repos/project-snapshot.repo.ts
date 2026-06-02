@@ -3,18 +3,18 @@ import { randomUUID } from 'node:crypto'
 import type {
   HarbourContext,
   ModuleSummary,
-  ModuleRecord,
   ProjectSummary,
-  ProjectRecord,
   RuntimeFact,
-  RuntimeRecord,
-  WorkspaceRecord,
   WorkspaceSummary,
 } from '@harbour/domain'
 import { eq } from 'drizzle-orm'
 import type {
   HarbourDatabase,
+  ModuleRecord,
+  ProjectRecord,
   ReplaceProjectSnapshotInput,
+  RuntimeRecord,
+  WorkspaceRecord,
   WorkspaceSnapshotInput,
 } from '../db.types'
 import {

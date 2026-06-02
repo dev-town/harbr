@@ -58,7 +58,7 @@ key press
 
 ## Package rules
 
-- `domain` defines Harbour language and depends on nothing.
+- `domain` defines shared Harbour contracts and language for cross-package boundaries.
 - `config` expresses user or project intent.
 - `git` and `runtime-tmux` adapt external systems.
 - `scanner` observes reality and emits facts only.
@@ -69,6 +69,21 @@ key press
 - `keymap` maps input to commands.
 - `ui` renders state and dispatches actions. Keep shell logic out.
 - `apps/tui` wires runtime, subscriptions, command handlers, and render tree.
+
+## Schema-first contracts
+
+- Put shared public package inputs/outputs in `domain`.
+- Prefer Zod schemas as source of truth for those contracts when validation matters.
+- Export inferred types from schemas for shared boundary shapes.
+- Do not put DB rows, adapter internals, or app-local view models in `domain`.
+- Keep raw config-file schema in `config`; map normalized outputs to `domain` contracts.
+- Keep DB rows local to `db`; map public outputs to `domain` contracts at the package boundary.
+
+## App-local projections
+
+- App command ids, key bindings, navigation unions, and render rows stay app-local unless shared across apps.
+- TUI row/view-model types are derived projections from domain contracts, not domain contracts themselves.
+- Avoid app-local catch-all files; split commands, navigation, and row types by concern.
 
 ## Public vs internal code
 
@@ -123,13 +138,19 @@ Read only what the task needs.
 
 When choosing placement, prefer these questions in order:
 
-1. Is this Harbour language? Put it in `domain`.
+1. Is this a shared public input/output contract between packages? Put it in `domain`.
 2. Is this user/project configuration? Put it in `config`.
 3. Is this raw Git or tmux interaction? Put it in an adapter package, not UI.
 4. Is this observation and normalization of external reality? Put it in `scanner`.
 5. Is this deciding what Harbour should believe and persist? Put it in `reconciler`.
 6. Is this durable schema, persistence service, internal repo, or database client code? Put it in `db`.
 7. Is this rendering, view-state projection, or interaction wiring? Put it in `ui`, `keymap`, or `apps/tui`.
+
+After that, ask:
+
+1. Is this shape only used inside one package? Keep it local.
+2. Is this a DB row or adapter detail? Keep it local and map at the boundary.
+3. Is this a TUI-only projection or command map? Keep it in the app.
 
 Prefer one clear owner. Avoid splitting a single rule between scanner, reconciler, and UI unless the architecture truly demands it.
 
@@ -139,12 +160,13 @@ Before finalizing, check:
 
 1. Right package owner?
 2. Dependency direction valid?
-3. Public API exposed as service/program/layer, with internals kept internal?
+3. Shared boundary contracts in `domain`, with package-local internals kept local?
 4. Scanner still fact-only?
 5. Reconciler still owns belief and state transitions?
 6. UI free of raw Git, tmux, SQL, and reconciliation logic?
 7. Durable state separated from external source-of-truth state?
-8. Change still supports a calm, sparse, reliable product?
+8. DB/config/adapter internals mapped to domain contracts at boundaries rather than leaked outward?
+9. Change still supports a calm, sparse, reliable product?
 
 ## Output style
 

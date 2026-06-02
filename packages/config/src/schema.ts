@@ -26,7 +26,7 @@ export const configSchema = z
     for (const [projectIndex, project] of config.projects.entries()) {
       if (seenProjects.has(project.name)) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['projects', projectIndex, 'name'],
           message: `duplicate project name: ${project.name}`,
           params: {
@@ -40,7 +40,7 @@ export const configSchema = z
       for (const [moduleIndex, moduleSelector] of project.modules.entries()) {
         if (moduleSelector === '/') {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: ['projects', projectIndex, 'modules', moduleIndex],
             message: 'module selector `/` is not supported; use `.` for repo root',
             params: {
@@ -52,7 +52,7 @@ export const configSchema = z
 
         if (path.isAbsolute(moduleSelector)) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: ['projects', projectIndex, 'modules', moduleIndex],
             message: `module selector must be repo-relative: ${moduleSelector}`,
             params: {

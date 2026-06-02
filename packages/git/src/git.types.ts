@@ -5,11 +5,6 @@ export type RepoInspection = {
   kind: RepoKind
 }
 
-export type CreateWorktreeInput = {
-  branchName: string
-  workspaceName: string
-}
-
 export type WorkspaceTarget = {
   branchName: string | null
   name: string

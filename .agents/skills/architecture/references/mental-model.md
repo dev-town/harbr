@@ -53,7 +53,7 @@ key press
 ### Translation table
 
 ```text
-domain        = Harbour language
+domain        = shared Harbour contracts and language
 config        = user/project intent
 git/tmux      = external reality adapters
 scanner       = what exists?
@@ -66,6 +66,12 @@ ui            = what the user sees
 apps          = how the user enters Harbour
 agent skills  = how agents stay inside the architecture
 ```
+
+### Contract rule
+
+- If a shape is a shared public input/output between packages, prefer `domain`.
+- If a shape is a DB row, adapter detail, or app-local projection, keep it local.
+- App-local rows, navigation unions, and command bindings belong in the app, derived from domain contracts where needed.
 
 ### Product feel
 
