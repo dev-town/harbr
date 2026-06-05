@@ -5,13 +5,12 @@ import {
   handleActiveRouteBack,
   handleActiveRouteSelect,
   moveActiveSelectionAtom,
+  openActionsMenuAtom as openActiveActionsMenuAtom,
 } from '../routes/active'
 import {
   backWorktreeFormAtom,
-  handleBrowseActionSelect,
   handleBrowseRouteBack,
   handleBrowseRouteSelect,
-  moveActionSelectionAtom,
   moveBrowseSelectionAtom,
   openActionsMenuAtom,
   selectedBrowseRowAtom,
@@ -45,7 +44,10 @@ export function createBrowserCommandHandlers(services: TuiServices, store: TuiSt
       store.get(currentRouteAtom) === 'active'
         ? handleActiveRouteSelect(services, store)
         : handleBrowseRouteSelect(services, store, store.get(selectedBrowseRowAtom)),
-    [harbourCommandIds.surfaceOpenActions]: () => store.set(openActionsMenuAtom),
+    [harbourCommandIds.surfaceOpenActions]: () =>
+      store.get(currentRouteAtom) === 'active'
+        ? store.set(openActiveActionsMenuAtom)
+        : store.set(openActionsMenuAtom),
   }
 }
 
@@ -61,9 +63,6 @@ export function createWorktreeFormCommandHandlers(
 
 export function createActionsCommandHandlers(services: TuiServices, store: TuiStore): CommandHandlers {
   return {
-    [harbourCommandIds.surfaceUp]: () => store.set(moveActionSelectionAtom, -1),
-    [harbourCommandIds.surfaceDown]: () => store.set(moveActionSelectionAtom, 1),
-    [harbourCommandIds.surfaceSelect]: () => handleBrowseActionSelect(services, store),
     [harbourCommandIds.surfaceBack]: () => handleBrowseRouteBack(services, store),
   }
 }

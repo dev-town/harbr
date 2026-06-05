@@ -3,10 +3,8 @@ import { atom } from 'jotai'
 import { noticeAtom } from '../../../../state/app'
 import {
   actionRowsAtom,
-  hoveredActionRowIdAtom,
   isActionsOpenAtom,
   isWorktreeFormOpenAtom,
-  selectedActionRowIdAtom,
   worktreeFormBranchNameAtom,
   worktreeFormProjectIdAtom,
   worktreeFormShowErrorsAtom,
@@ -17,8 +15,6 @@ import {
 export const openCreateWorkspaceFormAtom = atom(null, (_get, set, projectId: string) => {
   set(isActionsOpenAtom, false)
   set(actionRowsAtom, [])
-  set(selectedActionRowIdAtom, null)
-  set(hoveredActionRowIdAtom, null)
   set(worktreeFormProjectIdAtom, projectId)
   set(worktreeFormWorkspaceNameAtom, '')
   set(worktreeFormBranchNameAtom, '')

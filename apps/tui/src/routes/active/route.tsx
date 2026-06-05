@@ -4,6 +4,7 @@ import { getRowVariant } from '../../components/list-row/utils'
 import { ResultsList } from '../../components/results-list'
 import { SearchBar } from '../../components/search-bar'
 import { ActiveRouteLayout } from './layout'
+import { ActiveActionsModal } from './components/actions-modal'
 import { ActiveRouteRow } from './components/row'
 import { useActiveRoute } from './hooks/use-active-route'
 
@@ -16,7 +17,7 @@ export function ActiveRoute() {
     <ActiveRouteLayout
       search={
         <SearchBar
-          focused
+          focused={activeRoute.searchFocused}
           inputRef={activeRoute.searchRef}
           onChange={activeRoute.onSearchChange}
           onSubmit={() =>
@@ -45,6 +46,7 @@ export function ActiveRoute() {
         rows={activeRoute.rows}
         selectedId={activeRoute.selectedId}
       />
+      <ActiveActionsModal />
     </ActiveRouteLayout>
   )
 }

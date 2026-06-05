@@ -4,9 +4,9 @@ import { getRowVariant } from '../../components/list-row/utils'
 import { ResultsList } from '../../components/results-list'
 import { SearchBar } from '../../components/search-bar'
 import { BrowseRouteLayout } from './layout'
+import { BrowseActionsModal } from './components/actions-modal'
 import { BrowseRouteRow } from './components/row'
 import { useBrowseRoute } from './hooks/use-browse-route'
-import { ActionsModal } from './components/actions-modal'
 import { CreateWorkspaceModal } from './components/create-workspace-modal'
 
 export function BrowseRoute() {
@@ -44,7 +44,7 @@ export function BrowseRoute() {
         rows={browseRoute.rows}
         selectedId={browseRoute.selectedId}
       />
-      <ActionsModal />
+      <BrowseActionsModal />
       <CreateWorkspaceModal />
     </BrowseRouteLayout>
   )

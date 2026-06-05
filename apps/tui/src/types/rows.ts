@@ -1,6 +1,6 @@
 import type { ActiveRuntimeSummary, HarbourContext } from '@harbour/domain'
 
-export type RowKind = 'action' | 'module' | 'project' | 'workspace'
+export type RowKind = 'action' | 'active-action' | 'module' | 'project' | 'workspace'
 
 export type BaseRow = {
   id: string
@@ -45,6 +45,13 @@ export type ActionRow = BaseRow & {
   kind: 'action'
   actionId: string
   target: HarbourContext
+}
+
+export type ActiveActionRow = {
+  id: string
+  kind: 'active-action'
+  label: string
+  target: ActiveRuntimeRow
 }
 
 export type ActiveRuntimeRow = {

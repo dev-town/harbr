@@ -8,7 +8,6 @@ import {
   browseSectionAtom,
   browseVisibilityAtom,
   isActionsOpenAtom,
-  selectedActionRowIdAtom,
   selectedBrowseRowIdAtom,
   selectedProjectIssueAtom as browseSelectedProjectIssueAtom,
   visibleBrowseRowsAtom,
@@ -27,7 +26,7 @@ export const currentRowCountAtom = atom((get) => {
 
 export const currentSelectedRowIdAtom = atom((get) => {
   if (get(isActionsOpenAtom)) {
-    return get(selectedActionRowIdAtom)
+    return get(actionRowsAtom)[0]?.id ?? null
   }
 
   return get(currentRouteAtom) === 'active'
@@ -67,6 +66,7 @@ export const footerHintsAtom = atom((get) => {
   if (currentRoute === 'active') {
     return [
       { key: 'Enter', label: 'switch' },
+      { key: 'Ctrl+A', label: 'actions' },
       { key: 'Tab', label: 'next tab' },
       { key: 'Shift+Tab', label: 'prev tab' },
       { key: 'Esc', label: activeQuery.length > 0 ? 'clear query' : 'close' },

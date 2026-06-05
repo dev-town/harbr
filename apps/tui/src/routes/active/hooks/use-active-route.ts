@@ -8,19 +8,21 @@ import { useTuiServices } from '../../../hooks/useTuiServices'
 import { isLoadingAtom } from '../../../state/app'
 import type { ActiveRuntimeRow } from '../../../types/rows'
 import {
+  isActionsOpenAtom,
   activeQueryAtom,
   activeSearchFocusNonceAtom,
   selectedActiveRowIdAtom,
   hoveredActiveRowIdAtom,
 } from '../atoms'
-import { changeActiveQueryAtom, hoverActiveRowAtom, selectActiveRowAtom } from '../state/actions'
+import { changeActiveQueryAtom, hoverActiveRowAtom, openActionsMenuAtom, selectActiveRowAtom } from '../state/actions'
 import { selectedActiveRowAtom, visibleActiveRowsAtom } from '../derived'
 
 export function useActiveRoute() {
   const services = useTuiServices()
-  const store = useStore()
   const searchRef = useRef<InputRenderable | null>(null)
+  const store = useStore()
   const focusSearchNonce = useAtomValue(activeSearchFocusNonceAtom)
+  const isActionsOpen = useAtomValue(isActionsOpenAtom)
   const query = useAtomValue(activeQueryAtom)
   const selectedId = useAtomValue(selectedActiveRowIdAtom)
   const rows = useAtomValue(visibleActiveRowsAtom)
@@ -29,13 +31,18 @@ export function useActiveRoute() {
   useRegisterFocusTarget('browser', searchRef)
 
   useEffect(() => {
+    if (isActionsOpen) {
+      return
+    }
+
     searchRef.current?.focus?.()
-  }, [focusSearchNonce, rows.length, selectedId])
+  }, [focusSearchNonce, isActionsOpen, rows.length, selectedId])
 
   return {
     hoveredId: useAtomValue(hoveredActiveRowIdAtom),
     isLoading: useAtomValue(isLoadingAtom),
     onHoverRow: useSetAtom(hoverActiveRowAtom),
+    onOpenActions: useSetAtom(openActionsMenuAtom),
     onOpenRow: (row: ActiveRuntimeRow) => void openActiveRuntime(services, store, row),
     onSearchChange: useSetAtom(changeActiveQueryAtom),
     onSelectRow,
@@ -43,6 +50,7 @@ export function useActiveRoute() {
     query,
     rows,
     searchRef,
+    searchFocused: !isActionsOpen,
     selectedId,
     selectedRow: useAtomValue(selectedActiveRowAtom),
   }

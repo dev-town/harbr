@@ -6,7 +6,6 @@ import { noticeAtom } from '../../../state/app'
 import { moduleRowsAtom, projectRowsAtom, workspaceRowsAtom } from '../../../state/rows'
 import type { ActionRow, HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '../../../types/rows'
 import { openCreateWorkspaceFormAtom } from '../state/actions'
-import { selectedActionRowAtom } from '../state/derived'
 
 type SupportedContextRow = ModuleRow | ProjectRow | WorkspaceRow
 
@@ -46,9 +45,7 @@ export function handleBrowseRouteSelect(services: TuiServices, store: TuiStore, 
   void openProjectRoot(services, store, row)
 }
 
-export function handleBrowseActionSelect(services: TuiServices, store: TuiStore) {
-  const row = store.get(selectedActionRowAtom)
-
+export function handleBrowseActionSelect(services: TuiServices, store: TuiStore, row: ActionRow | null) {
   if (!row || row.kind !== 'action') {
     return
   }

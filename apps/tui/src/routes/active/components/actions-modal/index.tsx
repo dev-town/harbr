@@ -5,12 +5,12 @@ import { useEffect, useRef } from 'react'
 import { ActionsModal, type ActionsModalHandle } from '../../../../components/actions-modal'
 import { useRegisterFocusTarget } from '../../../../hooks/useRegisterFocusTarget'
 import { useTuiServices } from '../../../../hooks/useTuiServices'
-import { setBrowseActionsModalHandle } from '../../actions-modal-controller'
-import { handleBrowseActionSelect } from '../../actions'
+import { setActiveActionsModalHandle } from '../../actions-modal-controller'
+import { handleActiveActionSelect } from '../../actions'
 import { actionRowsAtom, isActionsOpenAtom } from '../../atoms'
 import { closeActionsMenuAtom } from '../../state/actions'
 
-export function BrowseActionsModal() {
+export function ActiveActionsModal() {
   const services = useTuiServices()
   const store = useStore()
   const focusRef = useRef<BoxRenderable | null>(null)
@@ -22,10 +22,10 @@ export function BrowseActionsModal() {
   useRegisterFocusTarget('actions', isOpen ? focusRef : null)
 
   useEffect(() => {
-    setBrowseActionsModalHandle(isOpen ? modalRef.current : null)
+    setActiveActionsModalHandle(isOpen ? modalRef.current : null)
 
     return () => {
-      setBrowseActionsModalHandle(null)
+      setActiveActionsModalHandle(null)
     }
   }, [isOpen])
 
@@ -35,7 +35,7 @@ export function BrowseActionsModal() {
       isOpen={isOpen}
       items={rows}
       onClose={onClose}
-      onSelect={(item) => handleBrowseActionSelect(services, store, item)}
+      onSelect={(item) => handleActiveActionSelect(services, store, item)}
       ref={modalRef}
     />
   )
