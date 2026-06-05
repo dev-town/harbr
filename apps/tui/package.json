@@ -19,6 +19,7 @@
     ".": "./src/index.tsx"
   },
   "scripts": {
+    "dev": "bun --watch src/index.tsx",
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
     "start": "bun src/index.tsx",

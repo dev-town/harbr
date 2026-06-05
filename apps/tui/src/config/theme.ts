@@ -5,6 +5,7 @@ export const theme = {
   border: '#89b4fa',
   borderSoft: '#313244',
   text: '#cdd6f4',
+  activeText: '#f5f7ff',
   muted: '#9399b2',
   accent: '#89b4fa',
   active: '#a6e3a1',

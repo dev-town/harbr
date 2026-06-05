@@ -2,7 +2,12 @@ import type { HarbourContext, ProjectSummary } from '@harbour/domain'
 
 import type { TuiServices, TuiStore } from '../app-context'
 import { listWorkspaceSummaries, loadCurrentRuntime } from '../data'
-import { currentSectionAtom, moduleRowsAtom, selectedBrowseRowIdAtom, selectedProjectIdAtom, workspaceRowsAtom } from '../state'
+import {
+  browseSectionAtom,
+  selectedBrowseRowIdAtom,
+  selectedProjectIdAtom,
+} from '../routes/browse'
+import { moduleRowsAtom, workspaceRowsAtom } from '../state'
 import { mapWorkspaceSummaryToRow } from '../transforms'
 import { openDefaultWorkspaceModules, openModules, openWorkspaces } from './drilldown'
 
@@ -89,7 +94,7 @@ export async function restoreCurrentRuntime(
 
   store.set(workspaceRowsAtom, workspaces.map(mapWorkspaceSummaryToRow))
   store.set(selectedProjectIdAtom, project.id)
-  store.set(currentSectionAtom, 'workspaces')
+  store.set(browseSectionAtom, 'workspaces')
 
   store.set(selectedBrowseRowIdAtom, workspace.id)
 

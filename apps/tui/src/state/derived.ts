@@ -1,78 +1,47 @@
-import type { HarbourRow } from '../types/rows'
 import { atom } from 'jotai'
 
-import { currentSectionAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom } from './navigation'
+import { activeQueryAtom, selectedActiveRowIdAtom, visibleActiveRowsAtom } from '../routes/active'
 import {
+  actionRowsAtom,
+  browseBreadcrumbAtom,
   browseQueryAtom,
+  browseSectionAtom,
   browseVisibilityAtom,
-  hoveredActionRowIdAtom,
-  hoveredBrowseRowIdAtom,
   isActionsOpenAtom,
   selectedActionRowIdAtom,
   selectedBrowseRowIdAtom,
-} from './app'
-import { actionRowsAtom, moduleRowsAtom, projectRowsAtom, workspaceRowsAtom } from './rows'
+  selectedProjectIssueAtom as browseSelectedProjectIssueAtom,
+  visibleBrowseRowsAtom,
+} from '../routes/browse'
+import { currentRouteAtom } from './app'
 
-export const browseRowsAtom = atom<readonly HarbourRow[]>((get) => {
-  const currentSection = get(currentSectionAtom)
-
-  if (currentSection === 'modules') {
-    return get(moduleRowsAtom)
+export const currentRowCountAtom = atom((get) => {
+  if (get(isActionsOpenAtom)) {
+    return get(actionRowsAtom).length
   }
 
-  if (currentSection === 'workspaces') {
-    return get(workspaceRowsAtom)
-  }
-
-  return get(projectRowsAtom)
+  return get(currentRouteAtom) === 'active'
+    ? get(visibleActiveRowsAtom).length
+    : get(visibleBrowseRowsAtom).length
 })
 
-export const visibleBrowseRowsAtom = atom<readonly HarbourRow[]>((get) => {
-  const visibility = get(browseVisibilityAtom)
-  const query = get(browseQueryAtom).trim().toLowerCase()
-  const baseRows = get(browseRowsAtom)
-  const scopedRows = visibility === 'active' ? baseRows.filter((row) => row.isActive) : [...baseRows]
-
-  if (!query) {
-    return scopedRows
+export const currentSelectedRowIdAtom = atom((get) => {
+  if (get(isActionsOpenAtom)) {
+    return get(selectedActionRowIdAtom)
   }
 
-  return scopedRows
-    .map((row) => ({ row, score: getRowScore(row, query) }))
-    .filter((entry) => entry.score >= 0)
-    .sort((left, right) => left.score - right.score)
-    .map((entry) => entry.row)
+  return get(currentRouteAtom) === 'active'
+    ? get(selectedActiveRowIdAtom)
+    : get(selectedBrowseRowIdAtom)
 })
-
-export const currentRowsAtom = atom<readonly HarbourRow[]>((get) =>
-  get(isActionsOpenAtom) ? get(actionRowsAtom) : get(visibleBrowseRowsAtom),
-)
-
-export const currentRowCountAtom = atom((get) => get(currentRowsAtom).length)
-
-export const selectedBrowseRowAtom = atom(
-  (get) => get(visibleBrowseRowsAtom).find((row) => row.id === get(selectedBrowseRowIdAtom)) ?? null,
-)
-
-export const hoveredBrowseRowAtom = atom(
-  (get) => get(visibleBrowseRowsAtom).find((row) => row.id === get(hoveredBrowseRowIdAtom)) ?? null,
-)
-
-export const selectedActionRowAtom = atom(
-  (get) => get(actionRowsAtom).find((row) => row.id === get(selectedActionRowIdAtom)) ?? null,
-)
-
-export const hoveredActionRowAtom = atom(
-  (get) => get(actionRowsAtom).find((row) => row.id === get(hoveredActionRowIdAtom)) ?? null,
-)
 
 export const effectiveVisibilityAtom = atom((get) => {
-  if (get(isActionsOpenAtom)) {
+  if (get(isActionsOpenAtom) || get(currentRouteAtom) === 'active') {
     return 'all'
   }
 
   const visibility = get(browseVisibilityAtom)
-  const rows = get(browseRowsAtom)
+  const rows = get(visibleBrowseRowsAtom)
 
   if (visibility === 'all') {
     return visibility
@@ -82,8 +51,10 @@ export const effectiveVisibilityAtom = atom((get) => {
 })
 
 export const footerHintsAtom = atom((get) => {
-  const query = get(browseQueryAtom)
-  const currentSection = get(currentSectionAtom)
+  const currentRoute = get(currentRouteAtom)
+  const currentSection = get(browseSectionAtom)
+  const activeQuery = get(activeQueryAtom)
+  const browseQuery = get(browseQueryAtom)
 
   if (get(isActionsOpenAtom)) {
     return [
@@ -93,10 +64,20 @@ export const footerHintsAtom = atom((get) => {
     ]
   }
 
-  if (query.length > 0) {
+  if (currentRoute === 'active') {
+    return [
+      { key: 'Enter', label: 'switch' },
+      { key: 'Tab', label: 'next tab' },
+      { key: 'Shift+Tab', label: 'prev tab' },
+      { key: 'Esc', label: activeQuery.length > 0 ? 'clear query' : 'close' },
+    ]
+  }
+
+  if (browseQuery.length > 0) {
     return [
       { key: 'Enter', label: 'drill next' },
-      { key: 'Tab', label: 'active/all' },
+      { key: 'Ctrl+A', label: 'actions' },
+      { key: 'Ctrl+F', label: 'active/all' },
       { key: 'Esc', label: 'clear query' },
     ]
   }
@@ -104,8 +85,8 @@ export const footerHintsAtom = atom((get) => {
   if (currentSection === 'workspaces') {
     return [
       { key: 'Enter', label: 'drill next' },
-      { key: 'Tab', label: 'active/all' },
-      { key: 'Ctrl+R', label: 'refresh' },
+      { key: 'Ctrl+A', label: 'actions' },
+      { key: 'Ctrl+F', label: 'active/all' },
       { key: 'Esc', label: 'back' },
     ]
   }
@@ -113,73 +94,20 @@ export const footerHintsAtom = atom((get) => {
   if (currentSection === 'modules') {
     return [
       { key: 'Enter', label: 'attach/create' },
-      { key: 'Tab', label: 'active/all' },
-      { key: 'Ctrl+R', label: 'refresh' },
+      { key: 'Ctrl+A', label: 'actions' },
+      { key: 'Ctrl+F', label: 'active/all' },
       { key: 'Esc', label: 'back' },
     ]
   }
 
   return [
     { key: 'Enter', label: 'drill next' },
-    { key: 'Tab', label: 'active/all' },
-    { key: 'Ctrl+R', label: 'refresh' },
+    { key: 'Ctrl+A', label: 'actions' },
+    { key: 'Ctrl+F', label: 'active/all' },
     { key: 'Esc', label: 'close' },
   ]
 })
 
-export const breadcrumbAtom = atom((get) => {
-  const selectedProjectId = get(selectedProjectIdAtom)
-  const selectedWorkspaceId = get(selectedWorkspaceIdAtom)
-  const selectedWorkspaceImplicit = get(selectedWorkspaceImplicitAtom)
-  const currentSection = get(currentSectionAtom)
-  const projectRows = get(projectRowsAtom)
-  const projectLabel = projectRows.find((row) => row.projectId === selectedProjectId)?.label
-  const workspaceLabel = get(workspaceRowsAtom).find((row) => row.workspaceId === selectedWorkspaceId)?.label
+export const breadcrumbAtom = atom((get) => get(browseBreadcrumbAtom))
 
-  if (
-    currentSection === 'modules' &&
-    projectLabel &&
-    workspaceLabel &&
-    !selectedWorkspaceImplicit
-  ) {
-    return `${projectLabel} › ${workspaceLabel}`
-  }
-
-  if (currentSection === 'modules' && projectLabel) {
-    return projectLabel
-  }
-
-  if (currentSection === 'workspaces' && projectLabel) {
-    return projectLabel
-  }
-
-  return ''
-})
-
-export const selectedProjectIssueAtom = atom((get) => {
-  const selectedProjectId = get(selectedProjectIdAtom)
-
-  if (!selectedProjectId) {
-    return null
-  }
-
-  return get(projectRowsAtom).find((row) => row.projectId === selectedProjectId)?.projectIssue ?? null
-})
-
-function getRowScore(row: HarbourRow, query: string) {
-  const label = row.label.toLowerCase()
-  const metadata = row.metadata?.toLowerCase() ?? ''
-  const labelIndex = label.indexOf(query)
-
-  if (labelIndex >= 0) {
-    return labelIndex
-  }
-
-  const metadataIndex = metadata.indexOf(query)
-
-  if (metadataIndex >= 0) {
-    return 100 + metadataIndex
-  }
-
-  return -1
-}
+export const selectedProjectIssueAtom = atom((get) => get(browseSelectedProjectIssueAtom))

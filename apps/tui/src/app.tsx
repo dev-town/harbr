@@ -1,5 +1,5 @@
 import { useAppShell } from './hooks/useAppShell'
-import { Browser, FooterRow, NoticeLine } from './components'
+import { FooterRow, NoticeLine, Shell } from './components'
 import { SurfaceFocusManager } from './keymap/layers'
 
 export function App() {
@@ -9,10 +9,9 @@ export function App() {
     <box flexDirection="column" height="100%" padding={1} width="100%">
       <SurfaceFocusManager />
       <box flexGrow={1}>
-        <Browser />
+        <Shell />
       </box>
       {notice ? <NoticeLine notice={notice} /> : null}
-      <FooterRow />
     </box>
   )
 }

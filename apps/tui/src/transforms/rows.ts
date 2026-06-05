@@ -1,10 +1,11 @@
 import type {
+  ActiveRuntimeSummary,
   ModuleSummary,
   ProjectSummary,
   WorkspaceSummary,
 } from '@harbour/domain'
 
-import type { ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
+import type { ActiveRuntimeRow, ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
 
 export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
   const projectIssue = summary.projectIssue ?? null
@@ -58,6 +59,27 @@ export function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
   }
 }
 
+export function mapActiveRuntimeSummaryToRow(summary: ActiveRuntimeSummary): ActiveRuntimeRow {
+  return {
+    contextLabel: getActiveRuntimeContextLabel(summary),
+    id: summary.id,
+    isCurrent: false,
+    label: getActiveRuntimeLabel(summary),
+    moduleId: summary.moduleId,
+    moduleLabel: summary.moduleName,
+    modulePath: summary.modulePath,
+    projectId: summary.projectId,
+    projectLabel: summary.projectName,
+    repoPath: summary.repoPath,
+    scope: summary.scope,
+    sessionName: summary.sessionName,
+    status: summary.status,
+    workspaceId: summary.workspaceId,
+    workspaceLabel: summary.workspaceName,
+    workspacePath: summary.workspacePath,
+  }
+}
+
 function formatSessionMetadata(activeSessionCount: number) {
   if (activeSessionCount === 0) {
     return 'no sessions'
@@ -78,4 +100,28 @@ function formatWorkspaceMetadata(branchName: string | null, activeSessionCount: 
   }
 
   return `${branchName} · ${sessionMetadata}`
+}
+
+function getActiveRuntimeLabel(summary: ActiveRuntimeSummary) {
+  if (summary.scope === 'module') {
+    return summary.moduleName ?? summary.workspaceName ?? summary.projectName
+  }
+
+  if (summary.scope === 'workspace') {
+    return summary.workspaceName ?? summary.projectName
+  }
+
+  return summary.projectName
+}
+
+function getActiveRuntimeContextLabel(summary: ActiveRuntimeSummary) {
+  if (summary.scope === 'module') {
+    return [summary.projectName, summary.workspaceName, summary.moduleName].filter(Boolean).join(' › ')
+  }
+
+  if (summary.scope === 'workspace') {
+    return [summary.projectName, summary.workspaceName].filter(Boolean).join(' › ')
+  }
+
+  return summary.projectName
 }

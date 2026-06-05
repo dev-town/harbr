@@ -1,5 +1,5 @@
 import { ProjectService, makeProjectServiceLayer } from '@harbour/db'
-import type { HarbourContext } from '@harbour/domain'
+import type { ActiveRuntimeSummary, HarbourContext } from '@harbour/domain'
 import { Effect } from 'effect'
 
 export async function loadUiContext(dbPath?: string) {
@@ -13,6 +13,14 @@ export async function loadUiContext(dbPath?: string) {
 export async function listProjectSummaries(dbPath?: string) {
   return Effect.runPromise(
     Effect.flatMap(ProjectService, (service) => service.listProjectSummaries).pipe(
+      Effect.provide(makeProjectServiceLayer(dbPath)),
+    ),
+  )
+}
+
+export async function listActiveRuntimeSummaries(dbPath?: string): Promise<readonly ActiveRuntimeSummary[]> {
+  return Effect.runPromise(
+    Effect.flatMap(ProjectService, (service) => service.listActiveRuntimeSummaries).pipe(
       Effect.provide(makeProjectServiceLayer(dbPath)),
     ),
   )

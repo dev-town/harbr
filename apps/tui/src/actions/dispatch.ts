@@ -1,7 +1,7 @@
 import { harbourCommandIds, type HarbourCommandId } from '../keymap/commands'
 
 import type { TuiServices, TuiStore } from '../app-context'
-import { isActionsOpenAtom, isWorktreeFormOpenAtom } from '../state'
+import { isActionsOpenAtom, isWorktreeFormOpenAtom } from '../routes/browse'
 import {
   createActionsCommandHandlers,
   createBrowserCommandHandlers,

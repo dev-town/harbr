@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import type {
+  ActiveRuntimeSummary,
   HarbourContext,
   ModuleSummary,
   ProjectSummary,
@@ -88,6 +89,66 @@ export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
       } satisfies ProjectSummary
     })
     .sort((left, right) => left.name.localeCompare(right.name))
+}
+
+export function listActiveRuntimeSummaries(db: HarbourDatabase): ActiveRuntimeSummary[] {
+  const projectRows = db
+    .select()
+    .from(projects)
+    .all()
+    .map((row) => projectRowSchema.parse(row))
+  const workspaceRows = db
+    .select()
+    .from(workspaces)
+    .all()
+    .map((row) => workspaceRowSchema.parse(row))
+  const moduleRows = db
+    .select()
+    .from(modules)
+    .all()
+    .map((row) => moduleRowSchema.parse(row))
+  const runtimeRows = db
+    .select()
+    .from(runtimes)
+    .all()
+    .map((row) => runtimeRowSchema.parse(row))
+
+  return runtimeRows
+    .map((runtime) => {
+      const project = projectRows.find((row) => row.id === runtime.projectId)
+
+      if (!project) {
+        return null
+      }
+
+      const workspace = runtime.workspaceId
+        ? workspaceRows.find((row) => row.id === runtime.workspaceId) ?? null
+        : null
+      const module =
+        runtime.scope === 'module' && runtime.workspaceId && runtime.modulePath
+          ? moduleRows.find(
+              (row) => row.workspaceId === runtime.workspaceId && row.modulePath === runtime.modulePath,
+            ) ?? null
+          : null
+
+      return {
+        id: runtime.id,
+        moduleId: module?.id ?? null,
+        moduleName: module?.name ?? null,
+        modulePath: runtime.modulePath,
+        projectId: project.id,
+        projectName: project.name,
+        repoPath: project.repoPath,
+        scope: runtime.scope,
+        sessionName: runtime.sessionName,
+        status: runtime.status,
+        workspaceId: workspace?.id ?? null,
+        workspaceName: workspace?.name ?? null,
+        workspacePath: workspace?.workspacePath ?? null,
+      } satisfies ActiveRuntimeSummary
+    })
+    .filter((runtime): runtime is ActiveRuntimeSummary => runtime !== null)
+    .sort((left, right) => left.sessionName.localeCompare(right.sessionName))
 }
 
 export function loadUiContext(db: HarbourDatabase): HarbourContext {

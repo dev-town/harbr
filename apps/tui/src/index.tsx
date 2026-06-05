@@ -25,14 +25,10 @@ const options: TuiOptions = {
 const renderer = await createCliRenderer({
   clearOnShutdown: false,
   exitOnCtrlC: false,
-  // Debug
   consoleOptions: {
     sizePercent: 30,
   },
 })
-
-// Show the debugger
-// renderer.console.toggle()
 
 const services: TuiServices = {
   options,

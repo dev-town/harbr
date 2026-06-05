@@ -2,7 +2,15 @@ import type { TuiServices, TuiStore } from '../app-context'
 import { listModuleSummaries, listWorkspaceSummaries } from '../data'
 import type { VisibilityFilter } from '../types/navigation'
 import { formatError } from '../helpers/errors'
-import { browseVisibilityAtom, currentSectionAtom, moduleRowsAtom, noticeAtom, selectedBrowseRowIdAtom, selectedProjectIdAtom, selectedWorkspaceIdAtom, selectedWorkspaceImplicitAtom, workspaceRowsAtom } from '../state'
+import {
+  browseSectionAtom,
+  browseVisibilityAtom,
+  selectedBrowseRowIdAtom,
+  selectedProjectIdAtom,
+  selectedWorkspaceIdAtom,
+  selectedWorkspaceImplicitAtom,
+} from '../routes/browse'
+import { moduleRowsAtom, noticeAtom, workspaceRowsAtom } from '../state'
 import { mapModuleSummaryToRow, mapWorkspaceSummaryToRow } from '../transforms'
 import { clearNotice, resetQuery, resetSelection, setLoading } from './store'
 
@@ -26,7 +34,7 @@ export async function openWorkspaces(
     store.set(selectedWorkspaceIdAtom, null)
     store.set(selectedWorkspaceImplicitAtom, false)
     store.set(browseVisibilityAtom, openOptions?.visibility ?? 'active')
-    store.set(currentSectionAtom, 'workspaces')
+    store.set(browseSectionAtom, 'workspaces')
     resetSelection(store)
 
     if (openOptions?.selectedWorkspaceName) {
@@ -73,7 +81,7 @@ export async function openModules(
     store.set(selectedProjectIdAtom, projectId)
     store.set(selectedWorkspaceIdAtom, workspaceId)
     store.set(selectedWorkspaceImplicitAtom, openOptions?.implicitWorkspace === true)
-    store.set(currentSectionAtom, 'modules')
+    store.set(browseSectionAtom, 'modules')
     resetSelection(store)
     resetQuery(store)
   } catch (error) {

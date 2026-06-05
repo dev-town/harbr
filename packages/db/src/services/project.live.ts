@@ -7,6 +7,7 @@ import {
 import { makeDatabaseClientLayer } from '../infra/database-client.live'
 import {
   getProjectByName as getProjectByNameRaw,
+  listActiveRuntimeSummaries as listActiveRuntimeSummariesRaw,
   loadUiContext as loadUiContextRaw,
   listModuleSummaries as listModuleSummariesRaw,
   listProjectSummaries as listProjectSummariesRaw,
@@ -45,6 +46,14 @@ export const ProjectServiceLive = Layer.effect(
         catch: (error) =>
           new ProjectServiceError({
             operation: 'listProjectSummaries',
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      }),
+      listActiveRuntimeSummaries: Effect.try({
+        try: () => listActiveRuntimeSummariesRaw(database.db),
+        catch: (error) =>
+          new ProjectServiceError({
+            operation: 'listActiveRuntimeSummaries',
             message: error instanceof Error ? error.message : String(error),
           }),
       }),

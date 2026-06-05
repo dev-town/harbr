@@ -16,6 +16,7 @@ export class ProjectServiceError extends Data.TaggedError(
 )<{
   operation:
     | 'findByName'
+    | 'listActiveRuntimeSummaries'
     | 'loadUiContext'
     | 'listModuleSummaries'
     | 'listProjectSummaries'

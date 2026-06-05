@@ -4,6 +4,7 @@ import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 
 import type {
   HarbourContext,
+  ActiveRuntimeSummary,
   ModuleSummary,
   ProjectSummary,
   RepoKind,
@@ -109,6 +110,10 @@ export type ProjectServiceApi = {
   readonly loadUiContext: Effect.Effect<HarbourContext, ProjectServiceError>
   readonly listProjectSummaries: Effect.Effect<
     readonly ProjectSummary[],
+    ProjectServiceError
+  >
+  readonly listActiveRuntimeSummaries: Effect.Effect<
+    readonly ActiveRuntimeSummary[],
     ProjectServiceError
   >
   readonly listWorkspaceSummaries: (

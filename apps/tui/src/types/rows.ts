@@ -1,4 +1,4 @@
-import type { HarbourContext } from '@harbour/domain'
+import type { ActiveRuntimeSummary, HarbourContext } from '@harbour/domain'
 
 export type RowKind = 'action' | 'module' | 'project' | 'workspace'
 
@@ -7,6 +7,7 @@ export type BaseRow = {
   kind: RowKind
   label: string
   isActive: boolean
+  isCurrent?: boolean
   metadata?: string
 }
 
@@ -44,6 +45,25 @@ export type ActionRow = BaseRow & {
   kind: 'action'
   actionId: string
   target: HarbourContext
+}
+
+export type ActiveRuntimeRow = {
+  id: string
+  contextLabel: string
+  isCurrent: boolean
+  label: string
+  moduleId: string | null
+  moduleLabel: string | null
+  modulePath: string | null
+  projectId: string
+  projectLabel: string
+  repoPath: string
+  scope: ActiveRuntimeSummary['scope']
+  sessionName: string
+  status: ActiveRuntimeSummary['status']
+  workspaceId: string | null
+  workspaceLabel: string | null
+  workspacePath: string | null
 }
 
 export type HarbourRow = ActionRow | ModuleRow | ProjectRow | WorkspaceRow

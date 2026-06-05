@@ -7,13 +7,15 @@ import { formatError } from '../helpers/errors'
 import { validateBranchName, validateWorkspaceName } from '../helpers/worktree-form'
 import {
   closeWorktreeFormAtom,
-  noticeAtom,
-  projectRowsAtom,
   worktreeFormBranchNameAtom,
   worktreeFormProjectIdAtom,
   worktreeFormShowErrorsAtom,
   worktreeFormStepAtom,
   worktreeFormWorkspaceNameAtom,
+} from '../routes/browse'
+import {
+  noticeAtom,
+  projectRowsAtom,
 } from '../state'
 import { openWorkspaces } from './drilldown'
 import { clearNotice, setLoading } from './store'

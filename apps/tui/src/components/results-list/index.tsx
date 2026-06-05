@@ -1,30 +1,32 @@
 import type { ScrollBoxRenderable } from '@opentui/core'
-import type { HarbourRow } from '../../types/rows'
+import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 
 import { theme } from '../../config/theme'
-import { useBrowseList } from '../../hooks/useBrowseList'
-import { capitalize } from '../../helpers/labels'
-import { RowLine } from '../row-line'
 import { StatusLine } from '../status-line'
 
-type ResultsListProps = {
+type ResultsListProps<TRow extends { id: string }> = {
   emptyLabel?: string
+  hoveredId: string | null
   isLoading?: boolean
-  onRowSelect: () => void
-  rows: readonly HarbourRow[]
+  renderRow: (
+    row: TRow,
+    state: { isHovered: boolean; isSelected: boolean },
+  ) => ReactNode
+  rows: readonly TRow[]
+  selectedId: string | null
 }
 
-export function ResultsList({
+export function ResultsList<TRow extends { id: string }>({
   emptyLabel,
+  hoveredId,
   isLoading: forceLoading = false,
-  onRowSelect,
+  renderRow,
   rows,
-}: ResultsListProps) {
-  const { currentSection, hoveredId, isLoading, onHoverRow, onSelectRow, selectedId } =
-    useBrowseList()
+  selectedId,
+}: ResultsListProps<TRow>) {
   const scrollboxRef = useRef<ScrollBoxRenderable | null>(null)
-  const showLoading = forceLoading || isLoading
+  const showLoading = forceLoading
 
   useEffect(() => {
     if (!selectedId) {
@@ -38,39 +40,31 @@ export function ResultsList({
     <scrollbox
       ref={scrollboxRef}
       style={{
-        contentOptions: { backgroundColor: theme.panel },
-        rootOptions: { backgroundColor: theme.panel },
-        scrollbarOptions: {
-          trackOptions: {
-            backgroundColor: theme.panelSoft,
-            foregroundColor: theme.selectionEdge,
-          },
-        },
-        viewportOptions: { backgroundColor: theme.panel },
-        wrapperOptions: { backgroundColor: theme.panel },
+        height: '100%',
+        marginBottom: 2,
       }}
     >
-      {showLoading ? <StatusLine color={theme.accent} icon="" text="Refreshing Harbour view..." /> : null}
+      {showLoading ? (
+        <StatusLine
+          color={theme.accent}
+          icon=""
+          text="Refreshing Harbour view..."
+        />
+      ) : null}
       {!showLoading && rows.length === 0 ? (
         <StatusLine
           color={theme.muted}
           icon="󰮗"
-          text={emptyLabel ?? `No ${capitalize(currentSection).toLowerCase()} match current filters`}
+          text={emptyLabel ?? 'No rows match current filters'}
         />
       ) : null}
       {!showLoading
         ? rows.map((row) => (
             <box id={`row:${row.id}`} key={row.id} width="100%">
-              <RowLine
-                isHovered={hoveredId === row.id}
-                isSelected={selectedId === row.id}
-                onRowClick={() => {
-                  onSelectRow(row.id)
-                  onRowSelect()
-                }}
-                onRowHover={onHoverRow}
-                row={row}
-              />
+              {renderRow(row, {
+                isHovered: hoveredId === row.id,
+                isSelected: selectedId === row.id,
+              })}
             </box>
           ))
         : null}

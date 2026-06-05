@@ -1,320 +1,45 @@
-import type {
-  ActionRow,
-  HarbourRow,
-  ModuleRow,
-  ProjectRow,
-  WorkspaceRow,
-} from '../types/rows'
-import { atom, type Getter, type Setter } from 'jotai'
+import { atom } from 'jotai'
 
-import type { HarbourSection } from '../types/navigation'
-
-import { actionIds } from '../actions/action-ids'
-import { clampIndex } from '../helpers/selection'
-import { visibleBrowseRowsAtom } from './derived'
+import type { AppRoute } from '../types/navigation'
+import { activeSearchFocusNonceAtom } from '../routes/active/atoms'
 import {
-  browseQueryAtom,
   browseSearchFocusNonceAtom,
-  browseVisibilityAtom,
-  hoveredActionRowIdAtom,
-  hoveredBrowseRowIdAtom,
-  isActionsOpenAtom,
-  isWorktreeFormOpenAtom,
-  noticeAtom,
-  selectedActionRowIdAtom,
-  selectedBrowseRowIdAtom,
-  worktreeFormBranchNameAtom,
-  worktreeFormProjectIdAtom,
-  worktreeFormShowErrorsAtom,
-  worktreeFormStepAtom,
-  worktreeFormWorkspaceNameAtom,
-} from './app'
-import {
-  currentSectionAtom,
-  selectedProjectIdAtom,
-  selectedWorkspaceIdAtom,
-} from './navigation'
-import { actionRowsAtom, projectRowsAtom, workspaceRowsAtom } from './rows'
+  closeActionsMenuAtom,
+  closeWorktreeFormAtom,
+} from '../routes/browse'
+import { currentRouteAtom, noticeAtom } from './app'
 
-type SupportedContextRow = ModuleRow | ProjectRow | WorkspaceRow
+const orderedRoutes: readonly AppRoute[] = ['active', 'browse']
 
 export const clearNoticeAtom = atom(null, (_get, set) => {
   set(noticeAtom, null)
 })
 
-export const focusBrowseSearchAtom = atom(null, (_get, set) => {
-  set(browseSearchFocusNonceAtom, (current) => current + 1)
-})
-
-export const hoverBrowseRowAtom = atom(null, (_get, set, rowId: string | null) => {
-  set(hoveredBrowseRowIdAtom, rowId)
-})
-
-export const selectBrowseRowAtom = atom(null, (_get, set, rowId: string) => {
-  set(selectedBrowseRowIdAtom, rowId)
-  set(browseSearchFocusNonceAtom, (current) => current + 1)
-})
-
-export const hoverActionRowAtom = atom(null, (_get, set, rowId: string | null) => {
-  set(hoveredActionRowIdAtom, rowId)
-  set(noticeAtom, null)
-})
-
-export const selectActionRowAtom = atom(null, (_get, set, rowId: string) => {
-  set(selectedActionRowIdAtom, rowId)
-  set(noticeAtom, null)
-})
-
-export const changeQueryAtom = atom(null, (get, set, value: string) => {
-  set(browseQueryAtom, value)
-
-  if (!get(isActionsOpenAtom)) {
-    syncSelectedBrowseRowId(get, set)
-  }
-
-  set(noticeAtom, null)
-})
-
-export const moveBrowseSelectionAtom = atom(null, (get, set, delta: number) => {
-  const rows = get(visibleBrowseRowsAtom)
-  const currentIndex = getIndexForRowId(rows, get(selectedBrowseRowIdAtom))
-  const nextIndex = clampIndex(currentIndex + delta, rows.length)
-
-  set(selectedBrowseRowIdAtom, rows[nextIndex]?.id ?? null)
-  set(noticeAtom, null)
-})
-
-export const moveActionSelectionAtom = atom(null, (get, set, delta: number) => {
-  const rows = get(actionRowsAtom)
-  const currentIndex = getIndexForRowId(rows, get(selectedActionRowIdAtom))
-  const nextIndex = clampIndex(currentIndex + delta, rows.length)
-
-  set(selectedActionRowIdAtom, rows[nextIndex]?.id ?? null)
-  set(noticeAtom, null)
-})
-
-export const toggleBrowseVisibilityAtom = atom(null, (_get, set) => {
-  set(browseVisibilityAtom, (current) => (current === 'active' ? 'all' : 'active'))
-  syncSelectedBrowseRowId(_get, set)
-  set(noticeAtom, null)
-})
-
-export const openActionsMenuAtom = atom(null, (get, set) => {
-  if (get(isActionsOpenAtom)) {
-    return
-  }
-
-  const target = getActionTarget(
-    get(currentSectionAtom),
-    get(visibleBrowseRowsAtom),
-    get(selectedBrowseRowIdAtom),
-    get(selectedProjectIdAtom),
-    get(selectedWorkspaceIdAtom),
-    get(projectRowsAtom),
-    get(workspaceRowsAtom),
-  )
-
-  if (!target) {
-    set(noticeAtom, 'No actions for current context')
-    return
-  }
-
-  const rows = buildActionRows(target)
-
-  set(actionRowsAtom, rows)
-  set(isActionsOpenAtom, true)
-  set(selectedActionRowIdAtom, rows[0]?.id ?? null)
-  set(hoveredActionRowIdAtom, null)
-  set(noticeAtom, null)
-})
-
-export const closeActionsMenuAtom = atom(null, (_get, set) => {
-  set(actionRowsAtom, [])
-  set(isActionsOpenAtom, false)
-  set(selectedActionRowIdAtom, null)
-  set(hoveredActionRowIdAtom, null)
-  set(noticeAtom, null)
-})
-
-export const openCreateWorkspaceFormAtom = atom(null, (_get, set, projectId: string) => {
-  set(isActionsOpenAtom, false)
-  set(actionRowsAtom, [])
-  set(selectedActionRowIdAtom, null)
-  set(hoveredActionRowIdAtom, null)
-  set(worktreeFormProjectIdAtom, projectId)
-  set(worktreeFormWorkspaceNameAtom, '')
-  set(worktreeFormBranchNameAtom, '')
-  set(worktreeFormShowErrorsAtom, false)
-  set(worktreeFormStepAtom, 'workspace')
-  set(isWorktreeFormOpenAtom, true)
-  set(noticeAtom, null)
-})
-
-export const closeWorktreeFormAtom = atom(null, (_get, set) => {
-  set(isWorktreeFormOpenAtom, false)
-  set(worktreeFormProjectIdAtom, null)
-  set(worktreeFormWorkspaceNameAtom, '')
-  set(worktreeFormBranchNameAtom, '')
-  set(worktreeFormShowErrorsAtom, false)
-  set(worktreeFormStepAtom, 'workspace')
-  set(noticeAtom, null)
-})
-
-export const backWorktreeFormAtom = atom(null, (get, set) => {
-  if (get(worktreeFormStepAtom) === 'branch') {
-    set(worktreeFormBranchNameAtom, '')
-    set(worktreeFormShowErrorsAtom, false)
-    set(worktreeFormStepAtom, 'workspace')
-    return
-  }
-
+export const setCurrentRouteAtom = atom(null, (_get, set, nextRoute: AppRoute) => {
+  set(currentRouteAtom, nextRoute)
+  set(closeActionsMenuAtom)
   set(closeWorktreeFormAtom)
-})
+  set(noticeAtom, null)
 
-export const advanceWorktreeFormAtom = atom(null, (get, set) => {
-  const workspaceName = get(worktreeFormWorkspaceNameAtom).trim()
-  const branchName = get(worktreeFormBranchNameAtom).trim()
-
-  if (get(worktreeFormStepAtom) === 'workspace') {
-    set(worktreeFormWorkspaceNameAtom, workspaceName)
-
-    if (branchName.length === 0) {
-      set(worktreeFormBranchNameAtom, workspaceName)
-    }
-
-    set(worktreeFormShowErrorsAtom, false)
-    set(worktreeFormStepAtom, 'branch')
+  if (nextRoute === 'active') {
+    set(activeSearchFocusNonceAtom, (current) => current + 1)
     return
   }
 
-  set(worktreeFormShowErrorsAtom, false)
-  set(worktreeFormBranchNameAtom, branchName)
+  set(browseSearchFocusNonceAtom, (current) => current + 1)
 })
 
-function buildActionRows(target: SupportedContextRow): readonly ActionRow[] {
-  if (target.kind === 'project') {
-    return [
-      makeActionRow(
-        actionIds.openProjectRoot,
-        'Open project root',
-        'project runtime',
-        target,
-      ),
-    ]
-  }
+export const nextRouteAtom = atom(null, (get, set) => {
+  const currentIndex = orderedRoutes.indexOf(get(currentRouteAtom))
+  const nextRoute = orderedRoutes[(currentIndex + 1) % orderedRoutes.length] ?? 'browse'
 
-  if (target.kind === 'workspace') {
-    return [
-      makeActionRow(
-        actionIds.createWorkspace,
-        'Create workspace',
-        'git worktree',
-        target,
-      ),
-      makeActionRow(
-        actionIds.openWorkspaceRoot,
-        'Open workspace root',
-        'workspace runtime',
-        target,
-      ),
-      makeActionRow(
-        actionIds.openProjectRoot,
-        'Open project root',
-        'project runtime',
-        target,
-      ),
-    ]
-  }
+  set(setCurrentRouteAtom, nextRoute)
+})
 
-  return [
-    makeActionRow(
-      actionIds.openModuleSession,
-      'Open module session',
-      'module runtime',
-      target,
-    ),
-    makeActionRow(
-      actionIds.openWorkspaceRoot,
-      'Open workspace root',
-      'workspace runtime',
-      target,
-    ),
-    makeActionRow(
-      actionIds.openProjectRoot,
-      'Open project root',
-      'project runtime',
-      target,
-    ),
-  ]
-}
+export const previousRouteAtom = atom(null, (get, set) => {
+  const currentIndex = orderedRoutes.indexOf(get(currentRouteAtom))
+  const nextRoute =
+    orderedRoutes[(currentIndex - 1 + orderedRoutes.length) % orderedRoutes.length] ?? 'browse'
 
-function makeActionRow(
-  actionId: string,
-  label: string,
-  metadata: string,
-  target: SupportedContextRow,
-): ActionRow {
-  return {
-    id: `${actionId}:${target.id}`,
-    kind: 'action',
-    label,
-    isActive: true,
-    metadata,
-    actionId,
-    target: {
-      projectId: target.projectId,
-      ...(target.kind === 'project' ? {} : { workspaceId: target.workspaceId }),
-      ...(target.kind === 'module' ? { moduleId: target.moduleId } : {}),
-    },
-  }
-}
-
-function getActionTarget(
-  currentSection: HarbourSection,
-  visibleBrowseRows: readonly HarbourRow[],
-  selectedRowId: string | null,
-  selectedProjectId: string | null,
-  selectedWorkspaceId: string | null,
-  projectRows: readonly ProjectRow[],
-  workspaceRows: readonly WorkspaceRow[],
-): SupportedContextRow | null {
-  const selectedRow = visibleBrowseRows.find((row) => row.id === selectedRowId)
-
-  if (selectedRow && selectedRow.kind !== 'action') {
-    return selectedRow
-  }
-
-  if (currentSection === 'modules' && selectedWorkspaceId) {
-    return workspaceRows.find((row) => row.workspaceId === selectedWorkspaceId) ?? null
-  }
-
-  if (currentSection === 'workspaces' && selectedProjectId) {
-    return projectRows.find((row) => row.projectId === selectedProjectId) ?? null
-  }
-
-  return null
-}
-
-function getIndexForRowId(rows: readonly HarbourRow[], rowId: string | null) {
-  if (rows.length === 0) {
-    return 0
-  }
-
-  const index = rowId ? rows.findIndex((row) => row.id === rowId) : -1
-
-  return index >= 0 ? index : 0
-}
-
-function syncSelectedBrowseRowId(
-  get: Getter,
-  set: Setter,
-) {
-  const rows = get(visibleBrowseRowsAtom)
-  const selectedRowId = get(selectedBrowseRowIdAtom)
-
-  if (selectedRowId && rows.some((row) => row.id === selectedRowId)) {
-    return
-  }
-
-  set(selectedBrowseRowIdAtom, rows[0]?.id ?? null)
-}
+  set(setCurrentRouteAtom, nextRoute)
+})

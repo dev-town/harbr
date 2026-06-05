@@ -12,3 +12,21 @@ export const RuntimeFactSchema = z.object({
 })
 
 export type RuntimeFact = z.infer<typeof RuntimeFactSchema>
+
+export const ActiveRuntimeSummarySchema = z.object({
+  id: z.string(),
+  moduleId: z.string().nullable(),
+  moduleName: z.string().nullable(),
+  modulePath: z.string().nullable(),
+  projectId: z.string(),
+  projectName: z.string(),
+  repoPath: z.string(),
+  scope: RuntimeScopeSchema,
+  sessionName: z.string(),
+  status: RuntimeStatusSchema,
+  workspaceId: z.string().nullable(),
+  workspaceName: z.string().nullable(),
+  workspacePath: z.string().nullable(),
+})
+
+export type ActiveRuntimeSummary = z.infer<typeof ActiveRuntimeSummarySchema>

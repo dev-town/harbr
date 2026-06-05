@@ -1,6 +1,6 @@
 import { atom } from 'jotai'
 
-import { isActionsOpenAtom, isWorktreeFormOpenAtom } from './app'
+import { isActionsOpenAtom, isWorktreeFormOpenAtom } from '../routes/browse'
 
 export type SurfaceId = 'actions' | 'browser' | 'confirm' | 'worktree-form'
 

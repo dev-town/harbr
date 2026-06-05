@@ -4,7 +4,7 @@ import { Effect } from 'effect'
 import { join } from 'node:path'
 
 import type { TuiServices, TuiStore } from '../app-context'
-import type { ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
+import type { ActiveRuntimeRow, ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
 import { saveUiContext } from '../data'
 import { formatError } from '../helpers/errors'
 import { noticeAtom, projectRowsAtom, workspaceRowsAtom } from '../state'
@@ -78,6 +78,40 @@ export async function openModuleRuntime(services: TuiServices, store: TuiStore, 
       projectId: row.projectId,
       workspaceId: row.workspaceId,
       moduleId: row.moduleId,
+    },
+  )
+}
+
+export async function openActiveRuntime(services: TuiServices, store: TuiStore, row: ActiveRuntimeRow) {
+  const cwd =
+    row.scope === 'module'
+      ? row.modulePath === '.'
+        ? row.workspacePath
+        : row.workspacePath && row.modulePath
+          ? join(row.workspacePath, row.modulePath)
+          : null
+      : row.scope === 'workspace'
+        ? row.workspacePath
+        : row.repoPath
+
+  if (!cwd) {
+    store.set(noticeAtom, 'Runtime path missing')
+    return
+  }
+
+  await openRuntimeForTarget(
+    services,
+    store,
+    {
+      projectName: row.projectLabel,
+      workspaceName: row.workspaceLabel,
+      moduleName: row.scope === 'module' ? row.label : null,
+      cwd,
+    },
+    {
+      projectId: row.projectId,
+      ...(row.workspaceId ? { workspaceId: row.workspaceId } : {}),
+      ...(row.scope === 'module' && row.moduleId ? { moduleId: row.moduleId } : {}),
     },
   )
 }

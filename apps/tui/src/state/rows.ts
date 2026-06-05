@@ -1,8 +1,8 @@
 import { atom } from 'jotai'
 
-import type { ActionRow, ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
+import type { ActiveRuntimeRow, ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
 
-export const actionRowsAtom = atom<readonly ActionRow[]>([])
+export const activeRuntimeRowsAtom = atom<readonly ActiveRuntimeRow[]>([])
 export const projectRowsAtom = atom<readonly ProjectRow[]>([])
 export const workspaceRowsAtom = atom<readonly WorkspaceRow[]>([])
 export const moduleRowsAtom = atom<readonly ModuleRow[]>([])

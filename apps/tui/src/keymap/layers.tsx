@@ -1,51 +1,9 @@
-import { useAtomValue, useStore } from 'jotai'
-import type { ReactNode } from 'react'
+import { useAtomValue } from 'jotai'
 import { useEffect, useRef } from 'react'
 
 import { useTuiServices } from '../hooks/useTuiServices'
-import type { FocusTargetRef, SurfaceId } from '../state'
-import {
-  actionsFocusTargetRefAtom,
-  activeFocusTargetAtom,
-  browserFocusTargetRefAtom,
-  worktreeFormFocusTargetRefAtom,
-} from '../state'
-
-export function Surface({
-  active,
-  children,
-  focusTargetRef,
-  id,
-}: {
-  active: boolean
-  children?: ReactNode
-  focusTargetRef?: FocusTargetRef
-  id: SurfaceId
-}) {
-  const store = useStore()
-
-  useEffect(() => {
-    const focusTargetAtom =
-      id === 'actions'
-        ? actionsFocusTargetRefAtom
-        : id === 'worktree-form'
-          ? worktreeFormFocusTargetRefAtom
-          : browserFocusTargetRefAtom
-
-    if (!active) {
-      store.set(focusTargetAtom, null)
-      return
-    }
-
-    store.set(focusTargetAtom, focusTargetRef ?? null)
-
-    return () => {
-      store.set(focusTargetAtom, null)
-    }
-  }, [active, focusTargetRef, id, store])
-
-  return active ? <>{children}</> : null
-}
+import type { FocusTargetRef } from '../state'
+import { activeFocusTargetAtom } from '../state'
 
 export function SurfaceFocusManager() {
   const services = useTuiServices()
