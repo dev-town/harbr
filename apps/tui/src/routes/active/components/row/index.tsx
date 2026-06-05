@@ -1,4 +1,5 @@
 import { ListRow } from '../../../../components/list-row'
+import type { RowVariant } from '../../../../components/list-row/types'
 import { theme } from '../../../../config/theme'
 import type { ActiveRuntimeRow } from '../../../../types/rows'
 
@@ -8,6 +9,7 @@ type ActiveRouteRowProps = {
   onRowClick: () => void
   onRowHover: (rowId: string | null) => void
   row: ActiveRuntimeRow
+  variant: RowVariant
 }
 
 export function ActiveRouteRow({
@@ -16,19 +18,20 @@ export function ActiveRouteRow({
   onRowClick,
   onRowHover,
   row,
+  variant,
 }: ActiveRouteRowProps) {
   return (
     <ListRow
-      context={row.contextLabel}
       isHovered={isHovered}
       isSelected={isSelected}
       marker={row.isCurrent ? '●' : '○'}
       markerColor={row.isCurrent ? theme.active : theme.idle}
+      meta={{ breadcrumb: row.contextLabel }}
       name={row.label}
-      nameWidth={28}
       onRowClick={onRowClick}
       onRowHover={onRowHover}
       rowId={row.id}
+      variant={variant}
     />
   )
 }

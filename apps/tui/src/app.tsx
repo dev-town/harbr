@@ -1,5 +1,5 @@
 import { useAppShell } from './hooks/useAppShell'
-import { FooterRow, NoticeLine, Shell } from './components'
+import { NoticeLine, Shell } from './components'
 import { SurfaceFocusManager } from './keymap/layers'
 
 export function App() {

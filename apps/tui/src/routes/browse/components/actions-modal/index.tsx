@@ -1,5 +1,6 @@
 import type { BoxRenderable } from '@opentui/core'
 import { RGBA } from '@opentui/core'
+import { useTerminalDimensions } from '@opentui/react'
 import { useRef } from 'react'
 
 import { theme } from '../../../../config/theme'
@@ -18,6 +19,10 @@ export function ActionsModal() {
     selectedId,
   } = useBrowseActions()
   const focusRef = useRef<BoxRenderable | null>(null)
+  const { width } = useTerminalDimensions()
+  const isNarrow = width < 90
+  const modalWidth = getModalWidth(width, 48)
+  const padding = isNarrow ? 0 : 1
 
   useRegisterFocusTarget('actions', isOpen ? focusRef : null)
 
@@ -51,10 +56,10 @@ export function ActionsModal() {
         onMouseUp={(event: { stopPropagation(): void }) =>
           event.stopPropagation()
         }
-        padding={1}
+        padding={padding}
         ref={focusRef}
         style={{ backgroundColor: theme.panel }}
-        width="36%"
+        width={modalWidth}
       >
         <box
           flexDirection="column"
@@ -108,4 +113,8 @@ export function ActionsModal() {
       </box>
     </box>
   )
+}
+
+function getModalWidth(width: number, maxWidth: number) {
+  return Math.max(32, Math.min(maxWidth, width - (width < 90 ? 4 : 10)))
 }

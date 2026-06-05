@@ -1,3 +1,6 @@
+import { useTerminalDimensions } from '@opentui/react'
+
+import { getRowVariant } from '../../components/list-row/utils'
 import { ResultsList } from '../../components/results-list'
 import { SearchBar } from '../../components/search-bar'
 import { ActiveRouteLayout } from './layout'
@@ -6,6 +9,8 @@ import { useActiveRoute } from './hooks/use-active-route'
 
 export function ActiveRoute() {
   const activeRoute = useActiveRoute()
+  const { width } = useTerminalDimensions()
+  const rowVariant = getRowVariant(width)
 
   return (
     <ActiveRouteLayout
@@ -34,6 +39,7 @@ export function ActiveRoute() {
             onRowClick={() => activeRoute.onOpenRow(row)}
             onRowHover={activeRoute.onHoverRow}
             row={row}
+            variant={rowVariant}
           />
         )}
         rows={activeRoute.rows}

@@ -1,3 +1,6 @@
+import { useTerminalDimensions } from '@opentui/react'
+
+import { getRowVariant } from '../../components/list-row/utils'
 import { ResultsList } from '../../components/results-list'
 import { SearchBar } from '../../components/search-bar'
 import { BrowseRouteLayout } from './layout'
@@ -8,6 +11,8 @@ import { CreateWorkspaceModal } from './components/create-workspace-modal'
 
 export function BrowseRoute() {
   const browseRoute = useBrowseRoute()
+  const { width } = useTerminalDimensions()
+  const rowVariant = getRowVariant(width)
 
   return (
     <BrowseRouteLayout
@@ -32,6 +37,8 @@ export function BrowseRoute() {
             onRowClick={() => browseRoute.onOpenRow(row)}
             onRowHover={browseRoute.onHoverRow}
             row={row}
+            scopeBreadcrumb={browseRoute.breadcrumb}
+            variant={rowVariant}
           />
         )}
         rows={browseRoute.rows}

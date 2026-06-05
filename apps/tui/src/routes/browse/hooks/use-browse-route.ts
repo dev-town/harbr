@@ -9,7 +9,7 @@ import {
   isActionsOpenAtom,
   isWorktreeFormOpenAtom,
 } from '../atoms'
-import { selectedBrowseRowAtom, visibleBrowseRowsAtom } from '../derived'
+import { browseBreadcrumbAtom, selectedBrowseRowAtom, visibleBrowseRowsAtom } from '../derived'
 import {
   backWorktreeFormAtom,
   closeActionsMenuAtom,
@@ -29,6 +29,7 @@ export function useBrowseRoute() {
 
   return {
     currentSection: browseSection.currentSection,
+    breadcrumb: useAtomValue(browseBreadcrumbAtom),
     hoveredId: useAtomValue(hoveredBrowseRowIdAtom),
     isLoading: useAtomValue(isLoadingAtom),
     onBack: () => {

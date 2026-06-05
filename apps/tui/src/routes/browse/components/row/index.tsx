@@ -1,4 +1,5 @@
 import { ListRow } from '../../../../components/list-row'
+import type { ListRowMeta, RowVariant } from '../../../../components/list-row/types'
 import { theme } from '../../../../config/theme'
 import type { HarbourRow } from '../../../../types/rows'
 
@@ -8,6 +9,8 @@ type BrowseRouteRowProps = {
   onRowClick: () => void
   onRowHover: (rowId: string | null) => void
   row: HarbourRow
+  scopeBreadcrumb: string
+  variant: RowVariant
 }
 
 export function BrowseRouteRow({
@@ -16,19 +19,48 @@ export function BrowseRouteRow({
   onRowClick,
   onRowHover,
   row,
+  scopeBreadcrumb,
+  variant,
 }: BrowseRouteRowProps) {
+  const meta = getBrowseRowMeta(row, scopeBreadcrumb)
+  const marker = row.isCurrent ? '◉' : row.isActive ? '●' : '○'
+  const markerColor = row.isCurrent ? theme.active : row.isActive ? theme.accent : theme.idle
+
   return (
     <ListRow
-      context={row.metadata ?? row.kind}
       isHovered={isHovered}
       isSelected={isSelected}
-      marker={row.isCurrent ? '●' : '○'}
-      markerColor={row.isCurrent ? theme.active : theme.idle}
+      marker={marker}
+      markerColor={markerColor}
+      meta={meta}
       name={row.label}
-      nameWidth={32}
       onRowClick={onRowClick}
       onRowHover={onRowHover}
       rowId={row.id}
+      variant={variant}
     />
   )
+}
+
+function getBrowseRowMeta(row: HarbourRow, scopeBreadcrumb: string): ListRowMeta {
+  if (row.kind === 'project') {
+    return { sessions: row.activeSessionCount }
+  }
+
+  if (row.kind === 'workspace') {
+    return {
+      active: row.isActive,
+      ...(row.branchName ? { branch: row.branchName } : {}),
+      sessions: row.activeSessionCount,
+    }
+  }
+
+  if (row.kind === 'module') {
+    return {
+      active: row.hasSession,
+      breadcrumb: [scopeBreadcrumb, row.label].filter(Boolean).join(' › '),
+    }
+  }
+
+  return {}
 }

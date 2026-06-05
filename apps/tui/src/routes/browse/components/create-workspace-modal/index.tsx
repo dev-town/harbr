@@ -1,5 +1,6 @@
 import type { BoxRenderable, InputRenderable } from '@opentui/core'
 import { RGBA } from '@opentui/core'
+import { useTerminalDimensions } from '@opentui/react'
 import { useRef } from 'react'
 
 import { theme } from '../../../../config/theme'
@@ -21,6 +22,10 @@ export function CreateWorkspaceModal() {
   } = useCreateWorkspace()
   const focusRef = useRef<BoxRenderable | null>(null)
   const inputRef = useRef<InputRenderable | null>(null)
+  const { width } = useTerminalDimensions()
+  const isNarrow = width < 90
+  const modalWidth = getModalWidth(width, 56)
+  const padding = isNarrow ? 0 : 1
 
   useRegisterFocusTarget('worktree-form', isOpen ? inputRef : null)
 
@@ -52,10 +57,10 @@ export function CreateWorkspaceModal() {
         borderStyle="single"
         flexDirection="column"
         onMouseUp={(event: { stopPropagation(): void }) => event.stopPropagation()}
-        padding={1}
+        padding={padding}
         ref={focusRef}
         style={{ backgroundColor: theme.panel }}
-        width="42%"
+        width={modalWidth}
       >
         <box flexDirection="column" marginBottom={1} paddingLeft={1} paddingRight={1} width="100%">
           <text>
@@ -92,4 +97,8 @@ export function CreateWorkspaceModal() {
       </box>
     </box>
   )
+}
+
+function getModalWidth(width: number, maxWidth: number) {
+  return Math.max(36, Math.min(maxWidth, width - (width < 90 ? 4 : 8)))
 }
