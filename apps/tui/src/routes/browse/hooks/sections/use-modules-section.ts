@@ -1,34 +1,17 @@
-import { useSetAtom, useStore } from 'jotai'
-
-import { resetWorkspaceScope } from '../../../../actions/store'
 import { openModuleRuntime } from '../../../../actions/runtime'
 import { useTuiServices } from '../../../../hooks/useTuiServices'
+import { tuiStore } from '../../../../store'
 import type { ModuleRow } from '../../../../types/rows'
-import {
-  browseSectionAtom,
-  selectedProjectIdAtom,
-  selectedWorkspaceImplicitAtom,
-} from '../../atoms'
 
 export function useModulesSection() {
   const services = useTuiServices()
-  const store = useStore()
-  const setBrowseSection = useSetAtom(browseSectionAtom)
-  const setSelectedProjectId = useSetAtom(selectedProjectIdAtom)
 
   return {
     onBack: () => {
-      if (store.get(selectedWorkspaceImplicitAtom)) {
-        setBrowseSection('projects')
-        setSelectedProjectId(null)
-      } else {
-        setBrowseSection('workspaces')
-      }
-
-      resetWorkspaceScope(store)
+      tuiStore.getState().resetWorkspaceScope()
     },
     onOpenRow: (row: ModuleRow) => {
-      void openModuleRuntime(services, store, row)
+      void openModuleRuntime(services, tuiStore, row)
     },
   }
 }

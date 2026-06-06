@@ -1,13 +1,12 @@
-import { useAtomValue } from 'jotai'
 import { useEffect, useRef } from 'react'
 
 import { useTuiServices } from '../hooks/useTuiServices'
-import type { FocusTargetRef } from '../state'
-import { activeFocusTargetAtom } from '../state'
+import type { FocusTargetRef } from '../store'
+import { selectActiveFocusTarget, useTuiStore } from '../store'
 
 export function SurfaceFocusManager() {
   const services = useTuiServices()
-  const activeFocusTarget = useAtomValue(activeFocusTargetAtom)
+  const activeFocusTarget = useTuiStore(selectActiveFocusTarget)
   const previousTargetRef = useRef<FocusTargetRef['current']>(null)
 
   useEffect(() => {

@@ -1,11 +1,9 @@
-import { useAtomValue, useSetAtom } from 'jotai'
-
-import { currentRouteAtom, setCurrentRouteAtom } from '../../state'
 import type { AppRoute } from '../../types/navigation'
+import { useTuiStore } from '../../store'
 
 export function useShell() {
-  const setCurrentRoute = useSetAtom(setCurrentRouteAtom)
-  const currentRoute = useAtomValue(currentRouteAtom)
+  const currentRoute = useTuiStore((state) => state.app.currentRoute)
+  const setCurrentRoute = useTuiStore((state) => state.setCurrentRoute)
 
   return {
     currentRoute,

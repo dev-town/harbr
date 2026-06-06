@@ -1,69 +1,67 @@
-import { useAtomValue, useSetAtom, useStore } from 'jotai'
+import { useMemo } from 'react'
 
-import { isLoadingAtom } from '../../../state/app'
-import {
-  browseQueryAtom,
-  selectedBrowseRowIdAtom,
-  hoveredBrowseRowIdAtom,
-  browseVisibilityAtom,
-  isActionsOpenAtom,
-  isWorktreeFormOpenAtom,
-} from '../atoms'
-import { browseBreadcrumbAtom, selectedBrowseRowAtom, visibleBrowseRowsAtom } from '../derived'
-import {
-  backWorktreeFormAtom,
-  closeActionsMenuAtom,
-  hoverBrowseRowAtom,
-  openActionsMenuAtom,
-  selectBrowseRowAtom,
-} from '../state/actions'
-import { clearNotice, resetQuery, resetSelection } from '../../../actions/store'
+import { selectBrowseBreadcrumb, selectIsBrowseActionsOpen, selectIsWorktreeFormOpen, selectVisibleBrowseRows, tuiStore, useTuiStore } from '../../../store'
 import { useBrowseSearch } from './use-browse-search'
 import { useBrowseSection } from './use-browse-section'
 
 export function useBrowseRoute() {
-  const store = useStore()
   const browseSearch = useBrowseSearch()
   const browseSection = useBrowseSection()
-  const query = useAtomValue(browseQueryAtom)
+  const query = useTuiStore((state) => state.browse.list.query)
+  const selectedId = useTuiStore((state) => state.browse.list.selectedId)
+  const projectRows = useTuiStore((state) => state.data.projectRows)
+  const workspaceRows = useTuiStore((state) => state.data.workspaceRows)
+  const moduleRows = useTuiStore((state) => state.data.moduleRows)
+  const currentRuntime = useTuiStore((state) => state.app.currentRuntime)
+  const scope = useTuiStore((state) => state.browse.scope)
+  const visibility = useTuiStore((state) => state.browse.visibility)
+  const rows = useMemo(
+    () => selectVisibleBrowseRows(tuiStore.getState()),
+    [currentRuntime, moduleRows, projectRows, query, scope, visibility, workspaceRows],
+  )
+  const selectedRow = useMemo(() => rows.find((row) => row.id === selectedId) ?? null, [rows, selectedId])
+  const breadcrumb = useMemo(
+    () => selectBrowseBreadcrumb(tuiStore.getState()),
+    [projectRows, scope, workspaceRows],
+  )
 
   return {
     currentSection: browseSection.currentSection,
-    breadcrumb: useAtomValue(browseBreadcrumbAtom),
-    hoveredId: useAtomValue(hoveredBrowseRowIdAtom),
-    isLoading: useAtomValue(isLoadingAtom),
+    breadcrumb,
+    hoveredId: useTuiStore((state) => state.browse.list.hoveredId),
+    isLoading: useTuiStore((state) => state.app.isLoading),
     onBack: () => {
-      if (store.get(isWorktreeFormOpenAtom)) {
-        store.set(backWorktreeFormAtom)
+      if (selectIsWorktreeFormOpen(tuiStore.getState())) {
+        tuiStore.getState().backWorktreeForm()
         return
       }
 
-      if (store.get(isActionsOpenAtom)) {
-        store.set(closeActionsMenuAtom)
+      if (selectIsBrowseActionsOpen(tuiStore.getState())) {
+        tuiStore.getState().closeActionsMenu()
         return
       }
 
       if (query.length > 0) {
-        resetQuery(store)
-        resetSelection(store)
-        clearNotice(store)
+        tuiStore.getState().resetBrowseQuery()
+        tuiStore.getState().resetBrowseSelection()
+        tuiStore.getState().clearNotice()
         return
       }
 
       browseSection.onBack()
     },
-    onHoverRow: useSetAtom(hoverBrowseRowAtom),
-    onOpenActions: useSetAtom(openActionsMenuAtom),
+    onHoverRow: useTuiStore((state) => state.hoverBrowseRow),
+    onOpenActions: useTuiStore((state) => state.openBrowseActionsMenu),
     onOpenRow: browseSection.onOpenRow,
     onSearchChange: browseSearch.onSearchChange,
-    onSelectRow: useSetAtom(selectBrowseRowAtom),
+    onSelectRow: useTuiStore((state) => state.selectBrowseRow),
     placeholder: browseSearch.placeholder,
     query: browseSearch.query,
-    rows: useAtomValue(visibleBrowseRowsAtom),
+    rows,
     searchRef: browseSearch.searchRef,
     searchFocused: browseSearch.searchFocused,
-    selectedId: useAtomValue(selectedBrowseRowIdAtom),
-    selectedRow: useAtomValue(selectedBrowseRowAtom),
-    visibility: useAtomValue(browseVisibilityAtom),
+    selectedId,
+    selectedRow,
+    visibility,
   }
 }

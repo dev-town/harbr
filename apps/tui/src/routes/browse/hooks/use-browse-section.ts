@@ -1,13 +1,11 @@
-import { useAtomValue } from 'jotai'
-
 import type { HarbourRow } from '../../../types/rows'
-import { browseSectionAtom } from '../atoms'
+import { selectCurrentBrowseSection, useTuiStore } from '../../../store'
 import { useModulesSection } from './sections/use-modules-section'
 import { useProjectsSection } from './sections/use-projects-section'
 import { useWorkspacesSection } from './sections/use-workspaces-section'
 
 export function useBrowseSection() {
-  const currentSection = useAtomValue(browseSectionAtom)
+  const currentSection = useTuiStore(selectCurrentBrowseSection)
   const projectsSection = useProjectsSection()
   const workspacesSection = useWorkspacesSection()
   const modulesSection = useModulesSection()

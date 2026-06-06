@@ -2,27 +2,19 @@ import { harbourCommandIds, type HarbourCommandId } from '../keymap/commands'
 
 import type { TuiServices, TuiStore } from '../app-context'
 import {
-  closeActionsMenuAtom as closeActiveActionsMenuAtom,
-  isActionsOpenAtom as isActiveActionsOpenAtom,
-} from '../routes/active'
-import {
   getActiveActionsModalHandle,
 } from '../routes/active/actions-modal-controller'
 import { getBrowseActionsModalHandle } from '../routes/browse/actions-modal-controller'
-import {
-  closeActionsMenuAtom as closeBrowseActionsMenuAtom,
-  isActionsOpenAtom as isBrowseActionsOpenAtom,
-  isWorktreeFormOpenAtom,
-} from '../routes/browse'
 import {
   createActionsCommandHandlers,
   createBrowserCommandHandlers,
   createGlobalCommandHandlers,
   createWorktreeFormCommandHandlers,
 } from '../keymap/handlers'
+import { selectIsActiveActionsOpen, selectIsBrowseActionsOpen, selectIsWorktreeFormOpen } from '../store'
 
 export function dispatchCommand(services: TuiServices, store: TuiStore, commandId: HarbourCommandId) {
-  if (store.get(isActiveActionsOpenAtom)) {
+  if (selectIsActiveActionsOpen(store.getState())) {
     const activeHandle = getActiveActionsModalHandle()
 
     if (handleActionsModalCommand(commandId, activeHandle)) {
@@ -30,12 +22,12 @@ export function dispatchCommand(services: TuiServices, store: TuiStore, commandI
     }
 
     if (commandId === harbourCommandIds.surfaceBack) {
-      store.set(closeActiveActionsMenuAtom)
+      store.getState().closeActionsMenu()
       return
     }
   }
 
-  if (store.get(isBrowseActionsOpenAtom)) {
+  if (selectIsBrowseActionsOpen(store.getState())) {
     const browseHandle = getBrowseActionsModalHandle()
 
     if (handleActionsModalCommand(commandId, browseHandle)) {
@@ -43,14 +35,14 @@ export function dispatchCommand(services: TuiServices, store: TuiStore, commandI
     }
 
     if (commandId === harbourCommandIds.surfaceBack) {
-      store.set(closeBrowseActionsMenuAtom)
+      store.getState().closeActionsMenu()
       return
     }
   }
 
-  const surfaceHandlers = store.get(isWorktreeFormOpenAtom)
+  const surfaceHandlers = selectIsWorktreeFormOpen(store.getState())
     ? createWorktreeFormCommandHandlers(services, store)
-    : store.get(isBrowseActionsOpenAtom)
+    : selectIsBrowseActionsOpen(store.getState())
       ? createActionsCommandHandlers(services, store)
       : createBrowserCommandHandlers(services, store)
   const surfaceHandler = surfaceHandlers[commandId]

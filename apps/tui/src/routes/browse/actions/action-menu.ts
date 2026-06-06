@@ -1,11 +1,8 @@
 import type { TuiServices, TuiStore } from '../../../app-context'
 import { openDefaultWorkspaceModules, openModules, openWorkspaces } from '../../../actions/drilldown'
 import { openModuleRuntime, openProjectRoot, openWorkspaceRoot } from '../../../actions/runtime'
-import { actionIds } from '../../../actions/action-ids'
-import { noticeAtom } from '../../../state/app'
-import { moduleRowsAtom, projectRowsAtom, workspaceRowsAtom } from '../../../state/rows'
+import { browseActionIds } from '../../../store'
 import type { ActionRow, HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '../../../types/rows'
-import { openCreateWorkspaceFormAtom } from '../state/actions'
 
 type SupportedContextRow = ModuleRow | ProjectRow | WorkspaceRow
 
@@ -53,55 +50,55 @@ export function handleBrowseActionSelect(services: TuiServices, store: TuiStore,
   const target = resolveActionTarget(store, row)
 
   if (!target) {
-    store.set(noticeAtom, 'Action target missing')
+    store.getState().setNotice('Action target missing')
     return
   }
 
   switch (row.actionId) {
-    case actionIds.createWorkspace: {
+    case browseActionIds.createWorkspace: {
       const project = getProjectTarget(store, target)
 
       if (!project) {
-        store.set(noticeAtom, 'Project context missing')
+        store.getState().setNotice('Project context missing')
         return
       }
 
-      store.set(openCreateWorkspaceFormAtom, project.projectId)
+      store.getState().openCreateWorkspaceForm(project.projectId)
       return
     }
-    case actionIds.openProjectRoot: {
+    case browseActionIds.openProjectRoot: {
       const project = getProjectTarget(store, target)
 
       if (!project) {
-        store.set(noticeAtom, 'Project context missing')
+        store.getState().setNotice('Project context missing')
         return
       }
 
       void openProjectRoot(services, store, project)
       return
     }
-    case actionIds.openWorkspaceRoot: {
+    case browseActionIds.openWorkspaceRoot: {
       if (target.kind !== 'workspace' && target.kind !== 'module') {
-        store.set(noticeAtom, 'Workspace context missing')
+        store.getState().setNotice('Workspace context missing')
         return
       }
 
       const workspace =
         target.kind === 'workspace'
           ? target
-          : store.get(workspaceRowsAtom).find((item) => item.workspaceId === target.workspaceId) ?? null
+          : store.getState().data.workspaceRows.find((item) => item.workspaceId === target.workspaceId) ?? null
 
       if (!workspace) {
-        store.set(noticeAtom, 'Workspace context missing')
+        store.getState().setNotice('Workspace context missing')
         return
       }
 
       void openWorkspaceRoot(services, store, workspace)
       return
     }
-    case actionIds.openModuleSession:
+    case browseActionIds.openModuleSession:
       if (target.kind !== 'module') {
-        store.set(noticeAtom, 'Module context missing')
+        store.getState().setNotice('Module context missing')
         return
       }
 
@@ -112,18 +109,18 @@ export function handleBrowseActionSelect(services: TuiServices, store: TuiStore,
 
 function resolveActionTarget(store: TuiStore, row: ActionRow): SupportedContextRow | null {
   if (row.target.moduleId) {
-    return store.get(moduleRowsAtom).find((item) => item.moduleId === row.target.moduleId) ?? null
+    return store.getState().data.moduleRows.find((item) => item.moduleId === row.target.moduleId) ?? null
   }
 
   if (row.target.workspaceId) {
-    return store.get(workspaceRowsAtom).find((item) => item.workspaceId === row.target.workspaceId) ?? null
+    return store.getState().data.workspaceRows.find((item) => item.workspaceId === row.target.workspaceId) ?? null
   }
 
   if (!row.target.projectId) {
     return null
   }
 
-  return store.get(projectRowsAtom).find((item) => item.projectId === row.target.projectId) ?? null
+  return store.getState().data.projectRows.find((item) => item.projectId === row.target.projectId) ?? null
 }
 
 function getProjectTarget(store: TuiStore, target: SupportedContextRow) {
@@ -131,5 +128,5 @@ function getProjectTarget(store: TuiStore, target: SupportedContextRow) {
     return target
   }
 
-  return store.get(projectRowsAtom).find((item) => item.projectId === target.projectId) ?? null
+  return store.getState().data.projectRows.find((item) => item.projectId === target.projectId) ?? null
 }

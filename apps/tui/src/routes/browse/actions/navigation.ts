@@ -1,51 +1,35 @@
 import type { TuiServices, TuiStore } from '../../../app-context'
 
-import { clearNotice, resetProjectScope, resetQuery, resetSelection, resetWorkspaceScope } from '../../../actions/store'
-import {
-  browseQueryAtom,
-  browseSectionAtom,
-  isActionsOpenAtom,
-  isWorktreeFormOpenAtom,
-  selectedProjectIdAtom,
-  selectedWorkspaceImplicitAtom,
-} from '../state/atoms'
-import { backWorktreeFormAtom, closeActionsMenuAtom } from '../state/actions'
+import { selectCurrentBrowseSection, selectIsBrowseActionsOpen, selectIsWorktreeFormOpen } from '../../../store'
 
 export function handleBrowseRouteBack(services: TuiServices, store: TuiStore) {
-  if (store.get(isWorktreeFormOpenAtom)) {
-    store.set(backWorktreeFormAtom)
+  if (selectIsWorktreeFormOpen(store.getState())) {
+    store.getState().backWorktreeForm()
     return
   }
 
-  if (store.get(isActionsOpenAtom)) {
-    store.set(closeActionsMenuAtom)
+  if (selectIsBrowseActionsOpen(store.getState())) {
+    store.getState().closeActionsMenu()
     return
   }
 
-  const query = store.get(browseQueryAtom)
-  const currentSection = store.get(browseSectionAtom)
+  const query = store.getState().browse.list.query
+  const currentSection = selectCurrentBrowseSection(store.getState())
 
   if (query.length > 0) {
-    resetQuery(store)
-    resetSelection(store)
-    clearNotice(store)
+    store.getState().resetBrowseQuery()
+    store.getState().resetBrowseSelection()
+    store.getState().clearNotice()
     return
   }
 
   if (currentSection === 'workspaces') {
-    resetProjectScope(store)
+    store.getState().resetProjectScope()
     return
   }
 
   if (currentSection === 'modules') {
-    if (store.get(selectedWorkspaceImplicitAtom)) {
-      store.set(browseSectionAtom, 'projects')
-      store.set(selectedProjectIdAtom, null)
-    } else {
-      store.set(browseSectionAtom, 'workspaces')
-    }
-
-    resetWorkspaceScope(store)
+    store.getState().resetWorkspaceScope()
     return
   }
 

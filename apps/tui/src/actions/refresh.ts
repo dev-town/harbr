@@ -4,37 +4,23 @@ import { Effect, Either } from 'effect'
 import type { TuiServices, TuiStore } from '../app-context'
 import { listActiveRuntimeSummaries, listProjectSummaries, loadCurrentRuntime, loadUiContext } from '../data'
 import { formatError } from '../helpers/errors'
-import { selectedActiveRowIdAtom } from '../routes/active'
-import {
-  browseSectionAtom,
-  selectedBrowseRowIdAtom,
-  selectedProjectIdAtom,
-  selectedWorkspaceIdAtom,
-  selectedWorkspaceImplicitAtom,
-} from '../routes/browse'
-import {
-  activeRuntimeRowsAtom,
-  currentRuntimeAtom,
-  moduleRowsAtom,
-  noticeAtom,
-  projectRowsAtom,
-  workspaceRowsAtom,
-} from '../state'
+import { projectsScope } from '../store'
 import { mapActiveRuntimeSummaryToRow, mapProjectSummaryToRow } from '../transforms'
 import { restoreCurrentRuntime, restoreUiContext } from './restore'
-import { clearNotice, setLoading } from './store'
 
 export async function loadProjects(services: TuiServices, store: TuiStore) {
-  setLoading(store, true)
-  clearNotice(store)
+  store.getState().setLoading(true)
+  store.getState().clearNotice()
 
   try {
     const syncResult = await Effect.runPromise(Effect.either(sync(services.options)))
 
     if (Either.isLeft(syncResult)) {
-      store.set(projectRowsAtom, [])
-      store.set(selectedBrowseRowIdAtom, null)
-      store.set(noticeAtom, formatError(syncResult.left))
+      store.setState((state) => ({
+        browse: { ...state.browse, list: { ...state.browse.list, selectedId: null } },
+        data: { ...state.data, projectRows: [] },
+      }))
+      store.getState().setNotice(formatError(syncResult.left))
       return
     }
 
@@ -45,20 +31,29 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       loadUiContext(services.options.dbPath),
     ])
 
-    store.set(projectRowsAtom, summaries.map(mapProjectSummaryToRow))
-    store.set(activeRuntimeRowsAtom, activeRuntimeSummaries.map(mapActiveRuntimeSummaryToRow))
-    store.set(currentRuntimeAtom, currentRuntime)
-    store.set(moduleRowsAtom, [])
-    store.set(workspaceRowsAtom, [])
-    store.set(browseSectionAtom, 'projects')
-    store.set(selectedProjectIdAtom, null)
-    store.set(selectedWorkspaceIdAtom, null)
-    store.set(selectedWorkspaceImplicitAtom, false)
-    store.set(
-      selectedActiveRowIdAtom,
-      getActiveRuntimeRowId(activeRuntimeSummaries, currentRuntime) ?? activeRuntimeSummaries[0]?.id ?? null,
-    )
-    store.set(selectedBrowseRowIdAtom, summaries[0]?.id ?? null)
+    store.setState((state) => ({
+      active: {
+        ...state.active,
+        list: {
+          ...state.active.list,
+          selectedId:
+            getActiveRuntimeRowId(activeRuntimeSummaries, currentRuntime) ?? activeRuntimeSummaries[0]?.id ?? null,
+        },
+      },
+      app: { ...state.app, currentRuntime },
+      browse: {
+        ...state.browse,
+        list: { ...state.browse.list, selectedId: summaries[0]?.id ?? null },
+        scope: projectsScope(),
+      },
+      data: {
+        ...state.data,
+        activeRuntimeRows: activeRuntimeSummaries.map(mapActiveRuntimeSummaryToRow),
+        moduleRows: [],
+        projectRows: summaries.map(mapProjectSummaryToRow),
+        workspaceRows: [],
+      },
+    }))
 
     const restoredFromTmux = await restoreCurrentRuntime(services, store, currentRuntime, summaries)
 
@@ -66,19 +61,17 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       await restoreUiContext(services, store, savedContext, summaries)
     }
 
-    store.set(
-      noticeAtom,
-      summaries.length === 0 ? 'No projects yet. Check config or run sync.' : null,
-    )
+    store.getState().setNotice(summaries.length === 0 ? 'No projects yet. Check config or run sync.' : null)
   } catch (error) {
-    store.set(activeRuntimeRowsAtom, [])
-    store.set(currentRuntimeAtom, null)
-    store.set(projectRowsAtom, [])
-    store.set(selectedActiveRowIdAtom, null)
-    store.set(selectedBrowseRowIdAtom, null)
-    store.set(noticeAtom, formatError(error))
+    store.setState((state) => ({
+      active: { ...state.active, list: { ...state.active.list, selectedId: null } },
+      app: { ...state.app, currentRuntime: null },
+      browse: { ...state.browse, list: { ...state.browse.list, selectedId: null } },
+      data: { ...state.data, activeRuntimeRows: [], projectRows: [] },
+    }))
+    store.getState().setNotice(formatError(error))
   } finally {
-    setLoading(store, false)
+    store.getState().setLoading(false)
   }
 }
 

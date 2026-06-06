@@ -7,8 +7,6 @@ import type { TuiServices, TuiStore } from '../app-context'
 import type { ActiveRuntimeRow, ModuleRow, ProjectRow, WorkspaceRow } from '../types/rows'
 import { saveUiContext } from '../data'
 import { formatError } from '../helpers/errors'
-import { noticeAtom, projectRowsAtom, workspaceRowsAtom } from '../state'
-import { clearNotice, setLoading } from './store'
 
 export async function persistContext(services: TuiServices, nextContext: HarbourContext) {
   try {
@@ -36,7 +34,7 @@ export async function openWorkspaceRoot(services: TuiServices, store: TuiStore, 
   const project = getSelectedProjectRow(store, row.projectId)
 
   if (!project) {
-    store.set(noticeAtom, 'Project not found')
+    store.getState().setNotice('Project not found')
     return
   }
 
@@ -61,7 +59,7 @@ export async function openModuleRuntime(services: TuiServices, store: TuiStore, 
   const workspace = getSelectedWorkspaceRow(store, row.workspaceId)
 
   if (!project || !workspace) {
-    store.set(noticeAtom, 'Workspace context missing')
+    store.getState().setNotice('Workspace context missing')
     return
   }
 
@@ -95,7 +93,7 @@ export async function openActiveRuntime(services: TuiServices, store: TuiStore, 
         : row.repoPath
 
   if (!cwd) {
-    store.set(noticeAtom, 'Runtime path missing')
+    store.getState().setNotice('Runtime path missing')
     return
   }
 
@@ -127,24 +125,24 @@ export async function openRuntimeForTarget(
   },
   nextContext: HarbourContext,
 ) {
-  setLoading(store, true)
-  clearNotice(store)
+  store.getState().setLoading(true)
+  store.getState().clearNotice()
 
   try {
     await persistContext(services, nextContext)
     await Effect.runPromise(openOrCreateRuntime(target))
     services.renderer.destroy()
   } catch (error) {
-    store.set(noticeAtom, formatError(error))
+    store.getState().setNotice(formatError(error))
   } finally {
-    setLoading(store, false)
+    store.getState().setLoading(false)
   }
 }
 
 function getSelectedProjectRow(store: TuiStore, projectId: string) {
-  return store.get(projectRowsAtom).find((row) => row.projectId === projectId) ?? null
+  return store.getState().data.projectRows.find((row) => row.projectId === projectId) ?? null
 }
 
 function getSelectedWorkspaceRow(store: TuiStore, workspaceId: string) {
-  return store.get(workspaceRowsAtom).find((row) => row.workspaceId === workspaceId) ?? null
+  return store.getState().data.workspaceRows.find((row) => row.workspaceId === workspaceId) ?? null
 }

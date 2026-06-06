@@ -4,50 +4,43 @@ import type { TuiServices, TuiStore } from '../app-context'
 import {
   handleActiveRouteBack,
   handleActiveRouteSelect,
-  moveActiveSelectionAtom,
-  openActionsMenuAtom as openActiveActionsMenuAtom,
 } from '../routes/active'
 import {
-  backWorktreeFormAtom,
   handleBrowseRouteBack,
   handleBrowseRouteSelect,
-  moveBrowseSelectionAtom,
-  openActionsMenuAtom,
-  selectedBrowseRowAtom,
-  toggleBrowseVisibilityAtom,
 } from '../routes/browse'
-import {
-  nextRouteAtom,
-  previousRouteAtom,
-} from '../state'
-import { currentRouteAtom } from '../state/app'
 import { loadProjects } from '../actions/refresh'
 import { handleWorktreeFormSubmit } from '../actions/worktree'
+import { selectSelectedBrowseRow } from '../store'
 
 export type CommandHandlers = Partial<Record<HarbourCommandId, () => void | Promise<void>>>
 
 export function createBrowserCommandHandlers(services: TuiServices, store: TuiStore): CommandHandlers {
   return {
     [harbourCommandIds.surfaceUp]: () =>
-      store.set(store.get(currentRouteAtom) === 'active' ? moveActiveSelectionAtom : moveBrowseSelectionAtom, -1),
+      store.getState().app.currentRoute === 'active'
+        ? store.getState().moveActiveSelection(-1)
+        : store.getState().moveBrowseSelection(-1),
     [harbourCommandIds.surfaceDown]: () =>
-      store.set(store.get(currentRouteAtom) === 'active' ? moveActiveSelectionAtom : moveBrowseSelectionAtom, 1),
-    [harbourCommandIds.surfaceNextTab]: () => store.set(nextRouteAtom),
-    [harbourCommandIds.surfacePreviousTab]: () => store.set(previousRouteAtom),
-    [harbourCommandIds.surfaceToggleVisibility]: () => store.set(toggleBrowseVisibilityAtom),
+      store.getState().app.currentRoute === 'active'
+        ? store.getState().moveActiveSelection(1)
+        : store.getState().moveBrowseSelection(1),
+    [harbourCommandIds.surfaceNextTab]: () => store.getState().nextRoute(),
+    [harbourCommandIds.surfacePreviousTab]: () => store.getState().previousRoute(),
+    [harbourCommandIds.surfaceToggleVisibility]: () => store.getState().toggleBrowseVisibility(),
     [harbourCommandIds.surfaceRefresh]: () => void loadProjects(services, store),
     [harbourCommandIds.surfaceBack]: () =>
-      store.get(currentRouteAtom) === 'active'
+      store.getState().app.currentRoute === 'active'
         ? handleActiveRouteBack(services, store)
         : handleBrowseRouteBack(services, store),
     [harbourCommandIds.surfaceSelect]: () =>
-      store.get(currentRouteAtom) === 'active'
+      store.getState().app.currentRoute === 'active'
         ? handleActiveRouteSelect(services, store)
-        : handleBrowseRouteSelect(services, store, store.get(selectedBrowseRowAtom)),
+        : handleBrowseRouteSelect(services, store, selectSelectedBrowseRow(store.getState())),
     [harbourCommandIds.surfaceOpenActions]: () =>
-      store.get(currentRouteAtom) === 'active'
-        ? store.set(openActiveActionsMenuAtom)
-        : store.set(openActionsMenuAtom),
+      store.getState().app.currentRoute === 'active'
+        ? store.getState().openActiveActionsMenu()
+        : store.getState().openBrowseActionsMenu(),
   }
 }
 
@@ -56,7 +49,7 @@ export function createWorktreeFormCommandHandlers(
   store: TuiStore,
 ): CommandHandlers {
   return {
-    [harbourCommandIds.surfaceBack]: () => store.set(backWorktreeFormAtom),
+    [harbourCommandIds.surfaceBack]: () => store.getState().backWorktreeForm(),
     [harbourCommandIds.surfaceSelect]: () => handleWorktreeFormSubmit(services, store),
   }
 }

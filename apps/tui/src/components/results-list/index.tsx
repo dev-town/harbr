@@ -1,6 +1,6 @@
 import type { ScrollBoxRenderable } from '@opentui/core'
 import type { ReactNode } from 'react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { theme } from '../../config/theme'
 import { StatusLine } from '../status-line'
@@ -26,7 +26,22 @@ export function ResultsList<TRow extends { id: string }>({
   selectedId,
 }: ResultsListProps<TRow>) {
   const scrollboxRef = useRef<ScrollBoxRenderable | null>(null)
-  const showLoading = forceLoading
+  const [showLoading, setShowLoading] = useState(false)
+
+  useEffect(() => {
+    if (!forceLoading) {
+      setShowLoading(false)
+      return
+    }
+
+    const timeout = setTimeout(() => {
+      setShowLoading(true)
+    }, 500)
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [forceLoading])
 
   useEffect(() => {
     if (!selectedId) {

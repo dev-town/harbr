@@ -1,22 +1,19 @@
 import type { TuiServices, TuiStore } from '../../../app-context'
 import { openActiveRuntime } from '../../../actions/runtime'
-import { clearNotice, resetActiveQuery, resetActiveSelection } from '../../../actions/store'
-import { activeQueryAtom, isActionsOpenAtom } from '../state/atoms'
-import { closeActionsMenuAtom } from '../state/actions'
-import { selectedActiveRowAtom } from '../state/derived'
+import { selectIsActiveActionsOpen, selectSelectedActiveRow } from '../../../store'
 
 export function handleActiveRouteBack(services: TuiServices, store: TuiStore) {
-  if (store.get(isActionsOpenAtom)) {
-    store.set(closeActionsMenuAtom)
+  if (selectIsActiveActionsOpen(store.getState())) {
+    store.getState().closeActionsMenu()
     return
   }
 
-  const query = store.get(activeQueryAtom)
+  const query = store.getState().active.list.query
 
   if (query.length > 0) {
-    resetActiveQuery(store)
-    resetActiveSelection(store)
-    clearNotice(store)
+    store.getState().resetActiveQuery()
+    store.getState().resetActiveSelection()
+    store.getState().clearNotice()
     return
   }
 
@@ -24,7 +21,7 @@ export function handleActiveRouteBack(services: TuiServices, store: TuiStore) {
 }
 
 export function handleActiveRouteSelect(services: TuiServices, store: TuiStore) {
-  const row = store.get(selectedActiveRowAtom)
+  const row = selectSelectedActiveRow(store.getState())
 
   if (!row) {
     return

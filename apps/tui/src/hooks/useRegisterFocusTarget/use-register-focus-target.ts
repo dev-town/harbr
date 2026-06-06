@@ -1,28 +1,16 @@
-import { useStore } from 'jotai'
 import { useEffect } from 'react'
 
-import type { FocusTargetRef, SurfaceId } from '../../state'
-import {
-  actionsFocusTargetRefAtom,
-  browserFocusTargetRefAtom,
-  worktreeFormFocusTargetRefAtom,
-} from '../../state'
+import type { FocusTargetRef, SurfaceId } from '../../store'
+import { useTuiStore } from '../../store'
 
 export function useRegisterFocusTarget(id: SurfaceId, focusTargetRef: FocusTargetRef | null) {
-  const store = useStore()
+  const registerFocusTarget = useTuiStore((state) => state.registerFocusTarget)
 
   useEffect(() => {
-    const focusTargetAtom =
-      id === 'actions'
-        ? actionsFocusTargetRefAtom
-        : id === 'worktree-form'
-          ? worktreeFormFocusTargetRefAtom
-          : browserFocusTargetRefAtom
-
-    store.set(focusTargetAtom, focusTargetRef)
+    registerFocusTarget(id, focusTargetRef)
 
     return () => {
-      store.set(focusTargetAtom, null)
+      registerFocusTarget(id, null)
     }
-  }, [focusTargetRef, id, store])
+  }, [focusTargetRef, id, registerFocusTarget])
 }
