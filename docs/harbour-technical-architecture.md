@@ -203,7 +203,7 @@ Depends on:
 @harbour/runtime-tmux
 @harbour/events
 @harbour/observability
-@harbour/keymap
+apps/tui keymap
 ```
 
 Must not contain:

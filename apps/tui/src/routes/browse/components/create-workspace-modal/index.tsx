@@ -1,15 +1,18 @@
 import type { BoxRenderable, InputRenderable } from '@opentui/core'
 import { RGBA } from '@opentui/core'
+import { useBindings } from '@opentui/keymap/react'
 import { useTerminalDimensions } from '@opentui/react'
 import { useRef } from 'react'
 
 import { theme } from '../../../../config/theme'
 import { useRegisterFocusTarget } from '../../../../hooks/useRegisterFocusTarget'
+import { keymapPriority } from '../../../../keymap/priorities'
 import { useCreateWorkspace } from '../../hooks/use-create-workspace'
 
 export function CreateWorkspaceModal() {
   const {
     isOpen,
+    onBack,
     onClose,
     onInput,
     onSubmit,
@@ -28,6 +31,22 @@ export function CreateWorkspaceModal() {
   const padding = isNarrow ? 0 : 1
 
   useRegisterFocusTarget('worktree-form', isOpen ? inputRef : null)
+
+  useBindings(
+    () =>
+      isOpen
+        ? {
+            targetRef: inputRef,
+            targetMode: 'focus-within',
+            priority: keymapPriority.modal,
+            bindings: [
+              { key: 'escape', cmd: onBack },
+              { key: 'return', cmd: onSubmit },
+            ],
+          }
+        : { bindings: [] },
+    [inputRef, isOpen, onBack, onSubmit],
+  )
 
   if (!isOpen) {
     return null
@@ -56,13 +75,21 @@ export function CreateWorkspaceModal() {
         borderColor={showValidationError ? theme.error : theme.border}
         borderStyle="single"
         flexDirection="column"
-        onMouseUp={(event: { stopPropagation(): void }) => event.stopPropagation()}
+        onMouseUp={(event: { stopPropagation(): void }) =>
+          event.stopPropagation()
+        }
         padding={padding}
         ref={focusRef}
         style={{ backgroundColor: theme.panel }}
         width={modalWidth}
       >
-        <box flexDirection="column" marginBottom={1} paddingLeft={1} paddingRight={1} width="100%">
+        <box
+          flexDirection="column"
+          marginBottom={1}
+          paddingLeft={1}
+          paddingRight={1}
+          width="100%"
+        >
           <text>
             <strong fg={theme.text}>{title}</strong>
           </text>
@@ -92,7 +119,9 @@ export function CreateWorkspaceModal() {
           </box>
         </box>
         <box height={1} marginTop={1} width="100%">
-          {showValidationError ? <text fg={theme.error}>{validationError}</text> : null}
+          {showValidationError ? (
+            <text fg={theme.error}>{validationError}</text>
+          ) : null}
         </box>
       </box>
     </box>

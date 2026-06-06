@@ -5,7 +5,6 @@
   "dependencies": {
     "@harbour/db": "workspace:*",
     "@harbour/domain": "workspace:*",
-    "@harbour/keymap": "workspace:*",
     "@harbour/reconciler": "workspace:*",
     "@harbour/runtime-tmux": "workspace:*",
     "@opentui/core": "^0.2.12",

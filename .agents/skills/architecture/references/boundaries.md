@@ -8,9 +8,6 @@ Use this doc when deciding whether an import, package dependency, or file move i
 apps/*
   -> packages/*
 
-keymap
-  -> domain optional
-
 db
   -> domain
   -> observability
@@ -56,7 +53,6 @@ test-utils
 
 ```text
 domain -> anything
-keymap -> db
 db -> scanner
 db -> reconciler
 scanner -> runtime-tmux
@@ -74,6 +70,7 @@ git -> db
 - `db` stores Harbour state; it should not reach outward into scanner or reconciler logic.
 - Map package-internal shapes to `domain` contracts at public boundaries instead of leaking internals outward.
 - Keep app-specific command ids, key bindings, and view-model projections in the app unless truly shared.
+- TUI keybindings should stay in `apps/tui`, close to the route, surface, or component that owns the behavior.
 - Import public package exports, not internal implementation files from other packages.
 - Prefer service-, program-, and layer-shaped public APIs at package boundaries.
 - Keep repos, clients, and low-level wiring internal to the package unless deliberately documented as public.

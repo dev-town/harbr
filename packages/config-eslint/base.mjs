@@ -12,7 +12,6 @@ const layerNames = [
   'reconciler',
   'events',
   'observability',
-  'keymap',
   'ui',
   'test-utils',
 ]
@@ -105,11 +104,6 @@ export const boundaryConfig = {
         mode: 'full',
       },
       {
-        type: 'keymap',
-        pattern: 'packages/keymap/src/**',
-        mode: 'full',
-      },
-      {
         type: 'ui',
         pattern: 'packages/ui/src/**',
         mode: 'full',
@@ -138,10 +132,6 @@ export const boundaryConfig = {
           },
           {
             from: ['ui'],
-            allow: ['domain'],
-          },
-          {
-            from: ['keymap'],
             allow: ['domain'],
           },
           {

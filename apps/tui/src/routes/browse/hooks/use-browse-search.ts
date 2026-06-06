@@ -3,13 +3,23 @@ import { useEffect, useMemo, useRef } from 'react'
 
 import { getPlaceholder } from '../../../helpers/labels'
 import { useRegisterFocusTarget } from '../../../hooks/useRegisterFocusTarget'
-import { selectCurrentBrowseSection, selectIsBrowseActionsOpen, selectIsWorktreeFormOpen, selectVisibleBrowseRows, tuiStore, useTuiStore } from '../../../store'
+import {
+  selectCurrentBrowseSection,
+  selectIsBrowseActionsOpen,
+  selectIsWorktreeFormOpen,
+  selectVisibleBrowseRows,
+  tuiStore,
+  useTuiStore,
+} from '../../../store'
+import { useBrowseKeybindings } from './use-browse-keybindings'
 
 export function useBrowseSearch() {
   const searchRef = useRef<InputRenderable | null>(null)
   const currentSection = useTuiStore(selectCurrentBrowseSection)
   const query = useTuiStore((state) => state.browse.list.query)
-  const focusSearchNonce = useTuiStore((state) => state.surfaces.focusRequestKey)
+  const focusSearchNonce = useTuiStore(
+    (state) => state.surfaces.focusRequestKey,
+  )
   const selectedId = useTuiStore((state) => state.browse.list.selectedId)
   const projectRows = useTuiStore((state) => state.data.projectRows)
   const workspaceRows = useTuiStore((state) => state.data.workspaceRows)
@@ -19,13 +29,22 @@ export function useBrowseSearch() {
   const visibility = useTuiStore((state) => state.browse.visibility)
   const rows = useMemo(
     () => selectVisibleBrowseRows(tuiStore.getState()),
-    [currentRuntime, moduleRows, projectRows, query, scope, visibility, workspaceRows],
+    [
+      currentRuntime,
+      moduleRows,
+      projectRows,
+      query,
+      scope,
+      visibility,
+      workspaceRows,
+    ],
   )
   const isActionsOpen = useTuiStore(selectIsBrowseActionsOpen)
   const isWorktreeFormOpen = useTuiStore(selectIsWorktreeFormOpen)
   const isSearchFocused = !isActionsOpen && !isWorktreeFormOpen
 
   useRegisterFocusTarget('browser', searchRef)
+  useBrowseKeybindings(searchRef)
 
   useEffect(() => {
     if (!isSearchFocused) {

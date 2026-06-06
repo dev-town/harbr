@@ -64,19 +64,13 @@ Use this doc to decide where new code belongs.
 - Owns logs, spans, diagnostic helpers, and internal visibility.
 - Keep it cross-cutting and low-friction.
 
-### `keymap`
-
-- Owns generic keybinding contexts and command routing.
-- Keep package-level keymap infra generic when possible.
-- App-specific command ids and bindings should stay in the app unless shared across apps.
-- Do not embed deep product logic here.
-
 ### app-local components
 
 - Own presentational components and view-state display concerns when no shared package is warranted.
 - Render Harbour state. Keep raw shell, db, and reconciliation logic out.
 - Consume app-provided state and commands, not internal package wiring.
 - App-local view models and row projections belong here or in app-local `types/` files, not in `domain`.
+- Component-specific keybindings belong beside the component, usually in local `hooks/` when the component would otherwise become verbose.
 
 ### `apps/tui`
 
@@ -86,10 +80,11 @@ Owns:
 
 - app bootstrap
 - OpenTUI render tree
-- Jotai store setup
-- keyboard input routing
+- Zustand store setup
+- OpenTUI keymap creation
+- root, route, surface, and modal keyboard input routing
 - command palette
-- app-specific command ids and key bindings
+- app-specific command ids and key bindings, when command ids are still useful
 - screen layout
 - subscriptions to Harbour state
 - execution of command handlers
@@ -108,7 +103,6 @@ Depends on:
 @harbour/runtime-tmux
 @harbour/events
 @harbour/observability
-@harbour/keymap
 ```
 
 Must not contain:
@@ -133,6 +127,8 @@ Must not contain:
 - Shared cross-package inputs/outputs should usually live in `domain`.
 - Internal implementation details should stay internal to the package.
 - Split app-local types by concern; avoid catch-all files that mix bindings, navigation, and projections.
+- Keep TUI keybindings app-local. Root quit can be global; route bindings should live in route-local hooks; modal bindings should live in modal-local hooks.
+- Prefer direct `@opentui/keymap/react` `useBindings` over package wrappers. Use target-scoped layers for focus-owned surfaces and open-state high-priority layers for modal overlays.
 - When packages grow, prefer:
 
 ```text

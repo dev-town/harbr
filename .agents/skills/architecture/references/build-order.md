@@ -13,11 +13,10 @@ Use this doc when planning implementation sequence or a first vertical slice.
 7. `events`
 8. `scanner`
 9. `reconciler`
-10. `keymap`
-11. `ui`
-12. `apps/tui`
-13. `apps/cli`
-14. `test-utils` hardening throughout
+10. `ui`
+11. `apps/tui`
+12. `apps/cli`
+13. `test-utils` hardening throughout
 
 ### Why this order
 
@@ -28,7 +27,7 @@ Use this doc when planning implementation sequence or a first vertical slice.
 - `db` before `reconciler` because belief needs durable storage.
 - `scanner` before `reconciler` because reconciliation consumes facts.
 - `ui` after read model stabilizes so presentation does not invent backend shape.
-- `apps/*` after reusable package behavior exists.
+- `apps/*` after reusable package behavior exists. TUI keybindings are app-local and should be built with the route or modal that owns the behavior.
 
 ### First vertical slice
 
@@ -76,4 +75,4 @@ This yields the first real Harbour loop: observe reality, store belief, render c
 - adapters wrap Git and tmux
 - scanner emits facts only
 - reconciler owns belief and state transitions
-- TUI reads derived state and dispatches command ids only
+- TUI reads derived state and dispatches app-local commands/actions

@@ -66,9 +66,8 @@ key press
 - `db` stores Harbour metadata, cache, history, and event-adjacent state. It is not source of truth for Git or tmux.
 - `events` records why things changed.
 - `observability` captures logs, spans, and diagnostics.
-- `keymap` maps input to commands.
 - `ui` renders state and dispatches actions. Keep shell logic out.
-- `apps/tui` wires runtime, subscriptions, command handlers, and render tree.
+- `apps/tui` wires runtime, subscriptions, command handlers, OpenTUI keybindings, and render tree.
 
 ## Schema-first contracts
 
@@ -82,6 +81,9 @@ key press
 ## App-local projections
 
 - App command ids, key bindings, navigation unions, and render rows stay app-local unless shared across apps.
+- TUI keybindings live with the surface that owns the behavior: root bindings at app root, route bindings in route hooks, modal bindings in component-local hooks.
+- Prefer `@opentui/keymap/react` `useBindings` directly. Add wrappers only after repeated patterns prove they improve clarity.
+- Use target-scoped keymap layers for focus-owned surfaces. Use open-state, high-priority layers for modal overlays that must capture keys regardless of focus.
 - TUI row/view-model types are derived projections from domain contracts, not domain contracts themselves.
 - Avoid app-local catch-all files; split commands, navigation, and row types by concern.
 
@@ -144,7 +146,7 @@ When choosing placement, prefer these questions in order:
 4. Is this observation and normalization of external reality? Put it in `scanner`.
 5. Is this deciding what Harbour should believe and persist? Put it in `reconciler`.
 6. Is this durable schema, persistence service, internal repo, or database client code? Put it in `db`.
-7. Is this rendering, view-state projection, or interaction wiring? Put it in `ui`, `keymap`, or `apps/tui`.
+7. Is this rendering, view-state projection, or interaction wiring? Put it in `ui` or `apps/tui`.
 
 After that, ask:
 

@@ -42,8 +42,8 @@ Write path:
 
 ```text
 key press
--> command id
--> command handler
+-> app-local keybinding layer
+-> command handler / surface action
 -> domain action
 -> git/tmux/runtime adapter
 -> external state changes
@@ -61,9 +61,8 @@ reconciler    = what changed and what should Harbour believe?
 db            = what Harbour remembers
 events        = why things changed
 observability = what happened internally
-keymap        = key -> command
 ui            = what the user sees
-apps          = how the user enters Harbour
+apps          = how the user enters Harbour and handles app-local keybindings
 agent skills  = how agents stay inside the architecture
 ```
 
@@ -72,6 +71,7 @@ agent skills  = how agents stay inside the architecture
 - If a shape is a shared public input/output between packages, prefer `domain`.
 - If a shape is a DB row, adapter detail, or app-local projection, keep it local.
 - App-local rows, navigation unions, and command bindings belong in the app, derived from domain contracts where needed.
+- TUI keybindings belong with the owning surface: app root for global quit, route hooks for route behavior, component-local hooks for modal behavior.
 
 ### Product feel
 

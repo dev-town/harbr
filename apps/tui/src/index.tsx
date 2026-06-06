@@ -1,14 +1,11 @@
 import { createCliRenderer } from '@opentui/core'
-import { makeAppKeymap } from '@harbour/keymap'
 import { KeymapProvider } from '@opentui/keymap/react'
 import { createRoot } from '@opentui/react'
 
-import { createSurfaceCommandHandler } from './actions/dispatch'
 import { App } from './app'
 import { TuiServicesProvider, type TuiServices } from './app-context'
 import { readArgValue } from './helpers/args'
-import { harbourCommandBindings, harbourCommandIds } from './keymap/commands'
-import { tuiStore } from './store'
+import { createTuiKeymap } from './keymap/create-keymap'
 import type { TuiOptions } from './types'
 
 const args = process.argv.slice(2)
@@ -33,11 +30,7 @@ const services: TuiServices = {
   renderer,
 }
 
-const keymap = makeAppKeymap(renderer, {
-  bindings: harbourCommandBindings,
-  commands: Object.values(harbourCommandIds),
-    onCommand: createSurfaceCommandHandler(services, tuiStore),
-  })
+const keymap = createTuiKeymap(renderer)
 
 createRoot(renderer).render(
   <TuiServicesProvider value={services}>
