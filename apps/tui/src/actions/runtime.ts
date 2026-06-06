@@ -51,7 +51,7 @@ export async function openWorkspaceRoot(
   const project = getSelectedProjectRow(store, row.projectId)
 
   if (!project) {
-    store.getState().setNotice('Project not found')
+    store.getState().setNotice('Project not found', 'warning')
     return
   }
 
@@ -80,7 +80,7 @@ export async function openModuleRuntime(
   const workspace = getSelectedWorkspaceRow(store, row.workspaceId)
 
   if (!project || !workspace) {
-    store.getState().setNotice('Workspace context missing')
+    store.getState().setNotice('Workspace context missing', 'warning')
     return
   }
 
@@ -121,7 +121,7 @@ export async function openActiveRuntime(
         : row.repoPath
 
   if (!cwd) {
-    store.getState().setNotice('Runtime path missing')
+    store.getState().setNotice('Runtime path missing', 'warning')
     return
   }
 
@@ -153,7 +153,7 @@ export async function closeActiveRuntime(
     row.isCurrent ||
     store.getState().app.currentRuntime?.sessionName === row.sessionName
   ) {
-    store.getState().setNotice('Cannot close current session')
+    store.getState().setNotice('Cannot close current session', 'warning')
     return
   }
 
@@ -165,7 +165,7 @@ export async function closeActiveRuntime(
     store.getState().closeActionsMenu()
     await loadProjects(services, store)
   } catch (error) {
-    store.getState().setNotice(formatError(error))
+    store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }
@@ -190,7 +190,7 @@ export async function openRuntimeForTarget(
     await Effect.runPromise(openOrCreateRuntime(target))
     services.renderer.destroy()
   } catch (error) {
-    store.getState().setNotice(formatError(error))
+    store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }

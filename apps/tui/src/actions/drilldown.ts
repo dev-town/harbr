@@ -43,7 +43,7 @@ export async function openWorkspaces(
 
     store.getState().resetBrowseQuery()
   } catch (error) {
-    store.getState().setNotice(formatError(error))
+    store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }
@@ -88,7 +88,7 @@ export async function openModules(
     store.getState().resetBrowseSelection()
     store.getState().resetBrowseQuery()
   } catch (error) {
-    store.getState().setNotice(formatError(error))
+    store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }
@@ -104,7 +104,7 @@ export async function openDefaultWorkspaceModules(services: TuiServices, store: 
 
     if (!defaultWorkspace) {
       // TODO: surface a clearer empty-state when project module config exists but no default workspace was persisted.
-      store.getState().setNotice('No default workspace found')
+      store.getState().setNotice('No default workspace found', 'warning')
       return
     }
 
@@ -113,7 +113,7 @@ export async function openDefaultWorkspaceModules(services: TuiServices, store: 
       workspaceSummaries: summaries,
     })
   } catch (error) {
-    store.getState().setNotice(formatError(error))
+    store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }

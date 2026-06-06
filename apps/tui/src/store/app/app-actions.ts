@@ -30,6 +30,20 @@ export function createAppActions(set: TuiStoreSet, get: TuiStoreGet): Pick<
       worktreeForm: createWorktreeFormState(),
     })),
     setLoading: (isLoading) => set((state) => ({ app: { ...state.app, isLoading } })),
-    setNotice: (notice) => set((state) => ({ app: { ...state.app, notice } })),
+    setNotice: (notice, level = 'info') => set((state) => {
+      if (!notice) {
+        return { app: { ...state.app, notice: null } }
+      }
+
+      const noticeSequence = state.app.noticeSequence + 1
+
+      return {
+        app: {
+          ...state.app,
+          notice: { id: noticeSequence, level, message: notice },
+          noticeSequence,
+        },
+      }
+    }),
   }
 }

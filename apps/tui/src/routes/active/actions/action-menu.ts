@@ -13,7 +13,7 @@ export function handleActiveActionSelect(
   }
 
   if (row.disabledNotice) {
-    store.getState().setNotice(row.disabledNotice)
+    store.getState().setNotice(row.disabledNotice, 'warning')
     return
   }
 

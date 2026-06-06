@@ -12,5 +12,18 @@ export function useAppShell() {
     void loadProjects(services, tuiStore)
   }, [services])
 
-  return { notice }
+  useEffect(() => {
+    if (!notice) {
+      return
+    }
+
+    const noticeId = notice.id
+    const timeout = setTimeout(() => {
+      if (tuiStore.getState().app.notice?.id === noticeId) {
+        tuiStore.getState().clearNotice()
+      }
+    }, 3500)
+
+    return () => clearTimeout(timeout)
+  }, [notice])
 }

@@ -7,6 +7,7 @@ import type { DataState } from './data/data-state'
 import type { FocusTargetRef, SurfaceId, SurfacesState } from './surfaces/surfaces-state'
 import type { WorktreeFormState } from './worktree-form/worktree-form-state'
 import type { AppRoute, VisibilityFilter } from '../types/navigation'
+import type { NoticeLevel } from '../types/notice'
 
 export type TuiStoreState = {
   active: ActiveState
@@ -43,7 +44,7 @@ export type TuiStoreActions = {
   selectBrowseRow(rowId: string): void
   setCurrentRoute(route: AppRoute): void
   setLoading(isLoading: boolean): void
-  setNotice(notice: string | null): void
+  setNotice(notice: string | null, level?: NoticeLevel): void
   toggleBrowseVisibility(): void
   nextRoute(): void
   setBrowseVisibility(visibility: VisibilityFilter): void

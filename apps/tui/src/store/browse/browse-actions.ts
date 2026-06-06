@@ -48,7 +48,7 @@ export function createBrowseActions(set: TuiStoreSet, get: TuiStoreGet): Pick<
       }
 
       if (selectBrowseActionRows(get()).length === 0) {
-        set((state) => ({ app: { ...state.app, notice: 'No actions for current context' } }))
+        get().setNotice('No actions for current context', 'warning')
         return
       }
 

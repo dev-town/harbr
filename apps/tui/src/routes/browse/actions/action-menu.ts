@@ -74,21 +74,21 @@ export function handleBrowseActionSelect(
   const target = resolveActionTarget(store, row)
 
   if (!target) {
-    store.getState().setNotice('Action target missing')
+    store.getState().setNotice('Action target missing', 'warning')
     return
   }
 
   switch (row.actionId) {
     case browseActionIds.closeRuntimeSession: {
       if (row.disabledNotice) {
-        store.getState().setNotice(row.disabledNotice)
+        store.getState().setNotice(row.disabledNotice, 'warning')
         return
       }
 
       const runtime = getActiveRuntimeTarget(store, target)
 
       if (!runtime) {
-        store.getState().setNotice('Session context missing')
+        store.getState().setNotice('Session context missing', 'warning')
         return
       }
 
@@ -99,7 +99,7 @@ export function handleBrowseActionSelect(
       const project = getProjectTarget(store, target)
 
       if (!project) {
-        store.getState().setNotice('Project context missing')
+        store.getState().setNotice('Project context missing', 'warning')
         return
       }
 
@@ -110,7 +110,7 @@ export function handleBrowseActionSelect(
       const project = getProjectTarget(store, target)
 
       if (!project) {
-        store.getState().setNotice('Project context missing')
+        store.getState().setNotice('Project context missing', 'warning')
         return
       }
 
@@ -119,7 +119,7 @@ export function handleBrowseActionSelect(
     }
     case browseActionIds.openWorkspaceRoot: {
       if (target.kind !== 'workspace' && target.kind !== 'module') {
-        store.getState().setNotice('Workspace context missing')
+        store.getState().setNotice('Workspace context missing', 'warning')
         return
       }
 
@@ -133,7 +133,7 @@ export function handleBrowseActionSelect(
               ) ?? null)
 
       if (!workspace) {
-        store.getState().setNotice('Workspace context missing')
+        store.getState().setNotice('Workspace context missing', 'warning')
         return
       }
 
@@ -142,7 +142,7 @@ export function handleBrowseActionSelect(
     }
     case browseActionIds.openModuleSession:
       if (target.kind !== 'module') {
-        store.getState().setNotice('Module context missing')
+        store.getState().setNotice('Module context missing', 'warning')
         return
       }
 

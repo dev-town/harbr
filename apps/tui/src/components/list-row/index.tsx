@@ -1,7 +1,8 @@
 import { theme } from '../../config/theme'
+import { noticeIcon } from '../../types/notice'
 import { padCell, truncate, truncateLeft } from '../shared/utils/text'
 
-import type { ListRowMeta, RowVariant } from './types'
+import type { ListRowMeta, ListRowMetaNotice, RowVariant } from './types'
 import { getInlineMeta, getStackedMeta } from './utils'
 
 type ListRowProps = {
@@ -37,10 +38,12 @@ export function ListRow({
   const nameWidth = 34
   const metaWidth = 52
   const gutterWidth = 4
-  const inlineMeta = meta && variant !== 'stacked' ? getInlineMeta(meta, variant) : ''
-  const stackedMeta = meta ? getStackedMeta(meta) : ''
+  const notice = meta?.notice
+  const noticeText = notice ? `${noticeIcon(notice.level)} ${notice.message}` : ''
+  const inlineMeta = meta && !notice && variant !== 'stacked' ? getInlineMeta(meta, variant) : ''
+  const stackedMeta = meta && !notice ? getStackedMeta(meta) : ''
   const topTextColor = isSelected ? theme.activeText : theme.text
-  const stackedRowHeight = stackedMeta ? 2 : 1
+  const stackedRowHeight = stackedMeta || notice ? 2 : 1
 
   return (
     <box
@@ -69,7 +72,11 @@ export function ListRow({
             <text fg={topTextColor}>
               <strong>{name}</strong>
             </text>
-            {stackedMeta ? (
+            {notice ? (
+              <text>
+                <span fg={noticeColor(notice.level)}>{truncate(noticeText, 72)}</span>
+              </text>
+            ) : stackedMeta ? (
               <text>
                 <span fg={theme.muted}>{truncate(stackedMeta, 72)}</span>
               </text>
@@ -89,7 +96,13 @@ export function ListRow({
             </text>
           </box>
           <box width={gutterWidth} />
-          {inlineMeta ? (
+          {notice ? (
+            <box flexGrow={1} style={{ justifyContent: 'flex-end' }}>
+              <text>
+                <span fg={noticeColor(notice.level)}>{truncateLeft(noticeText, metaWidth)}</span>
+              </text>
+            </box>
+          ) : inlineMeta ? (
             <box flexGrow={1} style={{ justifyContent: 'flex-end' }}>
               <text>
                 <span fg={theme.muted}>{truncateLeft(inlineMeta, metaWidth)}</span>
@@ -102,4 +115,20 @@ export function ListRow({
       )}
     </box>
   )
+}
+
+function noticeColor(level: ListRowMetaNotice['level']) {
+  if (level === 'error') {
+    return theme.error
+  }
+
+  if (level === 'warning') {
+    return theme.warning
+  }
+
+  if (level === 'success') {
+    return theme.active
+  }
+
+  return theme.accent
 }

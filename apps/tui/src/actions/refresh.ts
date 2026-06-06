@@ -20,7 +20,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
         browse: { ...state.browse, list: { ...state.browse.list, selectedId: null } },
         data: { ...state.data, projectRows: [] },
       }))
-      store.getState().setNotice(formatError(syncResult.left))
+      store.getState().setNotice(formatError(syncResult.left), 'error')
       return
     }
 
@@ -61,7 +61,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       await restoreUiContext(services, store, savedContext, summaries)
     }
 
-    store.getState().setNotice(summaries.length === 0 ? 'No projects yet. Check config or run sync.' : null)
+    store.getState().setNotice(summaries.length === 0 ? 'No projects yet. Check config or run sync.' : null, 'info')
   } catch (error) {
     store.setState((state) => ({
       active: { ...state.active, list: { ...state.active.list, selectedId: null } },
@@ -69,7 +69,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       browse: { ...state.browse, list: { ...state.browse.list, selectedId: null } },
       data: { ...state.data, activeRuntimeRows: [], projectRows: [] },
     }))
-    store.getState().setNotice(formatError(error))
+    store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }

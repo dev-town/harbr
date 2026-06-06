@@ -44,7 +44,12 @@ export function BrowseRouteRow({
 
 function getBrowseRowMeta(row: HarbourRow, scopeBreadcrumb: string): ListRowMeta {
   if (row.kind === 'project') {
-    return { sessions: row.activeSessionCount }
+    return {
+      sessions: row.activeSessionCount,
+      ...(row.projectIssue
+        ? { notice: { level: 'warning', message: row.projectIssue } }
+        : {}),
+    }
   }
 
   if (row.kind === 'workspace') {

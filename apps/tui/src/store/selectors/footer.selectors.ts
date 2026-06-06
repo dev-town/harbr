@@ -1,5 +1,5 @@
 import type { TuiStoreModel } from '../types'
-import { selectBrowseBreadcrumb, selectCurrentBrowseSection, selectSelectedProjectIssue, selectVisibleBrowseRows } from '../browse/browse-selectors'
+import { selectBrowseBreadcrumb, selectCurrentBrowseSection, selectVisibleBrowseRows } from '../browse/browse-selectors'
 import { selectIsActionsOpen } from '../surfaces/surfaces-selectors'
 
 export function selectEffectiveVisibility(state: TuiStoreModel) {
@@ -69,4 +69,3 @@ export function selectFooterHints(state: TuiStoreModel) {
 }
 
 export const selectBreadcrumb = selectBrowseBreadcrumb
-export const selectProjectIssue = selectSelectedProjectIssue

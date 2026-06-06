@@ -41,7 +41,7 @@ export function createActiveActions(set: TuiStoreSet, get: TuiStoreGet): Pick<
       }
 
       if (selectActiveActionRows(get()).length === 0 || !selectSelectedActiveRow(get())) {
-        set((state) => ({ app: { ...state.app, notice: 'No actions for current context' } }))
+        get().setNotice('No actions for current context', 'warning')
         return
       }
 

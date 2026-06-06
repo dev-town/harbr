@@ -44,7 +44,7 @@ export async function handleWorktreeFormSubmit(services: TuiServices, store: Tui
     : null
 
   if (!project) {
-    store.getState().setNotice('Project context missing')
+    store.getState().setNotice('Project context missing', 'warning')
     return
   }
 
@@ -62,7 +62,7 @@ export async function handleWorktreeFormSubmit(services: TuiServices, store: Tui
     })
     store.getState().closeWorktreeForm()
   } catch (error) {
-    store.getState().setNotice(formatError(error))
+    store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }

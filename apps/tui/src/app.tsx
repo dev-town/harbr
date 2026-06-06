@@ -1,10 +1,10 @@
 import { useAppShell } from './hooks/useAppShell'
-import { NoticeLine, Shell } from './components'
+import { Shell } from './components'
 import { SurfaceFocusManager } from './keymap/layers'
 import { useRootKeybindings } from './keymap/root-keybindings'
 
 export function App() {
-  const { notice } = useAppShell()
+  useAppShell()
   useRootKeybindings()
 
   return (
@@ -13,7 +13,6 @@ export function App() {
       <box flexGrow={1}>
         <Shell />
       </box>
-      {notice ? <NoticeLine notice={notice} /> : null}
     </box>
   )
 }

@@ -1,12 +1,20 @@
 import type { RuntimeFact } from '@harbour/domain'
 
 import type { AppRoute } from '../../types/navigation'
+import type { NoticeLevel } from '../../types/notice'
+
+export type Notice = {
+  id: number
+  level: NoticeLevel
+  message: string
+}
 
 export type AppState = {
   currentRoute: AppRoute
   currentRuntime: RuntimeFact | null
   isLoading: boolean
-  notice: string | null
+  notice: Notice | null
+  noticeSequence: number
 }
 
 export function createAppState(): AppState {
@@ -15,5 +23,6 @@ export function createAppState(): AppState {
     currentRuntime: null,
     isLoading: true,
     notice: null,
+    noticeSequence: 0,
   }
 }

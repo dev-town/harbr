@@ -1,8 +1,8 @@
 import { theme } from '../../config/theme'
+import { noticeIcon, type NoticeLevel } from '../../types/notice'
 import {
   selectBreadcrumb,
   selectEffectiveVisibility,
-  selectProjectIssue,
   useTuiStore,
 } from '../../store'
 import { breadcrumbLabel } from './utils/breadcrumb-label'
@@ -11,8 +11,8 @@ import { visibilityColor } from './utils/visibility-color'
 export function FooterRow() {
   const breadcrumb = useTuiStore(selectBreadcrumb)
   const currentRoute = useTuiStore((state) => state.app.currentRoute)
+  const notice = useTuiStore((state) => state.app.notice)
   const visibility = useTuiStore(selectEffectiveVisibility)
-  const projectIssue = useTuiStore(selectProjectIssue)
   const showVisibility = currentRoute === 'browse'
 
   return (
@@ -24,12 +24,38 @@ export function FooterRow() {
             {visibility.toUpperCase()}{' '}
           </span>
         ) : null}
-        <span fg={projectIssue ? theme.error : theme.muted}>
-          {' '}
-          {breadcrumbLabel(breadcrumb)}
-        </span>
-        {projectIssue ? <span fg={theme.error}> {projectIssue}</span> : null}
+        {notice ? (
+          <span fg={noticeColor(notice.level)}>
+            {' '}
+            {noticeIcon(notice.level)} {noticeLabel(notice.level)} {notice.message}
+          </span>
+        ) : (
+          <span fg={theme.muted}>
+            {' '}
+            {breadcrumbLabel(breadcrumb)}
+          </span>
+        )}
       </text>
     </box>
   )
+}
+
+function noticeColor(level: NoticeLevel) {
+  if (level === 'error') {
+    return theme.error
+  }
+
+  if (level === 'warning') {
+    return theme.warning
+  }
+
+  if (level === 'success') {
+    return theme.active
+  }
+
+  return theme.accent
+}
+
+function noticeLabel(level: NoticeLevel) {
+  return level.toUpperCase()
 }
