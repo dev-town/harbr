@@ -17,6 +17,7 @@ export function BrowseActionsModal() {
   const focusRef = useRef<BoxRenderable | null>(null)
   const isOpen = useTuiStore(selectIsBrowseActionsOpen)
   const selectedId = useTuiStore((state) => state.browse.list.selectedId)
+  const activeRuntimeRows = useTuiStore((state) => state.data.activeRuntimeRows)
   const projectRows = useTuiStore((state) => state.data.projectRows)
   const workspaceRows = useTuiStore((state) => state.data.workspaceRows)
   const moduleRows = useTuiStore((state) => state.data.moduleRows)
@@ -27,6 +28,7 @@ export function BrowseActionsModal() {
   const rows = useMemo(
     () => selectBrowseActionRows(tuiStore.getState()),
     [
+      activeRuntimeRows,
       currentRuntime,
       moduleRows,
       projectRows,

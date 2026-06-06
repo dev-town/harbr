@@ -1,12 +1,32 @@
 import type { TuiServices, TuiStore } from '../../../app-context'
-import { openDefaultWorkspaceModules, openModules, openWorkspaces } from '../../../actions/drilldown'
-import { openModuleRuntime, openProjectRoot, openWorkspaceRoot } from '../../../actions/runtime'
+import {
+  openDefaultWorkspaceModules,
+  openModules,
+  openWorkspaces,
+} from '../../../actions/drilldown'
+import {
+  closeActiveRuntime,
+  openModuleRuntime,
+  openProjectRoot,
+  openWorkspaceRoot,
+} from '../../../actions/runtime'
 import { browseActionIds } from '../../../store'
-import type { ActionRow, HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '../../../types/rows'
+import type {
+  ActionRow,
+  ActiveRuntimeRow,
+  HarbourRow,
+  ModuleRow,
+  ProjectRow,
+  WorkspaceRow,
+} from '../../../types/rows'
 
 type SupportedContextRow = ModuleRow | ProjectRow | WorkspaceRow
 
-export function handleBrowseRouteSelect(services: TuiServices, store: TuiStore, row: HarbourRow | null) {
+export function handleBrowseRouteSelect(
+  services: TuiServices,
+  store: TuiStore,
+  row: HarbourRow | null,
+) {
   if (!row) {
     return
   }
@@ -42,7 +62,11 @@ export function handleBrowseRouteSelect(services: TuiServices, store: TuiStore, 
   void openProjectRoot(services, store, row)
 }
 
-export function handleBrowseActionSelect(services: TuiServices, store: TuiStore, row: ActionRow | null) {
+export function handleBrowseActionSelect(
+  services: TuiServices,
+  store: TuiStore,
+  row: ActionRow | null,
+) {
   if (!row || row.kind !== 'action') {
     return
   }
@@ -55,6 +79,22 @@ export function handleBrowseActionSelect(services: TuiServices, store: TuiStore,
   }
 
   switch (row.actionId) {
+    case browseActionIds.closeRuntimeSession: {
+      if (row.disabledNotice) {
+        store.getState().setNotice(row.disabledNotice)
+        return
+      }
+
+      const runtime = getActiveRuntimeTarget(store, target)
+
+      if (!runtime) {
+        store.getState().setNotice('Session context missing')
+        return
+      }
+
+      void closeActiveRuntime(services, store, runtime)
+      return
+    }
     case browseActionIds.createWorkspace: {
       const project = getProjectTarget(store, target)
 
@@ -86,7 +126,11 @@ export function handleBrowseActionSelect(services: TuiServices, store: TuiStore,
       const workspace =
         target.kind === 'workspace'
           ? target
-          : store.getState().data.workspaceRows.find((item) => item.workspaceId === target.workspaceId) ?? null
+          : (store
+              .getState()
+              .data.workspaceRows.find(
+                (item) => item.workspaceId === target.workspaceId,
+              ) ?? null)
 
       if (!workspace) {
         store.getState().setNotice('Workspace context missing')
@@ -107,20 +151,76 @@ export function handleBrowseActionSelect(services: TuiServices, store: TuiStore,
   }
 }
 
-function resolveActionTarget(store: TuiStore, row: ActionRow): SupportedContextRow | null {
+function getActiveRuntimeTarget(
+  store: TuiStore,
+  target: SupportedContextRow,
+): ActiveRuntimeRow | null {
+  if (target.kind === 'project') {
+    return (
+      store
+        .getState()
+        .data.activeRuntimeRows.find(
+          (row) =>
+            row.scope === 'project' && row.projectId === target.projectId,
+        ) ?? null
+    )
+  }
+
+  if (target.kind === 'workspace') {
+    return (
+      store
+        .getState()
+        .data.activeRuntimeRows.find(
+          (row) =>
+            row.scope === 'workspace' && row.workspaceId === target.workspaceId,
+        ) ?? null
+    )
+  }
+
+  return (
+    store
+      .getState()
+      .data.activeRuntimeRows.find(
+        (row) => row.scope === 'module' && row.moduleId === target.moduleId,
+      ) ?? null
+  )
+}
+
+function resolveActionTarget(
+  store: TuiStore,
+  row: ActionRow,
+): SupportedContextRow | null {
   if (row.target.moduleId) {
-    return store.getState().data.moduleRows.find((item) => item.moduleId === row.target.moduleId) ?? null
+    return (
+      store
+        .getState()
+        .data.moduleRows.find(
+          (item) => item.moduleId === row.target.moduleId,
+        ) ?? null
+    )
   }
 
   if (row.target.workspaceId) {
-    return store.getState().data.workspaceRows.find((item) => item.workspaceId === row.target.workspaceId) ?? null
+    return (
+      store
+        .getState()
+        .data.workspaceRows.find(
+          (item) => item.workspaceId === row.target.workspaceId,
+        ) ?? null
+    )
   }
 
   if (!row.target.projectId) {
     return null
   }
 
-  return store.getState().data.projectRows.find((item) => item.projectId === row.target.projectId) ?? null
+  return (
+    store
+      .getState()
+      .data.projectRows.find(
+        (item) => item.projectId === row.target.projectId,
+      ) ?? null
+  )
 }
 
 function getProjectTarget(store: TuiStore, target: SupportedContextRow) {
@@ -128,5 +228,10 @@ function getProjectTarget(store: TuiStore, target: SupportedContextRow) {
     return target
   }
 
-  return store.getState().data.projectRows.find((item) => item.projectId === target.projectId) ?? null
+  return (
+    store
+      .getState()
+      .data.projectRows.find((item) => item.projectId === target.projectId) ??
+    null
+  )
 }

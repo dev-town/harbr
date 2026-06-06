@@ -1,5 +1,10 @@
 import { theme } from '../../config/theme'
-import { selectBreadcrumb, selectEffectiveVisibility, selectProjectIssue, useTuiStore } from '../../store'
+import {
+  selectBreadcrumb,
+  selectEffectiveVisibility,
+  selectProjectIssue,
+  useTuiStore,
+} from '../../store'
 import { breadcrumbLabel } from './utils/breadcrumb-label'
 import { visibilityColor } from './utils/visibility-color'
 

@@ -8,6 +8,7 @@ import type {
 import type { TmuxError } from '../runtime-tmux.errors'
 
 export type RuntimeTmuxServiceApi = {
+  readonly closeRuntime: (sessionName: string) => Effect.Effect<void, TmuxError>
   readonly getCurrentRuntime: Effect.Effect<CurrentRuntime, TmuxError>
   readonly listRuntimes: Effect.Effect<RuntimeDiscovery, TmuxError>
   readonly openOrCreateRuntime: (

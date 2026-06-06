@@ -81,6 +81,7 @@ export function ActionsModal<T extends ActionItemBase>({
         </box>
         <box flexDirection="column" width="100%">
           {items.map((item) => {
+            const isDisabled = Boolean(item.disabledNotice)
             const isHovered = hoveredId === item.id
             const isSelected = selectedId === item.id
 
@@ -109,7 +110,15 @@ export function ActionsModal<T extends ActionItemBase>({
                     {isSelected ? '›' : ' '}
                   </span>
                   <span fg={theme.text}> </span>
-                  <span fg={isSelected ? theme.activeText : theme.text}>
+                  <span
+                    fg={
+                      isDisabled
+                        ? theme.muted
+                        : isSelected
+                          ? theme.activeText
+                          : theme.text
+                    }
+                  >
                     {item.label}
                   </span>
                 </text>

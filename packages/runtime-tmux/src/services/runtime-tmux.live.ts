@@ -23,6 +23,7 @@ import {
 const execFileAsync = promisify(execFile)
 
 export const RuntimeTmuxServiceLive = Layer.succeed(RuntimeTmuxService, {
+  closeRuntime: closeRuntimeLive,
   getCurrentRuntime: getCurrentRuntimeLive(),
   listRuntimes: listRuntimesLive(),
   openOrCreateRuntime: openOrCreateRuntimeLive,
@@ -33,32 +34,46 @@ export function makeRuntimeTmuxServiceLayer() {
 }
 
 export function listRuntimes() {
-  return Effect.flatMap(RuntimeTmuxService, (service) => service.listRuntimes).pipe(
-    Effect.provide(makeRuntimeTmuxServiceLayer()),
-  )
+  return Effect.flatMap(
+    RuntimeTmuxService,
+    (service) => service.listRuntimes,
+  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
 }
 
 export function getCurrentRuntime() {
-  return Effect.flatMap(RuntimeTmuxService, (service) => service.getCurrentRuntime).pipe(
-    Effect.provide(makeRuntimeTmuxServiceLayer()),
-  )
+  return Effect.flatMap(
+    RuntimeTmuxService,
+    (service) => service.getCurrentRuntime,
+  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
 }
 
 export function openOrCreateRuntime(target: RuntimeTarget) {
-  return Effect.flatMap(RuntimeTmuxService, (service) => service.openOrCreateRuntime(target)).pipe(
-    Effect.provide(makeRuntimeTmuxServiceLayer()),
-  )
+  return Effect.flatMap(RuntimeTmuxService, (service) =>
+    service.openOrCreateRuntime(target),
+  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
+}
+
+export function closeRuntime(sessionName: string) {
+  return Effect.flatMap(RuntimeTmuxService, (service) =>
+    service.closeRuntime(sessionName),
+  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
 }
 
 function getCurrentRuntimeLive() {
   return Effect.tryPromise({
     try: async () => {
-      const { stdout } = await execFileAsync('tmux', ['display-message', '-p', '#{session_name}'])
+      const { stdout } = await execFileAsync('tmux', [
+        'display-message',
+        '-p',
+        '#{session_name}',
+      ])
       return parseSessionName(stdout.trim()) satisfies CurrentRuntime
     },
     catch: (error) => mapTmuxError(error),
   }).pipe(
-    Effect.catchTag('TmuxNotFoundError', () => Effect.succeed<CurrentRuntime>(null)),
+    Effect.catchTag('TmuxNotFoundError', () =>
+      Effect.succeed<CurrentRuntime>(null),
+    ),
     Effect.catchTag('TmuxCommandError', (error) =>
       isNoServerRunning(error.message)
         ? Effect.succeed<CurrentRuntime>(null)
@@ -82,7 +97,10 @@ function listRuntimesLive() {
           .map((line) => line.trim())
           .filter((line) => line.length > 0)
           .map(parseSessionName)
-          .filter((runtime): runtime is NonNullable<typeof runtime> => runtime !== null),
+          .filter(
+            (runtime): runtime is NonNullable<typeof runtime> =>
+              runtime !== null,
+          ),
         runtimeIssue: null,
       } satisfies RuntimeDiscovery
     },
@@ -113,13 +131,34 @@ function openOrCreateRuntimeLive(target: RuntimeTarget) {
       const existingRuntime = findMatchingRuntime(discovery.runtimes, target)
 
       if (existingRuntime) {
-        await execTmux(['switch-client', '-c', client, '-t', formatSessionTarget(existingRuntime.sessionName)])
+        await execTmux([
+          'switch-client',
+          '-c',
+          client,
+          '-t',
+          formatSessionTarget(existingRuntime.sessionName),
+        ])
         return
       }
 
       const sessionName = formatSessionName(target)
       await execTmux(['new-session', '-d', '-s', sessionName, '-c', target.cwd])
-      await execTmux(['switch-client', '-c', client, '-t', formatSessionTarget(sessionName)])
+      await execTmux([
+        'switch-client',
+        '-c',
+        client,
+        '-t',
+        formatSessionTarget(sessionName),
+      ])
+    },
+    catch: (error) => mapTmuxError(error),
+  })
+}
+
+function closeRuntimeLive(sessionName: string) {
+  return Effect.tryPromise({
+    try: async () => {
+      await execTmux(['kill-session', '-t', formatSessionTarget(sessionName)])
     },
     catch: (error) => mapTmuxError(error),
   })
@@ -142,7 +181,11 @@ async function execTmux(args: string[]) {
 }
 
 async function getCurrentClient() {
-  const { stdout } = await execFileAsync('tmux', ['display-message', '-p', '#{client_tty}'])
+  const { stdout } = await execFileAsync('tmux', [
+    'display-message',
+    '-p',
+    '#{client_tty}',
+  ])
 
   return stdout.trim()
 }

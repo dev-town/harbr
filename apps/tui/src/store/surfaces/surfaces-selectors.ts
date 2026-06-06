@@ -3,23 +3,36 @@ import { selectSelectedActiveRow } from '../active/active-selectors'
 import { selectBrowseActionRows } from '../browse/browse-selectors'
 import type { TuiStoreModel } from '../types'
 
+export const activeActionIds = {
+  closeRuntimeSession: 'active.close_runtime_session',
+  openRuntime: 'active.open_runtime',
+} as const
+
 export function selectIsActionsOpen(state: TuiStoreModel) {
   return state.surfaces.surface.kind === 'actions'
 }
 
 export function selectIsActiveActionsOpen(state: TuiStoreModel) {
-  return state.surfaces.surface.kind === 'actions' && state.surfaces.surface.route === 'active'
+  return (
+    state.surfaces.surface.kind === 'actions' &&
+    state.surfaces.surface.route === 'active'
+  )
 }
 
 export function selectIsBrowseActionsOpen(state: TuiStoreModel) {
-  return state.surfaces.surface.kind === 'actions' && state.surfaces.surface.route === 'browse'
+  return (
+    state.surfaces.surface.kind === 'actions' &&
+    state.surfaces.surface.route === 'browse'
+  )
 }
 
 export function selectIsWorktreeFormOpen(state: TuiStoreModel) {
   return state.surfaces.surface.kind === 'worktree-form'
 }
 
-export function selectActiveActionRows(state: TuiStoreModel): readonly ActiveActionRow[] {
+export function selectActiveActionRows(
+  state: TuiStoreModel,
+): readonly ActiveActionRow[] {
   const target = selectSelectedActiveRow(state)
 
   if (!target) {
@@ -28,9 +41,20 @@ export function selectActiveActionRows(state: TuiStoreModel): readonly ActiveAct
 
   return [
     {
+      actionId: activeActionIds.openRuntime,
       id: `action.open:${target.id}`,
       kind: 'active-action',
       label: 'Open',
+      target,
+    },
+    {
+      actionId: activeActionIds.closeRuntimeSession,
+      ...(target.isCurrent
+        ? { disabledNotice: 'Cannot close current session' }
+        : {}),
+      id: `action.close:${target.id}`,
+      kind: 'active-action',
+      label: 'Close session',
       target,
     },
   ]

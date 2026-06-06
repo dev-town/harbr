@@ -1,6 +1,7 @@
 import type { BoxRenderable } from '@opentui/core'
 
 export type ActionItemBase = {
+  disabledNotice?: string
   id: string
   label: string
 }

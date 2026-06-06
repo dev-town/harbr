@@ -1,10 +1,22 @@
 import type { RuntimeFact } from '@harbour/domain'
 
-import type { HarbourRow, ActionRow, ModuleRow, ProjectRow, WorkspaceRow } from '../../types/rows'
+import type {
+  HarbourRow,
+  ActionRow,
+  ActiveRuntimeRow,
+  ModuleRow,
+  ProjectRow,
+  WorkspaceRow,
+} from '../../types/rows'
 import { browseActionIds } from './browse-action-ids'
 import { getSelectedRow } from '../shared/list-selectors'
 import type { TuiStoreModel } from '../types'
-import { getBrowseSection, getSelectedProjectId, getSelectedWorkspaceId, isImplicitWorkspace } from './browse-state'
+import {
+  getBrowseSection,
+  getSelectedProjectId,
+  getSelectedWorkspaceId,
+  isImplicitWorkspace,
+} from './browse-state'
 
 type SupportedContextRow = ModuleRow | ProjectRow | WorkspaceRow
 
@@ -26,13 +38,18 @@ export function selectBrowseRows(state: TuiStoreModel): readonly HarbourRow[] {
   return state.data.projectRows
 }
 
-export function selectVisibleBrowseRows(state: TuiStoreModel): readonly HarbourRow[] {
+export function selectVisibleBrowseRows(
+  state: TuiStoreModel,
+): readonly HarbourRow[] {
   const query = state.browse.list.query.trim().toLowerCase()
   const baseRows = selectBrowseRows(state).map((row) => ({
     ...row,
     isCurrent: isCurrentBrowseRow(row, state.app.currentRuntime),
   }))
-  const scopedRows = state.browse.visibility === 'active' ? baseRows.filter((row) => row.isActive) : [...baseRows]
+  const scopedRows =
+    state.browse.visibility === 'active'
+      ? baseRows.filter((row) => row.isActive)
+      : [...baseRows]
 
   if (!query) {
     return scopedRows
@@ -46,21 +63,36 @@ export function selectVisibleBrowseRows(state: TuiStoreModel): readonly HarbourR
 }
 
 export function selectSelectedBrowseRow(state: TuiStoreModel) {
-  return getSelectedRow(selectVisibleBrowseRows(state), state.browse.list.selectedId)
+  return getSelectedRow(
+    selectVisibleBrowseRows(state),
+    state.browse.list.selectedId,
+  )
 }
 
 export function selectHoveredBrowseRow(state: TuiStoreModel) {
-  return getSelectedRow(selectVisibleBrowseRows(state), state.browse.list.hoveredId)
+  return getSelectedRow(
+    selectVisibleBrowseRows(state),
+    state.browse.list.hoveredId,
+  )
 }
 
 export function selectBrowseBreadcrumb(state: TuiStoreModel) {
   const projectId = getSelectedProjectId(state.browse.scope)
   const workspaceId = getSelectedWorkspaceId(state.browse.scope)
   const section = selectCurrentBrowseSection(state)
-  const projectLabel = state.data.projectRows.find((row) => row.projectId === projectId)?.label
-  const workspaceLabel = state.data.workspaceRows.find((row) => row.workspaceId === workspaceId)?.label
+  const projectLabel = state.data.projectRows.find(
+    (row) => row.projectId === projectId,
+  )?.label
+  const workspaceLabel = state.data.workspaceRows.find(
+    (row) => row.workspaceId === workspaceId,
+  )?.label
 
-  if (section === 'modules' && projectLabel && workspaceLabel && !isImplicitWorkspace(state.browse.scope)) {
+  if (
+    section === 'modules' &&
+    projectLabel &&
+    workspaceLabel &&
+    !isImplicitWorkspace(state.browse.scope)
+  ) {
     return `${projectLabel} › ${workspaceLabel}`
   }
 
@@ -82,23 +114,32 @@ export function selectSelectedProjectIssue(state: TuiStoreModel) {
     return null
   }
 
-  return state.data.projectRows.find((row) => row.projectId === projectId)?.projectIssue ?? null
+  return (
+    state.data.projectRows.find((row) => row.projectId === projectId)
+      ?.projectIssue ?? null
+  )
 }
 
-export function selectBrowseActionRows(state: TuiStoreModel): readonly ActionRow[] {
+export function selectBrowseActionRows(
+  state: TuiStoreModel,
+): readonly ActionRow[] {
   const target = getBrowseActionTarget(state)
 
   if (!target) {
     return []
   }
 
-  return buildActionRows(target)
+  return buildActionRows(state, target)
 }
 
-export function getBrowseActionTarget(state: TuiStoreModel): SupportedContextRow | null {
+export function getBrowseActionTarget(
+  state: TuiStoreModel,
+): SupportedContextRow | null {
   const visibleRows = selectVisibleBrowseRows(state)
   const selectedRow = selectSelectedBrowseRow(state)
-  const currentRow = visibleRows.find((row) => row.id === state.browse.list.selectedId)
+  const currentRow = visibleRows.find(
+    (row) => row.id === state.browse.list.selectedId,
+  )
   const section = selectCurrentBrowseSection(state)
   const projectId = getSelectedProjectId(state.browse.scope)
   const workspaceId = getSelectedWorkspaceId(state.browse.scope)
@@ -107,35 +148,150 @@ export function getBrowseActionTarget(state: TuiStoreModel): SupportedContextRow
     return currentRow
   }
 
-  if (section === 'modules' && workspaceId && selectedRow?.kind === 'workspace') {
+  if (
+    section === 'modules' &&
+    workspaceId &&
+    selectedRow?.kind === 'workspace'
+  ) {
     return selectedRow
   }
 
-  if (section === 'workspaces' && projectId && selectedRow?.kind === 'project') {
+  if (
+    section === 'workspaces' &&
+    projectId &&
+    selectedRow?.kind === 'project'
+  ) {
     return selectedRow
   }
 
   return null
 }
 
-function buildActionRows(target: SupportedContextRow): readonly ActionRow[] {
+function buildActionRows(
+  state: TuiStoreModel,
+  target: SupportedContextRow,
+): readonly ActionRow[] {
+  const closeAction = makeCloseSessionActionRow(state, target)
+
   if (target.kind === 'project') {
-    return [makeActionRow(browseActionIds.openProjectRoot, 'Open', 'project runtime', target)]
+    return [
+      makeActionRow(
+        browseActionIds.openProjectRoot,
+        'Open',
+        'project runtime',
+        target,
+      ),
+      ...closeAction,
+    ]
   }
 
   if (target.kind === 'workspace') {
     return [
-      makeActionRow(browseActionIds.openWorkspaceRoot, 'Open', 'workspace runtime', target),
-      makeActionRow(browseActionIds.createWorkspace, 'Create workspace', 'git worktree', target),
-      makeActionRow(browseActionIds.openProjectRoot, 'Open project root', 'project runtime', target),
+      makeActionRow(
+        browseActionIds.openWorkspaceRoot,
+        'Open',
+        'workspace runtime',
+        target,
+      ),
+      makeActionRow(
+        browseActionIds.createWorkspace,
+        'Create workspace',
+        'git worktree',
+        target,
+      ),
+      makeActionRow(
+        browseActionIds.openProjectRoot,
+        'Open project root',
+        'project runtime',
+        target,
+      ),
+      ...closeAction,
     ]
   }
 
   return [
-    makeActionRow(browseActionIds.openModuleSession, 'Open', 'module runtime', target),
-    makeActionRow(browseActionIds.openWorkspaceRoot, 'Open workspace root', 'workspace runtime', target),
-    makeActionRow(browseActionIds.openProjectRoot, 'Open project root', 'project runtime', target),
+    makeActionRow(
+      browseActionIds.openModuleSession,
+      'Open',
+      'module runtime',
+      target,
+    ),
+    makeActionRow(
+      browseActionIds.openWorkspaceRoot,
+      'Open workspace root',
+      'workspace runtime',
+      target,
+    ),
+    makeActionRow(
+      browseActionIds.openProjectRoot,
+      'Open project root',
+      'project runtime',
+      target,
+    ),
+    ...closeAction,
   ]
+}
+
+function makeCloseSessionActionRow(
+  state: TuiStoreModel,
+  target: SupportedContextRow,
+): readonly ActionRow[] {
+  if (!target.isActive) {
+    return []
+  }
+
+  const runtime = getExactActiveRuntime(state, target)
+
+  if (!runtime) {
+    return []
+  }
+
+  return [
+    makeActionRow(
+      browseActionIds.closeRuntimeSession,
+      'Close session',
+      'tmux runtime',
+      target,
+      isCurrentActiveRuntime(state, runtime)
+        ? 'Cannot close current session'
+        : undefined,
+    ),
+  ]
+}
+
+function isCurrentActiveRuntime(
+  state: TuiStoreModel,
+  runtime: ActiveRuntimeRow,
+) {
+  return state.app.currentRuntime?.sessionName === runtime.sessionName
+}
+
+function getExactActiveRuntime(
+  state: TuiStoreModel,
+  target: SupportedContextRow,
+): ActiveRuntimeRow | null {
+  if (target.kind === 'project') {
+    return (
+      state.data.activeRuntimeRows.find(
+        (row) => row.scope === 'project' && row.projectId === target.projectId,
+      ) ?? null
+    )
+  }
+
+  if (target.kind === 'workspace') {
+    return (
+      state.data.activeRuntimeRows.find(
+        (row) =>
+          row.scope === 'workspace' && row.workspaceId === target.workspaceId,
+      ) ?? null
+    )
+  }
+
+  return (
+    state.data.activeRuntimeRows.find(
+      (row) => row.scope === 'module' && row.moduleId === target.moduleId,
+    ) ?? null
+  )
 }
 
 function makeActionRow(
@@ -143,6 +299,7 @@ function makeActionRow(
   label: string,
   metadata: string,
   target: SupportedContextRow,
+  disabledNotice?: string,
 ): ActionRow {
   return {
     id: `${actionId}:${target.id}`,
@@ -151,6 +308,7 @@ function makeActionRow(
     isActive: true,
     metadata,
     actionId,
+    ...(disabledNotice ? { disabledNotice } : {}),
     target: {
       projectId: target.projectId,
       ...(target.kind === 'project' ? {} : { workspaceId: target.workspaceId }),
@@ -177,21 +335,33 @@ function getBrowseRowScore(row: HarbourRow, query: string) {
   return -1
 }
 
-function isCurrentBrowseRow(row: HarbourRow, currentRuntime: RuntimeFact | null) {
+function isCurrentBrowseRow(
+  row: HarbourRow,
+  currentRuntime: RuntimeFact | null,
+) {
   if (!currentRuntime) {
     return false
   }
 
   if (row.kind === 'project') {
-    return currentRuntime.scope === 'project' && row.label === currentRuntime.projectName
+    return (
+      currentRuntime.scope === 'project' &&
+      row.label === currentRuntime.projectName
+    )
   }
 
   if (row.kind === 'workspace') {
-    return currentRuntime.scope === 'workspace' && row.label === currentRuntime.workspaceName
+    return (
+      currentRuntime.scope === 'workspace' &&
+      row.label === currentRuntime.workspaceName
+    )
   }
 
   if (row.kind === 'module') {
-    return currentRuntime.scope === 'module' && row.label === currentRuntime.moduleName
+    return (
+      currentRuntime.scope === 'module' &&
+      row.label === currentRuntime.moduleName
+    )
   }
 
   return false

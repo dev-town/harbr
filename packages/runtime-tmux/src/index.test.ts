@@ -13,6 +13,7 @@ import {
   parseSessionName,
 } from './session-name.util'
 import {
+  closeRuntime,
   getCurrentRuntime,
   listRuntimes,
   openOrCreateRuntime,
@@ -61,7 +62,9 @@ describe('parseSessionName', () => {
       moduleName: 'apps/__generated.test%ok',
     })
 
-    expect(sessionName).toBe('alpha~~feature/__fixtures~3amain~~apps/__generated~2etest~25ok')
+    expect(sessionName).toBe(
+      'alpha~~feature/__fixtures~3amain~~apps/__generated~2etest~25ok',
+    )
     expect(parseSessionName(sessionName)).toEqual({
       sessionName,
       scope: 'module',
@@ -133,6 +136,7 @@ describe('listRuntimes', () => {
     }
 
     const layer = Layer.succeed(RuntimeTmuxService, {
+      closeRuntime: (_sessionName: string) => Effect.void,
       listRuntimes: Effect.succeed(discovery),
       getCurrentRuntime: Effect.succeed(null),
       openOrCreateRuntime: (_target: RuntimeTarget) => Effect.void,
@@ -140,9 +144,10 @@ describe('listRuntimes', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(RuntimeTmuxService, (service) => service.listRuntimes).pipe(
-          Effect.provide(layer),
-        ),
+        Effect.flatMap(
+          RuntimeTmuxService,
+          (service) => service.listRuntimes,
+        ).pipe(Effect.provide(layer)),
       ),
     ).resolves.toEqual(discovery)
   })
@@ -165,6 +170,7 @@ describe('getCurrentRuntime', () => {
     }
 
     const layer = Layer.succeed(RuntimeTmuxService, {
+      closeRuntime: (_sessionName: string) => Effect.void,
       listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
       getCurrentRuntime: Effect.succeed(currentRuntime),
       openOrCreateRuntime: (_target: RuntimeTarget) => Effect.void,
@@ -172,14 +178,16 @@ describe('getCurrentRuntime', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(RuntimeTmuxService, (service) => service.getCurrentRuntime).pipe(
-          Effect.provide(layer),
-        ),
+        Effect.flatMap(
+          RuntimeTmuxService,
+          (service) => service.getCurrentRuntime,
+        ).pipe(Effect.provide(layer)),
       ),
     ).resolves.toEqual(currentRuntime)
   })
 
   it('exports a usable current runtime program symbol', () => {
+    expect(closeRuntime).toBeTypeOf('function')
     expect(getCurrentRuntime).toBeTypeOf('function')
     expect(openOrCreateRuntime).toBeTypeOf('function')
   })
