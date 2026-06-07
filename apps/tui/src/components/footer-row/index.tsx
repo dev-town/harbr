@@ -16,7 +16,13 @@ export function FooterRow() {
   const showVisibility = currentRoute === 'browse'
 
   return (
-    <box paddingLeft={1} paddingRight={1} width="100%">
+    <box
+      flexDirection="row"
+      paddingLeft={1}
+      paddingRight={1}
+      style={{ justifyContent: 'space-between' }}
+      width="100%"
+    >
       <text>
         {showVisibility ? (
           <span bg={visibilityColor(visibility)} fg={theme.backdrop}>
@@ -33,6 +39,10 @@ export function FooterRow() {
         ) : (
           <span fg={theme.muted}> {breadcrumbLabel(breadcrumb)}</span>
         )}
+      </text>
+      <text>
+        <span fg={theme.active}>?</span>
+        <span fg={theme.muted}> Help</span>
       </text>
     </box>
   )

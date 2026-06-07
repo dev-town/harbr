@@ -29,6 +29,7 @@ export type TuiStoreActions = {
   changeBrowseQuery(value: string): void
   clearNotice(): void
   closeActionsMenu(): void
+  closeHelpModal(): void
   closeWindowPicker(): void
   closeWorktreeForm(): void
   hoverActiveRow(rowId: string | null): void
@@ -38,6 +39,7 @@ export type TuiStoreActions = {
   openActiveActionsMenu(): void
   openBrowseActionsMenu(): void
   openCreateWorkspaceForm(projectId: string): void
+  openHelpModal(): void
   openWindowPicker(target: ResolvedContextTarget, contextLabel?: string): void
   previousRoute(): void
   registerFocusTarget(id: SurfaceId, ref: FocusTargetRef | null): void

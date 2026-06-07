@@ -3,7 +3,9 @@ import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '../types'
 export function createSurfacesActions(set: TuiStoreSet, _get: TuiStoreGet): Pick<
   TuiStoreActions,
   | 'closeActionsMenu'
+  | 'closeHelpModal'
   | 'closeWindowPicker'
+  | 'openHelpModal'
   | 'openWindowPicker'
   | 'registerFocusTarget'
 > {
@@ -12,6 +14,10 @@ export function createSurfacesActions(set: TuiStoreSet, _get: TuiStoreGet): Pick
       app: { ...state.app, notice: null },
         surfaces: { ...state.surfaces, surface: { kind: 'browser' } },
       })),
+    closeHelpModal: () => set((state) => ({
+      app: { ...state.app, notice: null },
+      surfaces: { ...state.surfaces, surface: { kind: 'browser' } },
+    })),
     closeWindowPicker: () => set((state) => ({
       app: { ...state.app, notice: null },
       surfaces: {
@@ -37,9 +43,15 @@ export function createSurfacesActions(set: TuiStoreSet, _get: TuiStoreGet): Pick
         },
       },
     })),
+    openHelpModal: () => set((state) => ({
+      app: { ...state.app, notice: null },
+      surfaces: { ...state.surfaces, surface: { kind: 'help' } },
+    })),
     registerFocusTarget: (id, ref) => set((state) => {
       const currentRef = id === 'actions'
         ? state.surfaces.actionsFocusTargetRef
+        : id === 'help'
+          ? state.surfaces.helpFocusTargetRef
         : id === 'window-picker'
           ? state.surfaces.windowPickerFocusTargetRef
         : id === 'worktree-form'
@@ -55,6 +67,8 @@ export function createSurfacesActions(set: TuiStoreSet, _get: TuiStoreGet): Pick
           ...state.surfaces,
           ...(id === 'actions'
             ? { actionsFocusTargetRef: ref }
+            : id === 'help'
+              ? { helpFocusTargetRef: ref }
             : id === 'window-picker'
               ? { windowPickerFocusTargetRef: ref }
             : id === 'worktree-form'

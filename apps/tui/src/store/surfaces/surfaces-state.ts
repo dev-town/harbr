@@ -4,12 +4,14 @@ export type SurfaceId =
   | 'actions'
   | 'browser'
   | 'confirm'
+  | 'help'
   | 'window-picker'
   | 'worktree-form'
 
 export type SurfaceState =
   | { kind: 'actions'; route: 'active' | 'browse' }
   | { kind: 'browser' }
+  | { kind: 'help' }
   | {
       contextLabel?: string
       kind: 'window-picker'
@@ -32,6 +34,7 @@ export type SurfacesState = {
   actionsFocusTargetRef: FocusTargetRef | null
   browserFocusTargetRef: FocusTargetRef | null
   focusRequestKey: number
+  helpFocusTargetRef: FocusTargetRef | null
   surface: SurfaceState
   windowPickerFocusTargetRef: FocusTargetRef | null
   worktreeFormFocusTargetRef: FocusTargetRef | null
@@ -42,6 +45,7 @@ export function createSurfacesState(): SurfacesState {
     actionsFocusTargetRef: null,
     browserFocusTargetRef: null,
     focusRequestKey: 0,
+    helpFocusTargetRef: null,
     surface: { kind: 'browser' },
     windowPickerFocusTargetRef: null,
     worktreeFormFocusTargetRef: null,

@@ -1,6 +1,8 @@
 import { useBindings } from '@opentui/keymap/react'
 
 import { useTuiServices } from '../hooks/useTuiServices'
+import { tuiStore } from '../store'
+import { makeRootBindings } from './bindings'
 import { keymapPriority } from './priorities'
 
 export function useRootKeybindings() {
@@ -9,7 +11,10 @@ export function useRootKeybindings() {
   useBindings(
     () => ({
       priority: keymapPriority.root,
-      bindings: [{ key: 'ctrl+c', cmd: () => renderer.destroy() }],
+      bindings: makeRootBindings({
+        onHelp: () => tuiStore.getState().openHelpModal(),
+        onQuit: () => renderer.destroy(),
+      }),
     }),
     [renderer],
   )

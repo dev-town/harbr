@@ -1,5 +1,6 @@
 import { useBindings } from '@opentui/keymap/react'
 
+import { makeActionsModalBindings } from '../../../keymap/bindings'
 import { keymapPriority } from '../../../keymap/priorities'
 
 type UseActionKeybindingsArgs = {
@@ -20,12 +21,12 @@ export function useActionKeybindings({
       enabled
         ? {
             priority: keymapPriority.modal,
-            bindings: [
-              { key: 'up', cmd: () => moveSelection(-1) },
-              { key: 'down', cmd: () => moveSelection(1) },
-              { key: 'return', cmd: selectCurrent },
-              { key: 'escape', cmd: onClose },
-            ],
+            bindings: makeActionsModalBindings({
+              onClose,
+              onMoveDown: () => moveSelection(1),
+              onMoveUp: () => moveSelection(-1),
+              onSelect: selectCurrent,
+            }),
           }
         : { bindings: [] },
     [enabled, moveSelection, onClose, selectCurrent],

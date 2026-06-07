@@ -1,5 +1,5 @@
 import { useAppShell } from './hooks/useAppShell'
-import { Shell } from './components'
+import { HelpModal, Shell } from './components'
 import { SurfaceFocusManager } from './keymap/layers'
 import { useRootKeybindings } from './keymap/root-keybindings'
 
@@ -13,6 +13,7 @@ export function App() {
       <box flexGrow={1}>
         <Shell />
       </box>
+      <HelpModal />
     </box>
   )
 }

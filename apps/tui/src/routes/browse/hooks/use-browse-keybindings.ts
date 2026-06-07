@@ -3,6 +3,7 @@ import { useBindings } from '@opentui/keymap/react'
 import type { RefObject } from 'react'
 
 import { loadProjects } from '../../../actions/refresh'
+import { makeBrowseBindings } from '../../../keymap/bindings'
 import { keymapPriority } from '../../../keymap/priorities'
 import { handleBrowseRouteBack, handleBrowseRouteSelect } from '../actions'
 import { useTuiServices } from '../../../hooks/useTuiServices'
@@ -18,31 +19,22 @@ export function useBrowseKeybindings(
       targetRef: searchRef,
       targetMode: 'focus-within',
       priority: keymapPriority.route,
-      bindings: [
-        { key: 'up', cmd: () => tuiStore.getState().moveBrowseSelection(-1) },
-        { key: 'down', cmd: () => tuiStore.getState().moveBrowseSelection(1) },
-        {
-          key: 'return',
-          cmd: () =>
-            handleBrowseRouteSelect(
-              services,
-              tuiStore,
-              selectSelectedBrowseRow(tuiStore.getState()),
-            ),
-        },
-        { key: 'escape', cmd: () => handleBrowseRouteBack(services, tuiStore) },
-        { key: 'tab', cmd: () => tuiStore.getState().nextRoute() },
-        { key: 'shift+tab', cmd: () => tuiStore.getState().previousRoute() },
-        { key: 'ctrl+r', cmd: () => void loadProjects(services, tuiStore) },
-        {
-          key: 'ctrl+f',
-          cmd: () => tuiStore.getState().toggleBrowseVisibility(),
-        },
-        {
-          key: 'ctrl+a',
-          cmd: () => tuiStore.getState().openBrowseActionsMenu(),
-        },
-      ],
+      bindings: makeBrowseBindings({
+        onActions: () => tuiStore.getState().openBrowseActionsMenu(),
+        onBack: () => handleBrowseRouteBack(services, tuiStore),
+        onMoveDown: () => tuiStore.getState().moveBrowseSelection(1),
+        onMoveUp: () => tuiStore.getState().moveBrowseSelection(-1),
+        onNextRoute: () => tuiStore.getState().nextRoute(),
+        onPreviousRoute: () => tuiStore.getState().previousRoute(),
+        onRefresh: () => void loadProjects(services, tuiStore),
+        onSelect: () =>
+          handleBrowseRouteSelect(
+            services,
+            tuiStore,
+            selectSelectedBrowseRow(tuiStore.getState()),
+          ),
+        onToggleVisibility: () => tuiStore.getState().toggleBrowseVisibility(),
+      }),
     }),
     [searchRef, services],
   )

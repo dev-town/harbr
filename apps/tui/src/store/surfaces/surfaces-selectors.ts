@@ -27,6 +27,10 @@ export function selectIsBrowseActionsOpen(state: TuiStoreModel) {
   )
 }
 
+export function selectIsHelpOpen(state: TuiStoreModel) {
+  return state.surfaces.surface.kind === 'help'
+}
+
 export function selectIsWorktreeFormOpen(state: TuiStoreModel) {
   return state.surfaces.surface.kind === 'worktree-form'
 }
@@ -104,7 +108,9 @@ export function selectCurrentActionRows(state: TuiStoreModel) {
 
 export function selectActiveFocusTarget(state: TuiStoreModel) {
   const ref =
-    state.surfaces.surface.kind === 'worktree-form'
+    state.surfaces.surface.kind === 'help'
+      ? state.surfaces.helpFocusTargetRef
+      : state.surfaces.surface.kind === 'worktree-form'
       ? state.surfaces.worktreeFormFocusTargetRef
       : state.surfaces.surface.kind === 'window-picker'
         ? state.surfaces.windowPickerFocusTargetRef

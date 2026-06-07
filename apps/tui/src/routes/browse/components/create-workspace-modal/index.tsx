@@ -6,6 +6,7 @@ import { useRef } from 'react'
 
 import { theme } from '../../../../config/theme'
 import { useRegisterFocusTarget } from '../../../../hooks/useRegisterFocusTarget'
+import { makeCreateWorkspaceBindings } from '../../../../keymap/bindings'
 import { keymapPriority } from '../../../../keymap/priorities'
 import { useCreateWorkspace } from '../../hooks/use-create-workspace'
 
@@ -39,10 +40,7 @@ export function CreateWorkspaceModal() {
             targetRef: inputRef,
             targetMode: 'focus-within',
             priority: keymapPriority.modal,
-            bindings: [
-              { key: 'escape', cmd: onBack },
-              { key: 'return', cmd: onSubmit },
-            ],
+            bindings: makeCreateWorkspaceBindings({ onBack, onSubmit }),
           }
         : { bindings: [] },
     [inputRef, isOpen, onBack, onSubmit],

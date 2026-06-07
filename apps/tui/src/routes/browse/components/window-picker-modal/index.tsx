@@ -8,6 +8,7 @@ import { createWindowsForContext } from '../../../../actions/windows'
 import { theme } from '../../../../config/theme'
 import { useRegisterFocusTarget } from '../../../../hooks/useRegisterFocusTarget'
 import { useTuiServices } from '../../../../hooks/useTuiServices'
+import { makeWindowPickerBindings } from '../../../../keymap/bindings'
 import { keymapPriority } from '../../../../keymap/priorities'
 import {
   selectIsWindowPickerOpen,
@@ -107,16 +108,13 @@ export function WindowPickerModal() {
       isOpen
         ? {
             priority: keymapPriority.modal,
-            bindings: [
-              { key: 'up', cmd: () => moveSelection(-1) },
-              { key: 'down', cmd: () => moveSelection(1) },
-              { key: 'space', cmd: () => toggleSelected() },
-              { key: 'return', cmd: confirmSelection },
-              {
-                key: 'escape',
-                cmd: () => tuiStore.getState().closeWindowPicker(),
-              },
-            ],
+            bindings: makeWindowPickerBindings({
+              onClose: () => tuiStore.getState().closeWindowPicker(),
+              onConfirm: confirmSelection,
+              onMoveDown: () => moveSelection(1),
+              onMoveUp: () => moveSelection(-1),
+              onToggle: () => toggleSelected(),
+            }),
           }
         : { bindings: [] },
     [confirmSelection, isOpen, moveSelection, selectedId, toggleSelected],
@@ -218,7 +216,7 @@ function resolvePickerState(input: {
   projectWindows: ReturnType<typeof tuiStore.getState>['data']['projectWindows']
   target: Exclude<
     ReturnType<typeof tuiStore.getState>['surfaces']['surface'],
-    { kind: 'browser' | 'actions' | 'worktree-form' }
+    { kind: 'browser' | 'actions' | 'help' | 'worktree-form' }
   >['target']
 }) {
   const windows =
