@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef } from 'react'
 import { openActiveRuntime } from '../../../actions/runtime'
 import { useRegisterFocusTarget } from '../../../hooks/useRegisterFocusTarget'
 import { useTuiServices } from '../../../hooks/useTuiServices'
-import type { ActiveRuntimeRow } from '../../../types/rows'
+import type { RuntimeAttachment } from '@harbour/domain'
+import type { HarbourRow } from '../../../types/rows'
 import {
   selectIsActiveActionsOpen,
   selectIsWindowPickerOpen,
@@ -45,14 +46,20 @@ export function useActiveRoute() {
     }
 
     searchRef.current?.focus?.()
-  }, [focusSearchNonce, isActionsOpen, isWindowPickerOpen, rows.length, selectedId])
+  }, [
+    focusSearchNonce,
+    isActionsOpen,
+    isWindowPickerOpen,
+    rows.length,
+    selectedId,
+  ])
 
   return {
     hoveredId: useTuiStore((state) => state.active.list.hoveredId),
     isLoading: useTuiStore((state) => state.app.isLoading),
     onHoverRow: useTuiStore((state) => state.hoverActiveRow),
     onOpenActions: useTuiStore((state) => state.openActiveActionsMenu),
-    onOpenRow: (row: ActiveRuntimeRow) =>
+    onOpenRow: (row: HarbourRow & { runtime: RuntimeAttachment }) =>
       void openActiveRuntime(services, tuiStore, row),
     onSearchChange: useTuiStore((state) => state.changeActiveQuery),
     onSelectRow,

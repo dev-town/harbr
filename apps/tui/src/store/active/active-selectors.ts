@@ -1,12 +1,14 @@
-import type { RuntimeFact } from '@harbour/domain'
+import type { RuntimeAttachment, RuntimeFact } from '@harbour/domain'
 
 import type { TuiStoreModel } from '../types'
-import type { ActiveRuntimeRow } from '../../types/rows'
+import type { HarbourRow } from '../../types/rows'
 import { getSelectedRow } from '../shared/list-selectors'
 
-export function selectVisibleActiveRows(state: TuiStoreModel): readonly ActiveRuntimeRow[] {
+export function selectVisibleActiveRows(
+  state: TuiStoreModel,
+): readonly (HarbourRow & { runtime: RuntimeAttachment })[] {
   const query = state.active.list.query.trim().toLowerCase()
-  const rows = state.data.activeRuntimeRows.map((row) => ({
+  const rows = state.data.activeRuntimeRows.filter(hasRuntime).map((row) => ({
     ...row,
     isCurrent: isCurrentActiveRow(row, state.app.currentRuntime),
   }))
@@ -23,13 +25,28 @@ export function selectVisibleActiveRows(state: TuiStoreModel): readonly ActiveRu
 }
 
 export function selectSelectedActiveRow(state: TuiStoreModel) {
-  return getSelectedRow(selectVisibleActiveRows(state), state.active.list.selectedId)
+  return getSelectedRow(
+    selectVisibleActiveRows(state),
+    state.active.list.selectedId,
+  )
 }
 
 export function selectHoveredActiveRow(state: TuiStoreModel) {
-  return getSelectedRow(selectVisibleActiveRows(state), state.active.list.hoveredId)
+  return getSelectedRow(
+    selectVisibleActiveRows(state),
+    state.active.list.hoveredId,
+  )
 }
 
-function isCurrentActiveRow(row: ActiveRuntimeRow, currentRuntime: RuntimeFact | null) {
-  return currentRuntime?.sessionName === row.sessionName
+function hasRuntime(
+  row: HarbourRow,
+): row is HarbourRow & { runtime: RuntimeAttachment } {
+  return row.runtime !== null
+}
+
+function isCurrentActiveRow(
+  row: HarbourRow & { runtime: RuntimeAttachment },
+  currentRuntime: RuntimeFact | null,
+) {
+  return currentRuntime?.sessionName === row.runtime.sessionName
 }

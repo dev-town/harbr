@@ -1,4 +1,4 @@
-import type { HarbourContext } from '@harbour/domain'
+import type { ResolvedContextTarget } from '@harbour/domain'
 
 export type SurfaceId =
   | 'actions'
@@ -14,7 +14,7 @@ export type SurfaceState =
       contextLabel?: string
       kind: 'window-picker'
       route: 'active' | 'browse'
-      target: HarbourContext
+      target: ResolvedContextTarget
     }
   | { kind: 'worktree-form' }
 

@@ -1,6 +1,33 @@
 import { z } from 'zod'
 
+import { HarbourContextSchema } from './context.contracts'
 import { RuntimeScopeSchema, RuntimeStatusSchema } from './shared.contracts'
+
+export const RuntimeTargetSchema = z.object({
+  cwd: z.string(),
+  moduleName: z.string().nullable(),
+  projectName: z.string(),
+  workspaceName: z.string().nullable(),
+})
+
+export type RuntimeTarget = z.infer<typeof RuntimeTargetSchema>
+
+export const RuntimeAttachmentSchema = z.object({
+  sessionName: z.string(),
+  status: RuntimeStatusSchema,
+})
+
+export type RuntimeAttachment = z.infer<typeof RuntimeAttachmentSchema>
+
+export const ResolvedContextTargetSchema = z.object({
+  breadcrumb: z.string(),
+  context: HarbourContextSchema,
+  label: z.string(),
+  runtimeTarget: RuntimeTargetSchema,
+  scope: RuntimeScopeSchema,
+})
+
+export type ResolvedContextTarget = z.infer<typeof ResolvedContextTargetSchema>
 
 export const RuntimeFactSchema = z.object({
   moduleName: z.string().nullable(),

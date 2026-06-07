@@ -31,10 +31,7 @@ import {
   workspaces,
 } from '../schema'
 
-export function getProjectByName(
-  db: HarbourDatabase,
-  projectName: string,
-) {
+export function getProjectByName(db: HarbourDatabase, projectName: string) {
   const row = db
     .select()
     .from(projects)
@@ -71,7 +68,9 @@ export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
       const projectWorkspaces = workspaceRows.filter(
         (workspace) => workspace.projectId === project.id,
       )
-      const workspaceIds = new Set(projectWorkspaces.map((workspace) => workspace.id))
+      const workspaceIds = new Set(
+        projectWorkspaces.map((workspace) => workspace.id),
+      )
 
       return {
         id: project.id,
@@ -79,10 +78,19 @@ export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
         projectIssue: project.projectIssue,
         repoPath: project.repoPath,
         repoKind: project.repoKind,
-        activeSessionCount: runtimeRows.filter((runtime) => runtime.projectId === project.id)
-          .length,
+        runtime: mapRuntimeAttachment(
+          runtimeRows.find(
+            (runtime) =>
+              runtime.projectId === project.id && runtime.scope === 'project',
+          ) ?? null,
+        ),
+        activeSessionCount: runtimeRows.filter(
+          (runtime) => runtime.projectId === project.id,
+        ).length,
         workspaceCount: projectWorkspaces.length,
-        hasModules: moduleRows.some((module) => workspaceIds.has(module.workspaceId)),
+        hasModules: moduleRows.some((module) =>
+          workspaceIds.has(module.workspaceId),
+        ),
         hasWorkspaces:
           projectWorkspaces.length > 1 ||
           projectWorkspaces.some((workspace) => workspace.kind === 'worktree'),
@@ -91,7 +99,9 @@ export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
     .sort((left, right) => left.name.localeCompare(right.name))
 }
 
-export function listActiveRuntimeSummaries(db: HarbourDatabase): ActiveRuntimeSummary[] {
+export function listActiveRuntimeSummaries(
+  db: HarbourDatabase,
+): ActiveRuntimeSummary[] {
   const projectRows = db
     .select()
     .from(projects)
@@ -122,14 +132,24 @@ export function listActiveRuntimeSummaries(db: HarbourDatabase): ActiveRuntimeSu
       }
 
       const workspace = runtime.workspaceId
-        ? workspaceRows.find((row) => row.id === runtime.workspaceId) ?? null
+        ? (workspaceRows.find((row) => row.id === runtime.workspaceId) ?? null)
         : null
       const module =
         runtime.scope === 'module' && runtime.workspaceId && runtime.modulePath
-          ? moduleRows.find(
-              (row) => row.workspaceId === runtime.workspaceId && row.modulePath === runtime.modulePath,
-            ) ?? null
+          ? (moduleRows.find(
+              (row) =>
+                row.workspaceId === runtime.workspaceId &&
+                row.modulePath === runtime.modulePath,
+            ) ?? null)
           : null
+
+      if (runtime.scope === 'workspace' && !workspace) {
+        return null
+      }
+
+      if (runtime.scope === 'module' && (!workspace || !module)) {
+        return null
+      }
 
       return {
         id: runtime.id,
@@ -173,8 +193,7 @@ export function saveUiContext(
 ): HarbourContext {
   const updatedAt = Date.now()
 
-  db
-    .insert(uiContext)
+  db.insert(uiContext)
     .values({
       id: 'main',
       projectId: context.projectId ?? null,
@@ -200,6 +219,17 @@ export function listWorkspaceSummaries(
   db: HarbourDatabase,
   projectId: string,
 ): WorkspaceSummary[] {
+  const projectRow = db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .get()
+
+  if (!projectRow) {
+    return []
+  }
+
+  const project = projectRowSchema.parse(projectRow)
   const workspaceRows = db
     .select()
     .from(workspaces)
@@ -229,6 +259,15 @@ export function listWorkspaceSummaries(
         projectId: workspace.projectId,
         kind: workspace.kind,
         name: workspace.name,
+        projectName: project.name,
+        repoPath: project.repoPath,
+        runtime: mapRuntimeAttachment(
+          runtimeRows.find(
+            (runtime) =>
+              runtime.workspaceId === workspace.id &&
+              runtime.scope === 'workspace',
+          ) ?? null,
+        ),
         workspacePath: workspace.workspacePath,
         activeSessionCount: runtimeRows.filter(
           (runtime) => runtime.workspaceId === workspace.id,
@@ -262,6 +301,17 @@ export function listModuleSummaries(
   }
 
   const workspace = workspaceRowSchema.parse(workspaceRow)
+  const projectRow = db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, workspace.projectId))
+    .get()
+
+  if (!projectRow) {
+    return []
+  }
+
+  const project = projectRowSchema.parse(projectRow)
   const moduleRows = db
     .select()
     .from(modules)
@@ -282,19 +332,34 @@ export function listModuleSummaries(
       workspaceId: module.workspaceId,
       name: module.modulePath === '.' ? '/' : module.name,
       path: module.modulePath,
-      hasActiveSession: runtimeRows.some(
-        (runtime) =>
-          module.modulePath === '.'
-            ? runtime.scope === 'workspace' || (runtime.scope === 'module' && runtime.modulePath === '.')
-            : runtime.scope === 'module' && runtime.modulePath === module.modulePath,
+      hasActiveSession: runtimeRows.some((runtime) =>
+        module.modulePath === '.'
+          ? runtime.scope === 'workspace' ||
+            (runtime.scope === 'module' && runtime.modulePath === '.')
+          : runtime.scope === 'module' &&
+            runtime.modulePath === module.modulePath,
       ),
+      projectName: project.name,
+      repoPath: project.repoPath,
+      runtime: mapRuntimeAttachment(
+        runtimeRows.find(
+          (runtime) =>
+            runtime.scope === 'module' &&
+            runtime.modulePath === module.modulePath,
+        ) ?? null,
+      ),
+      workspaceName: workspace.name,
+      workspacePath: workspace.workspacePath,
     }))
     .sort((left, right) => left.path.localeCompare(right.path))
 }
 
 export function upsertProject(
   db: HarbourDatabase,
-  input: Pick<ReplaceProjectSnapshotInput, 'projectIssue' | 'projectName' | 'repoKind' | 'repoPath'>,
+  input: Pick<
+    ReplaceProjectSnapshotInput,
+    'projectIssue' | 'projectName' | 'repoKind' | 'repoPath'
+  >,
 ) {
   const now = Date.now()
   const existing = db
@@ -304,8 +369,7 @@ export function upsertProject(
     .get()
 
   if (existing) {
-    db
-      .update(projects)
+    db.update(projects)
       .set({
         projectIssue: input.projectIssue ?? null,
         repoPath: input.repoPath,
@@ -315,7 +379,11 @@ export function upsertProject(
       .where(eq(projects.id, existing.id))
       .run()
 
-    const row = db.select().from(projects).where(eq(projects.id, existing.id)).get()
+    const row = db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, existing.id))
+      .get()
 
     if (!row) {
       throw new Error(`project disappeared after update: ${existing.id}`)
@@ -326,8 +394,7 @@ export function upsertProject(
 
   const projectId = randomUUID()
 
-  db
-    .insert(projects)
+  db.insert(projects)
     .values({
       id: projectId,
       name: input.projectName,
@@ -376,11 +443,20 @@ export function replaceProjectSnapshot(
     }
 
     const createdAt = now()
-    const workspaceRecords = insertWorkspaces(tx, project.id, input.workspaces, createdAt)
-    const workspacesByName = new Map(workspaceRecords.map((workspace) => [workspace.name, workspace]))
+    const workspaceRecords = insertWorkspaces(
+      tx,
+      project.id,
+      input.workspaces,
+      createdAt,
+    )
+    const workspacesByName = new Map(
+      workspaceRecords.map((workspace) => [workspace.name, workspace]),
+    )
 
     const moduleRecords = workspaceRecords.flatMap((workspace) => {
-      const source = input.workspaces.find((candidate) => candidate.workspaceName === workspace.name)
+      const source = input.workspaces.find(
+        (candidate) => candidate.workspaceName === workspace.name,
+      )
 
       if (!source || source.modules.length === 0) {
         return []
@@ -429,8 +505,7 @@ function insertWorkspaces(
   createdAt: number,
 ) {
   for (const workspace of observedWorkspaces) {
-    db
-      .insert(workspaces)
+    db.insert(workspaces)
       .values({
         id: randomUUID(),
         projectId,
@@ -444,7 +519,11 @@ function insertWorkspaces(
       .run()
   }
 
-  const rows = db.select().from(workspaces).where(eq(workspaces.projectId, projectId)).all()
+  const rows = db
+    .select()
+    .from(workspaces)
+    .where(eq(workspaces.projectId, projectId))
+    .all()
 
   return rows.map((row) => mapWorkspaceRow(workspaceRowSchema.parse(row)))
 }
@@ -456,8 +535,7 @@ function insertModules(
   now: number,
 ) {
   for (const module of resolvedModules) {
-    db
-      .insert(modules)
+    db.insert(modules)
       .values({
         id: randomUUID(),
         workspaceId,
@@ -472,7 +550,11 @@ function insertModules(
       .run()
   }
 
-  const rows = db.select().from(modules).where(eq(modules.workspaceId, workspaceId)).all()
+  const rows = db
+    .select()
+    .from(modules)
+    .where(eq(modules.workspaceId, workspaceId))
+    .all()
 
   return rows.map((row) => mapModuleRow(moduleRowSchema.parse(row)))
 }
@@ -486,14 +568,16 @@ function insertRuntimes(
 ) {
   for (const runtime of runtimeFacts) {
     const workspace =
-      runtime.workspaceName === null ? null : workspacesByName.get(runtime.workspaceName) ?? null
+      runtime.workspaceName === null
+        ? null
+        : (workspacesByName.get(runtime.workspaceName) ?? null)
 
-    db
-      .insert(runtimes)
+    db.insert(runtimes)
       .values({
         id: randomUUID(),
         projectId,
-        workspaceId: runtime.scope === 'project' ? null : workspace?.id ?? null,
+        workspaceId:
+          runtime.scope === 'project' ? null : (workspace?.id ?? null),
         sessionName: runtime.sessionName,
         scope: runtime.scope,
         modulePath:
@@ -509,12 +593,18 @@ function insertRuntimes(
       .run()
   }
 
-  const rows = db.select().from(runtimes).where(eq(runtimes.projectId, projectId)).all()
+  const rows = db
+    .select()
+    .from(runtimes)
+    .where(eq(runtimes.projectId, projectId))
+    .all()
 
   return rows.map((row) => mapRuntimeRow(runtimeRowSchema.parse(row)))
 }
 
-function mapProjectRow(row: ReturnType<typeof projectRowSchema.parse>): ProjectRecord {
+function mapProjectRow(
+  row: ReturnType<typeof projectRowSchema.parse>,
+): ProjectRecord {
   return {
     id: row.id,
     projectIssue: row.projectIssue ?? null,
@@ -541,7 +631,9 @@ function mapWorkspaceRow(
   }
 }
 
-function mapModuleRow(row: ReturnType<typeof moduleRowSchema.parse>): ModuleRecord {
+function mapModuleRow(
+  row: ReturnType<typeof moduleRowSchema.parse>,
+): ModuleRecord {
   return {
     id: row.id,
     workspaceId: row.workspaceId,
@@ -557,7 +649,9 @@ function mapModuleRow(row: ReturnType<typeof moduleRowSchema.parse>): ModuleReco
   }
 }
 
-function mapRuntimeRow(row: ReturnType<typeof runtimeRowSchema.parse>): RuntimeRecord {
+function mapRuntimeRow(
+  row: ReturnType<typeof runtimeRowSchema.parse>,
+): RuntimeRecord {
   return {
     id: row.id,
     projectId: row.projectId,
@@ -569,4 +663,13 @@ function mapRuntimeRow(row: ReturnType<typeof runtimeRowSchema.parse>): RuntimeR
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
+}
+
+function mapRuntimeAttachment(runtime: RuntimeRecord | null) {
+  return runtime
+    ? {
+        sessionName: runtime.sessionName,
+        status: runtime.status,
+      }
+    : null
 }

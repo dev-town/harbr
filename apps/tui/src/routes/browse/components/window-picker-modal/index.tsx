@@ -21,9 +21,6 @@ export function WindowPickerModal() {
   const { width } = useTerminalDimensions()
   const isOpen = useTuiStore(selectIsWindowPickerOpen)
   const surface = useTuiStore((state) => state.surfaces.surface)
-  const projectRows = useTuiStore((state) => state.data.projectRows)
-  const workspaceRows = useTuiStore((state) => state.data.workspaceRows)
-  const moduleRows = useTuiStore((state) => state.data.moduleRows)
   const projectWindows = useTuiStore((state) => state.data.projectWindows)
   const picker = useMemo(
     () =>
@@ -32,14 +29,11 @@ export function WindowPickerModal() {
             ...(surface.contextLabel
               ? { contextLabel: surface.contextLabel }
               : {}),
-            moduleRows,
-            projectRows,
             projectWindows,
             target: surface.target,
-            workspaceRows,
           })
         : null,
-    [moduleRows, projectRows, projectWindows, surface, workspaceRows],
+    [projectWindows, surface],
   )
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedNames, setSelectedNames] = useState<readonly string[]>([])
@@ -221,44 +215,21 @@ export function WindowPickerModal() {
 
 function resolvePickerState(input: {
   contextLabel?: string
-  moduleRows: ReturnType<typeof tuiStore.getState>['data']['moduleRows']
-  projectRows: ReturnType<typeof tuiStore.getState>['data']['projectRows']
   projectWindows: ReturnType<typeof tuiStore.getState>['data']['projectWindows']
   target: Exclude<
     ReturnType<typeof tuiStore.getState>['surfaces']['surface'],
     { kind: 'browser' | 'actions' | 'worktree-form' }
   >['target']
-  workspaceRows: ReturnType<typeof tuiStore.getState>['data']['workspaceRows']
 }) {
-  const project = input.projectRows.find(
-    (row) => row.projectId === input.target.projectId,
-  )
-  const workspace = input.target.workspaceId
-    ? input.workspaceRows.find(
-        (row) => row.workspaceId === input.target.workspaceId,
-      )
-    : null
-  const module = input.target.moduleId
-    ? input.moduleRows.find((row) => row.moduleId === input.target.moduleId)
-    : null
   const windows =
     input.projectWindows.find(
-      (entry) => entry.projectId === input.target.projectId,
+      (entry) => entry.projectId === input.target.context.projectId,
     )?.windows ?? []
-  const scope = input.target.moduleId
-    ? 'module'
-    : input.target.workspaceId
-      ? 'workspace'
-      : 'project'
-  const contextLabel =
-    input.contextLabel ??
-    [project?.label, workspace?.label, module?.label]
-      .filter(Boolean)
-      .join(' › ')
+  const contextLabel = input.contextLabel ?? input.target.breadcrumb
 
   return {
     contextLabel,
-    scope,
+    scope: input.target.scope,
     target: input.target,
     windows,
   }

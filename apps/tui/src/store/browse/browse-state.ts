@@ -12,7 +12,7 @@ export function createBrowseState(): BrowseState {
   return {
     list: createListState(),
     scope: projectsScope(),
-    visibility: 'active',
+    visibility: 'all',
   }
 }
 

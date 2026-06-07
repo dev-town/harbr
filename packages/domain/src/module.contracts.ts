@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { RuntimeAttachmentSchema } from './runtime.contracts'
+
 export const ModuleSelectorModeSchema = z.enum(['children', 'explicit'])
 export type ModuleSelectorMode = z.infer<typeof ModuleSelectorModeSchema>
 
@@ -24,6 +26,11 @@ export const ModuleSummarySchema = z.object({
   name: z.string(),
   path: z.string(),
   projectId: z.string(),
+  projectName: z.string(),
+  repoPath: z.string(),
+  runtime: RuntimeAttachmentSchema.nullable(),
   workspaceId: z.string(),
+  workspaceName: z.string(),
+  workspacePath: z.string(),
 })
 export type ModuleSummary = z.infer<typeof ModuleSummarySchema>

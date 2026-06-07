@@ -1,10 +1,10 @@
 import { Context, type Effect } from 'effect'
+import type { RuntimeTarget } from '@harbour/domain'
 
 import type {
   CreateRuntimeWindowsResult,
   CurrentRuntime,
   RuntimeDiscovery,
-  RuntimeTarget,
   RuntimeWindowCreation,
 } from '../runtime-tmux.types'
 import type { TmuxError } from '../runtime-tmux.errors'

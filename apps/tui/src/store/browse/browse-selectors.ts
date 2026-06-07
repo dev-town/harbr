@@ -1,9 +1,8 @@
-import type { RuntimeFact } from '@harbour/domain'
+import type { RuntimeAttachment, RuntimeFact } from '@harbour/domain'
 
 import type {
   HarbourRow,
   ActionRow,
-  ActiveRuntimeRow,
   ModuleRow,
   ProjectRow,
   WorkspaceRow,
@@ -144,7 +143,7 @@ export function getBrowseActionTarget(
   const projectId = getSelectedProjectId(state.browse.scope)
   const workspaceId = getSelectedWorkspaceId(state.browse.scope)
 
-  if (currentRow && currentRow.kind !== 'action') {
+  if (currentRow) {
     return currentRow
   }
 
@@ -212,7 +211,7 @@ function buildActionRows(
         'project runtime',
         target,
         undefined,
-        project ? { projectId: project.projectId } : undefined,
+        project?.target,
       ),
       ...(project ? makeWindowActionRows(state, project, 'project') : []),
       ...closeAction,
@@ -243,9 +242,7 @@ function buildActionRows(
       'workspace runtime',
       target,
       undefined,
-      workspace
-        ? { projectId: workspace.projectId, workspaceId: workspace.workspaceId }
-        : undefined,
+      workspace?.target,
     ),
     ...(workspace ? makeWindowActionRows(state, workspace, 'workspace') : []),
     makeActionRow(
@@ -254,7 +251,7 @@ function buildActionRows(
       'project runtime',
       target,
       undefined,
-      project ? { projectId: project.projectId } : undefined,
+      project?.target,
     ),
     ...(project ? makeWindowActionRows(state, project, 'project') : []),
     ...closeAction,
@@ -284,7 +281,7 @@ function makeWindowActionRows(
       'configured windows',
       target,
       undefined,
-      getContextForScope(target, scope),
+      target.target,
     ),
   ]
 }
@@ -297,7 +294,7 @@ function makeCloseSessionActionRow(
     return []
   }
 
-  const runtime = getExactActiveRuntime(state, target)
+  const runtime = target.runtime
 
   if (!runtime) {
     return []
@@ -318,37 +315,9 @@ function makeCloseSessionActionRow(
 
 function isCurrentActiveRuntime(
   state: TuiStoreModel,
-  runtime: ActiveRuntimeRow,
+  runtime: RuntimeAttachment,
 ) {
   return state.app.currentRuntime?.sessionName === runtime.sessionName
-}
-
-function getExactActiveRuntime(
-  state: TuiStoreModel,
-  target: SupportedContextRow,
-): ActiveRuntimeRow | null {
-  if (target.kind === 'project') {
-    return (
-      state.data.activeRuntimeRows.find(
-        (row) => row.scope === 'project' && row.projectId === target.projectId,
-      ) ?? null
-    )
-  }
-
-  if (target.kind === 'workspace') {
-    return (
-      state.data.activeRuntimeRows.find(
-        (row) =>
-          row.scope === 'workspace' && row.workspaceId === target.workspaceId,
-      ) ?? null
-    )
-  }
-
-  return (
-    state.data.activeRuntimeRows.find(
-      (row) => row.scope === 'module' && row.moduleId === target.moduleId,
-    ) ?? null
-  )
 }
 
 function makeActionRow(
@@ -357,70 +326,44 @@ function makeActionRow(
   metadata: string,
   target: SupportedContextRow,
   disabledNotice?: string,
-  targetContext = getContextForTarget(target),
+  actionTarget = target.target,
 ): ActionRow {
   return {
-    id: `${actionId}:${formatContextId(targetContext)}`,
+    id: `${actionId}:${formatContextId(actionTarget.context)}`,
     kind: 'action',
     label,
     isActive: true,
     metadata,
     actionId,
     ...(disabledNotice ? { disabledNotice } : {}),
-    target: targetContext,
-  }
-}
-
-function getContextForTarget(target: SupportedContextRow) {
-  return {
-    projectId: target.projectId,
-    ...(target.kind === 'project' ? {} : { workspaceId: target.workspaceId }),
-    ...(target.kind === 'module' ? { moduleId: target.moduleId } : {}),
-  }
-}
-
-function getContextForScope(
-  target: SupportedContextRow,
-  scope: 'module' | 'project' | 'workspace',
-) {
-  if (scope === 'project' || target.kind === 'project') {
-    return { projectId: target.projectId }
-  }
-
-  if (scope === 'workspace' || target.kind === 'workspace') {
-    return { projectId: target.projectId, workspaceId: target.workspaceId }
-  }
-
-  return {
-    projectId: target.projectId,
-    workspaceId: target.workspaceId,
-    moduleId: target.moduleId,
+    runtime: actionTarget === target.target ? target.runtime : null,
+    target: actionTarget,
   }
 }
 
 function getRuntimeVerbForContext(
   state: TuiStoreModel,
-  context: ActionRow['target'],
+  context: ActionRow['target']['context'],
 ) {
   const runtimeExists = state.data.activeRuntimeRows.some((runtime) => {
     if (context.moduleId) {
-      return runtime.scope === 'module' && runtime.moduleId === context.moduleId
+      return runtime.kind === 'module' && runtime.moduleId === context.moduleId
     }
 
     if (context.workspaceId) {
       return (
-        runtime.scope === 'workspace' &&
+        runtime.kind === 'workspace' &&
         runtime.workspaceId === context.workspaceId
       )
     }
 
-    return runtime.scope === 'project' && runtime.projectId === context.projectId
+    return runtime.kind === 'project' && runtime.projectId === context.projectId
   })
 
   return runtimeExists ? 'Open' : 'Start'
 }
 
-function formatContextId(context: ActionRow['target']) {
+function formatContextId(context: ActionRow['target']['context']) {
   return [context.projectId, context.workspaceId, context.moduleId]
     .filter(Boolean)
     .join(':')
@@ -428,13 +371,15 @@ function formatContextId(context: ActionRow['target']) {
 
 function hasProjectWindows(state: TuiStoreModel, projectId: string) {
   return (
-    state.data.projectWindows.find((entry) => entry.projectId === projectId)
-      ?.windows.length ?? 0
-  ) > 0
+    (state.data.projectWindows.find((entry) => entry.projectId === projectId)
+      ?.windows.length ?? 0) > 0
+  )
 }
 
 function getProjectRow(state: TuiStoreModel, projectId: string) {
-  return state.data.projectRows.find((row) => row.projectId === projectId) ?? null
+  return (
+    state.data.projectRows.find((row) => row.projectId === projectId) ?? null
+  )
 }
 
 function getWorkspaceRow(state: TuiStoreModel, workspaceId: string) {
@@ -466,30 +411,5 @@ function isCurrentBrowseRow(
   row: HarbourRow,
   currentRuntime: RuntimeFact | null,
 ) {
-  if (!currentRuntime) {
-    return false
-  }
-
-  if (row.kind === 'project') {
-    return (
-      currentRuntime.scope === 'project' &&
-      row.label === currentRuntime.projectName
-    )
-  }
-
-  if (row.kind === 'workspace') {
-    return (
-      currentRuntime.scope === 'workspace' &&
-      row.label === currentRuntime.workspaceName
-    )
-  }
-
-  if (row.kind === 'module') {
-    return (
-      currentRuntime.scope === 'module' &&
-      row.label === currentRuntime.moduleName
-    )
-  }
-
-  return false
+  return row.runtime?.sessionName === currentRuntime?.sessionName
 }

@@ -1,4 +1,9 @@
-import type { RuntimeFact, RuntimeIssue, WindowConfig } from '@harbour/domain'
+import type {
+  RuntimeFact,
+  RuntimeIssue,
+  RuntimeTarget,
+  WindowConfig,
+} from '@harbour/domain'
 
 export type RuntimeDiscovery = {
   runtimes: RuntimeFact[]
@@ -6,13 +11,6 @@ export type RuntimeDiscovery = {
 }
 
 export type CurrentRuntime = RuntimeFact | null
-
-export type RuntimeTarget = {
-  cwd: string
-  moduleName: string | null
-  projectName: string
-  workspaceName: string | null
-}
 
 export type CreateRuntimeWindowsResult = {
   createdWindowNames: readonly string[]

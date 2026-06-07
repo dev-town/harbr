@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { ResolvedModuleSchema } from './module.contracts'
+import { RuntimeAttachmentSchema } from './runtime.contracts'
 import { WorkspaceKindSchema } from './shared.contracts'
 
 export const WorkspaceObservationSchema = z.object({
@@ -22,6 +23,9 @@ export const WorkspaceSummarySchema = z.object({
   moduleCount: z.number().int().nonnegative(),
   name: z.string(),
   projectId: z.string(),
+  projectName: z.string(),
+  repoPath: z.string(),
+  runtime: RuntimeAttachmentSchema.nullable(),
   workspacePath: z.string(),
 })
 export type WorkspaceSummary = z.infer<typeof WorkspaceSummarySchema>

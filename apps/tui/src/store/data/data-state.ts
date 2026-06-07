@@ -1,6 +1,11 @@
 import type { WindowConfig } from '@harbour/domain'
 
-import type { ActiveRuntimeRow, ModuleRow, ProjectRow, WorkspaceRow } from '../../types/rows'
+import type {
+  HarbourRow,
+  ModuleRow,
+  ProjectRow,
+  WorkspaceRow,
+} from '../../types/rows'
 
 export type ProjectWindowConfig = {
   projectId: string
@@ -9,7 +14,7 @@ export type ProjectWindowConfig = {
 }
 
 export type DataState = {
-  activeRuntimeRows: readonly ActiveRuntimeRow[]
+  activeRuntimeRows: readonly HarbourRow[]
   moduleRows: readonly ModuleRow[]
   projectWindows: readonly ProjectWindowConfig[]
   projectRows: readonly ProjectRow[]

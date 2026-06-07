@@ -1,14 +1,16 @@
+import type { RuntimeAttachment } from '@harbour/domain'
+
 import { ListRow } from '../../../../components/list-row'
 import type { RowVariant } from '../../../../components/list-row/types'
 import { theme } from '../../../../config/theme'
-import type { ActiveRuntimeRow } from '../../../../types/rows'
+import type { HarbourRow } from '../../../../types/rows'
 
 type ActiveRouteRowProps = {
   isHovered: boolean
   isSelected: boolean
   onRowClick: () => void
   onRowHover: (rowId: string | null) => void
-  row: ActiveRuntimeRow
+  row: HarbourRow & { runtime: RuntimeAttachment }
   variant: RowVariant
 }
 
@@ -26,7 +28,7 @@ export function ActiveRouteRow({
       isSelected={isSelected}
       marker={row.isCurrent ? '●' : '○'}
       markerColor={row.isCurrent ? theme.active : theme.idle}
-      meta={{ breadcrumb: row.contextLabel }}
+      meta={{ breadcrumb: row.target.breadcrumb }}
       name={row.label}
       onRowClick={onRowClick}
       onRowHover={onRowHover}

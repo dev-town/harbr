@@ -21,7 +21,9 @@ const tempRoots: string[] = []
 
 afterEach(async () => {
   await Promise.all(
-    tempRoots.splice(0).map((tempRoot) => rm(tempRoot, { recursive: true, force: true })),
+    tempRoots
+      .splice(0)
+      .map((tempRoot) => rm(tempRoot, { recursive: true, force: true })),
   )
 })
 
@@ -390,6 +392,7 @@ describe('db', () => {
           projectIssue: 'Repo HEAD points to missing branch refs/heads/master',
           repoPath: '/tmp/alpha.git',
           repoKind: 'standard',
+          runtime: { sessionName: 'alpha', status: 'open' },
           activeSessionCount: 4,
           workspaceCount: 2,
           hasModules: true,
@@ -401,6 +404,7 @@ describe('db', () => {
           projectIssue: null,
           repoPath: '/tmp/beta.git',
           repoKind: 'bare',
+          runtime: null,
           activeSessionCount: 0,
           workspaceCount: 0,
           hasModules: false,
@@ -408,13 +412,18 @@ describe('db', () => {
         },
       ])
 
-      expect(listWorkspaceSummaries(database.db, alphaSnapshot.project.id)).toEqual([
+      expect(
+        listWorkspaceSummaries(database.db, alphaSnapshot.project.id),
+      ).toEqual([
         {
           branchName: null,
           id: mainWorkspaceId,
           projectId: alphaSnapshot.project.id,
           kind: 'default',
           name: 'main',
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          runtime: { sessionName: 'alpha__main', status: 'open' },
           workspacePath: '/tmp/alpha-main',
           activeSessionCount: 2,
           moduleCount: 2,
@@ -427,6 +436,9 @@ describe('db', () => {
           projectId: alphaSnapshot.project.id,
           kind: 'worktree',
           name: 'feature-auth',
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          runtime: null,
           workspacePath: '/tmp/alpha-feature-auth',
           activeSessionCount: 1,
           moduleCount: 2,
@@ -437,13 +449,20 @@ describe('db', () => {
 
       expect(mainWorkspaceId).toBeDefined()
 
-      expect(listModuleSummaries(database.db, mainWorkspaceId ?? 'missing')).toEqual([
+      expect(
+        listModuleSummaries(database.db, mainWorkspaceId ?? 'missing'),
+      ).toEqual([
         {
           id: expect.any(String),
           projectId: alphaSnapshot.project.id,
           workspaceId: mainWorkspaceId,
           name: 'apps/cli',
           path: 'apps/cli',
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          runtime: { sessionName: 'alpha__main__apps/cli', status: 'open' },
+          workspaceName: 'main',
+          workspacePath: '/tmp/alpha-main',
           hasActiveSession: true,
         },
         {
@@ -452,6 +471,11 @@ describe('db', () => {
           workspaceId: mainWorkspaceId,
           name: 'apps/tui',
           path: 'apps/tui',
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          runtime: null,
+          workspaceName: 'main',
+          workspacePath: '/tmp/alpha-main',
           hasActiveSession: false,
         },
       ])
@@ -502,13 +526,20 @@ describe('db', () => {
 
       const workspaceId = snapshot.workspaces[0]?.id
 
-      expect(listModuleSummaries(database.db, workspaceId ?? 'missing')).toEqual([
+      expect(
+        listModuleSummaries(database.db, workspaceId ?? 'missing'),
+      ).toEqual([
         {
           id: expect.any(String),
           projectId: snapshot.project.id,
           workspaceId,
           name: '/',
           path: '.',
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          runtime: null,
+          workspaceName: 'main',
+          workspacePath: '/tmp/alpha-main',
           hasActiveSession: true,
         },
       ])
@@ -561,13 +592,20 @@ describe('db', () => {
       const workspaceId = snapshot.workspaces[0]?.id
 
       expect(runtimeRows[0]?.modulePath).toBe('.')
-      expect(listModuleSummaries(database.db, workspaceId ?? 'missing')).toEqual([
+      expect(
+        listModuleSummaries(database.db, workspaceId ?? 'missing'),
+      ).toEqual([
         {
           id: expect.any(String),
           projectId: snapshot.project.id,
           workspaceId,
           name: '/',
           path: '.',
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          runtime: { sessionName: 'alpha~~main~~/', status: 'open' },
+          workspaceName: 'main',
+          workspacePath: '/tmp/alpha-main',
           hasActiveSession: true,
         },
       ])

@@ -13,7 +13,6 @@ import {
 import { browseActionIds } from '../../../store'
 import type {
   ActionRow,
-  ActiveRuntimeRow,
   HarbourRow,
   ModuleRow,
   ProjectRow,
@@ -85,14 +84,15 @@ export function handleBrowseActionSelect(
         return
       }
 
-      const runtime = getActiveRuntimeTarget(store, target)
-
-      if (!runtime) {
+      if (!target.runtime) {
         store.getState().setNotice('Session context missing', 'warning')
         return
       }
 
-      void closeActiveRuntime(services, store, runtime)
+      void closeActiveRuntime(services, store, {
+        ...target,
+        runtime: target.runtime,
+      })
       return
     }
     case browseActionIds.createWorkspace: {
@@ -156,75 +156,40 @@ export function handleBrowseActionSelect(
   }
 }
 
-function getActiveRuntimeTarget(
-  store: TuiStore,
-  target: SupportedContextRow,
-): ActiveRuntimeRow | null {
-  if (target.kind === 'project') {
-    return (
-      store
-        .getState()
-        .data.activeRuntimeRows.find(
-          (row) =>
-            row.scope === 'project' && row.projectId === target.projectId,
-        ) ?? null
-    )
-  }
-
-  if (target.kind === 'workspace') {
-    return (
-      store
-        .getState()
-        .data.activeRuntimeRows.find(
-          (row) =>
-            row.scope === 'workspace' && row.workspaceId === target.workspaceId,
-        ) ?? null
-    )
-  }
-
-  return (
-    store
-      .getState()
-      .data.activeRuntimeRows.find(
-        (row) => row.scope === 'module' && row.moduleId === target.moduleId,
-      ) ?? null
-  )
-}
-
 function resolveActionTarget(
   store: TuiStore,
   row: ActionRow,
 ): SupportedContextRow | null {
-  if (row.target.moduleId) {
+  const context = row.target.context
+
+  if (context.moduleId) {
     return (
       store
         .getState()
-        .data.moduleRows.find(
-          (item) => item.moduleId === row.target.moduleId,
-        ) ?? null
+        .data.moduleRows.find((item) => item.moduleId === context.moduleId) ??
+      null
     )
   }
 
-  if (row.target.workspaceId) {
+  if (context.workspaceId) {
     return (
       store
         .getState()
         .data.workspaceRows.find(
-          (item) => item.workspaceId === row.target.workspaceId,
+          (item) => item.workspaceId === context.workspaceId,
         ) ?? null
     )
   }
 
-  if (!row.target.projectId) {
+  if (!context.projectId) {
     return null
   }
 
   return (
     store
       .getState()
-      .data.projectRows.find(
-        (item) => item.projectId === row.target.projectId,
-      ) ?? null
+      .data.projectRows.find((item) => item.projectId === context.projectId) ??
+    null
   )
 }
 

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { Effect, Layer } from 'effect'
+import type { RuntimeTarget } from '@harbour/domain'
 
 import type {
   CreateRuntimeWindowsResult,
   CurrentRuntime,
   RuntimeDiscovery,
-  RuntimeTarget,
 } from './runtime-tmux.types'
 import {
   findMatchingRuntime,

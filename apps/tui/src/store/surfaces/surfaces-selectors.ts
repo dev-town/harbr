@@ -70,9 +70,7 @@ function makeActiveWindowActionRows(
   state: TuiStoreModel,
   target: ActiveActionRow['target'],
 ): readonly ActiveActionRow[] {
-  const windowTarget = getActiveWindowTarget(target)
-
-  if (!windowTarget || !hasProjectWindows(state, target.projectId)) {
+  if (!hasProjectWindows(state, target.projectId)) {
     return []
   }
 
@@ -81,42 +79,17 @@ function makeActiveWindowActionRows(
       actionId: activeActionIds.createRuntimeWindows,
       id: `action.create_windows:${target.id}`,
       kind: 'active-action',
-      label: `Create ${target.scope} windows`,
+      label: `Create ${target.target.scope} windows`,
       target,
-      windowTarget,
     },
   ]
 }
 
-function getActiveWindowTarget(target: ActiveActionRow['target']) {
-  if (target.scope === 'project') {
-    return { projectId: target.projectId }
-  }
-
-  if (!target.workspaceId) {
-    return null
-  }
-
-  if (target.scope === 'workspace') {
-    return { projectId: target.projectId, workspaceId: target.workspaceId }
-  }
-
-  if (!target.moduleId) {
-    return null
-  }
-
-  return {
-    projectId: target.projectId,
-    workspaceId: target.workspaceId,
-    moduleId: target.moduleId,
-  }
-}
-
 function hasProjectWindows(state: TuiStoreModel, projectId: string) {
   return (
-    state.data.projectWindows.find((entry) => entry.projectId === projectId)
-      ?.windows.length ?? 0
-  ) > 0
+    (state.data.projectWindows.find((entry) => entry.projectId === projectId)
+      ?.windows.length ?? 0) > 0
+  )
 }
 
 export function selectCurrentActionRows(state: TuiStoreModel) {
@@ -135,9 +108,9 @@ export function selectActiveFocusTarget(state: TuiStoreModel) {
       ? state.surfaces.worktreeFormFocusTargetRef
       : state.surfaces.surface.kind === 'window-picker'
         ? state.surfaces.windowPickerFocusTargetRef
-      : state.surfaces.surface.kind === 'actions'
-        ? state.surfaces.actionsFocusTargetRef
-        : state.surfaces.browserFocusTargetRef
+        : state.surfaces.surface.kind === 'actions'
+          ? state.surfaces.actionsFocusTargetRef
+          : state.surfaces.browserFocusTargetRef
 
   return ref?.current ?? null
 }

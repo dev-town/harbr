@@ -1,4 +1,4 @@
-import type { ActiveRuntimeSummary, HarbourContext } from '@harbour/domain'
+import type { ResolvedContextTarget, RuntimeAttachment } from '@harbour/domain'
 
 export type RowKind =
   | 'action'
@@ -24,6 +24,8 @@ export type ProjectRow = BaseRow & {
   hasWorkspaces: boolean
   projectIssue?: string | null
   repoPath: string
+  runtime: RuntimeAttachment | null
+  target: ResolvedContextTarget
 }
 
 export type WorkspaceRow = BaseRow & {
@@ -34,6 +36,8 @@ export type WorkspaceRow = BaseRow & {
   branchName?: string | null
   hasModules: boolean
   isDefault: boolean
+  runtime: RuntimeAttachment | null
+  target: ResolvedContextTarget
   workspacePath: string
 }
 
@@ -44,13 +48,16 @@ export type ModuleRow = BaseRow & {
   moduleId: string
   hasSession: boolean
   modulePath: string
+  runtime: RuntimeAttachment | null
+  target: ResolvedContextTarget
 }
 
 export type ActionRow = BaseRow & {
   kind: 'action'
   actionId: string
   disabledNotice?: string
-  target: HarbourContext
+  runtime: RuntimeAttachment | null
+  target: ResolvedContextTarget
 }
 
 export type ActiveActionRow = {
@@ -59,27 +66,9 @@ export type ActiveActionRow = {
   id: string
   kind: 'active-action'
   label: string
-  windowTarget?: HarbourContext
-  target: ActiveRuntimeRow
+  target: HarbourRow & { runtime: RuntimeAttachment }
 }
 
-export type ActiveRuntimeRow = {
-  id: string
-  contextLabel: string
-  isCurrent: boolean
-  label: string
-  moduleId: string | null
-  moduleLabel: string | null
-  modulePath: string | null
-  projectId: string
-  projectLabel: string
-  repoPath: string
-  scope: ActiveRuntimeSummary['scope']
-  sessionName: string
-  status: ActiveRuntimeSummary['status']
-  workspaceId: string | null
-  workspaceLabel: string | null
-  workspacePath: string | null
-}
+export type HarbourRow = ModuleRow | ProjectRow | WorkspaceRow
 
-export type HarbourRow = ActionRow | ModuleRow | ProjectRow | WorkspaceRow
+export type BrowseRow = ActionRow | HarbourRow

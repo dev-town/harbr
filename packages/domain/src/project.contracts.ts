@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { ModuleSelectorSchema, ResolvedModuleSchema } from './module.contracts'
-import { RuntimeFactSchema } from './runtime.contracts'
+import { RuntimeAttachmentSchema, RuntimeFactSchema } from './runtime.contracts'
 import { RepoKindSchema, RuntimeIssueSchema } from './shared.contracts'
 import { WindowConfigSchema } from './window.contracts'
 import { WorkspaceObservationSchema } from './workspace.contracts'
@@ -42,6 +42,7 @@ export const ProjectSummarySchema = z.object({
   projectIssue: z.string().nullable().optional(),
   repoKind: RepoKindSchema,
   repoPath: z.string(),
+  runtime: RuntimeAttachmentSchema.nullable(),
   workspaceCount: z.number().int().nonnegative(),
 })
 export type ProjectSummary = z.infer<typeof ProjectSummarySchema>

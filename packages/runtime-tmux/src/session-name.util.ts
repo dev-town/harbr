@@ -1,6 +1,4 @@
-import type { RuntimeFact } from '@harbour/domain'
-
-import type { RuntimeTarget } from './runtime-tmux.types'
+import type { RuntimeFact, RuntimeTarget } from '@harbour/domain'
 
 const encodedSeparator = '~~'
 
@@ -108,7 +106,10 @@ function buildRuntimeFact(sessionName: string, parts: readonly string[]) {
 }
 
 function encodeSessionSegment(value: string) {
-  return value.replaceAll(/[~:.%]/g, (match) => `~${match.charCodeAt(0).toString(16)}`)
+  return value.replaceAll(
+    /[~:.%]/g,
+    (match) => `~${match.charCodeAt(0).toString(16)}`,
+  )
 }
 
 function decodeSessionParts(parts: readonly string[]) {

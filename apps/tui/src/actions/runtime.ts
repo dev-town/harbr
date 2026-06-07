@@ -1,11 +1,14 @@
-import type { HarbourContext } from '@harbour/domain'
+import type {
+  HarbourContext,
+  RuntimeAttachment,
+  RuntimeTarget,
+} from '@harbour/domain'
 import { closeRuntime, openOrCreateRuntime } from '@harbour/runtime-tmux'
 import { Effect } from 'effect'
-import { join } from 'node:path'
 
 import type { TuiServices, TuiStore } from '../app-context'
 import type {
-  ActiveRuntimeRow,
+  HarbourRow,
   ModuleRow,
   ProjectRow,
   WorkspaceRow,
@@ -33,13 +36,8 @@ export async function openProjectRoot(
   await openRuntimeForTarget(
     services,
     store,
-    {
-      projectName: row.label,
-      workspaceName: null,
-      moduleName: null,
-      cwd: row.repoPath,
-    },
-    { projectId: row.projectId },
+    row.target.runtimeTarget,
+    row.target.context,
   )
 }
 
@@ -48,26 +46,11 @@ export async function openWorkspaceRoot(
   store: TuiStore,
   row: WorkspaceRow,
 ) {
-  const project = getSelectedProjectRow(store, row.projectId)
-
-  if (!project) {
-    store.getState().setNotice('Project not found', 'warning')
-    return
-  }
-
   await openRuntimeForTarget(
     services,
     store,
-    {
-      projectName: project.label,
-      workspaceName: row.label,
-      moduleName: null,
-      cwd: row.workspacePath,
-    },
-    {
-      projectId: row.projectId,
-      workspaceId: row.workspaceId,
-    },
+    row.target.runtimeTarget,
+    row.target.context,
   )
 }
 
@@ -76,82 +59,35 @@ export async function openModuleRuntime(
   store: TuiStore,
   row: ModuleRow,
 ) {
-  const project = getSelectedProjectRow(store, row.projectId)
-  const workspace = getSelectedWorkspaceRow(store, row.workspaceId)
-
-  if (!project || !workspace) {
-    store.getState().setNotice('Workspace context missing', 'warning')
-    return
-  }
-
   await openRuntimeForTarget(
     services,
     store,
-    {
-      projectName: project.label,
-      workspaceName: workspace.label,
-      moduleName: row.label,
-      cwd:
-        row.modulePath === '.'
-          ? workspace.workspacePath
-          : join(workspace.workspacePath, row.modulePath),
-    },
-    {
-      projectId: row.projectId,
-      workspaceId: row.workspaceId,
-      moduleId: row.moduleId,
-    },
+    row.target.runtimeTarget,
+    row.target.context,
   )
 }
 
 export async function openActiveRuntime(
   services: TuiServices,
   store: TuiStore,
-  row: ActiveRuntimeRow,
+  row: HarbourRow & { runtime: RuntimeAttachment },
 ) {
-  const cwd =
-    row.scope === 'module'
-      ? row.modulePath === '.'
-        ? row.workspacePath
-        : row.workspacePath && row.modulePath
-          ? join(row.workspacePath, row.modulePath)
-          : null
-      : row.scope === 'workspace'
-        ? row.workspacePath
-        : row.repoPath
-
-  if (!cwd) {
-    store.getState().setNotice('Runtime path missing', 'warning')
-    return
-  }
-
   await openRuntimeForTarget(
     services,
     store,
-    {
-      projectName: row.projectLabel,
-      workspaceName: row.workspaceLabel,
-      moduleName: row.scope === 'module' ? row.label : null,
-      cwd,
-    },
-    {
-      projectId: row.projectId,
-      ...(row.workspaceId ? { workspaceId: row.workspaceId } : {}),
-      ...(row.scope === 'module' && row.moduleId
-        ? { moduleId: row.moduleId }
-        : {}),
-    },
+    row.target.runtimeTarget,
+    row.target.context,
   )
 }
 
 export async function closeActiveRuntime(
   services: TuiServices,
   store: TuiStore,
-  row: ActiveRuntimeRow,
+  row: HarbourRow & { runtime: RuntimeAttachment },
 ) {
   if (
     row.isCurrent ||
-    store.getState().app.currentRuntime?.sessionName === row.sessionName
+    store.getState().app.currentRuntime?.sessionName === row.runtime.sessionName
   ) {
     store.getState().setNotice('Cannot close current session', 'warning')
     return
@@ -161,7 +97,7 @@ export async function closeActiveRuntime(
   store.getState().clearNotice()
 
   try {
-    await Effect.runPromise(closeRuntime(row.sessionName))
+    await Effect.runPromise(closeRuntime(row.runtime.sessionName))
     store.getState().closeActionsMenu()
     await loadProjects(services, store)
   } catch (error) {
@@ -174,12 +110,7 @@ export async function closeActiveRuntime(
 export async function openRuntimeForTarget(
   services: TuiServices,
   store: TuiStore,
-  target: {
-    cwd: string
-    moduleName: string | null
-    projectName: string
-    workspaceName: string | null
-  },
+  target: RuntimeTarget,
   nextContext: HarbourContext,
 ) {
   store.getState().setLoading(true)
@@ -194,20 +125,4 @@ export async function openRuntimeForTarget(
   } finally {
     store.getState().setLoading(false)
   }
-}
-
-function getSelectedProjectRow(store: TuiStore, projectId: string) {
-  return (
-    store
-      .getState()
-      .data.projectRows.find((row) => row.projectId === projectId) ?? null
-  )
-}
-
-function getSelectedWorkspaceRow(store: TuiStore, workspaceId: string) {
-  return (
-    store
-      .getState()
-      .data.workspaceRows.find((row) => row.workspaceId === workspaceId) ?? null
-  )
 }

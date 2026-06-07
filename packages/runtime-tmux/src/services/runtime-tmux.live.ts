@@ -3,6 +3,7 @@ import { isAbsolute, join } from 'node:path'
 import { promisify } from 'node:util'
 
 import { Effect, Layer } from 'effect'
+import type { RuntimeTarget } from '@harbour/domain'
 
 import {
   findMatchingRuntime,
@@ -15,7 +16,6 @@ import type {
   CreateRuntimeWindowsResult,
   CurrentRuntime,
   RuntimeDiscovery,
-  RuntimeTarget,
   RuntimeWindowCreation,
 } from '../runtime-tmux.types'
 import {
@@ -177,12 +177,27 @@ function closeRuntimeLive(sessionName: string) {
 function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
   return Effect.tryPromise({
     try: async () => {
-      const sessionName = await ensureRuntimeSession(input.target)
-      const existingWindowNames = await listWindowNames(sessionName)
+      const discovery = await listRuntimeDiscoverySafe()
+      const existingRuntime = findMatchingRuntime(discovery.runtimes, input.target)
+      const firstWindow = input.windows[0]
+      const sessionName = existingRuntime?.sessionName ?? formatSessionName(input.target)
+      let existingWindowNames = new Set<string>()
+      let windowsToCreate = input.windows
       const createdWindowNames: string[] = []
       const skippedWindowNames: string[] = []
 
-      for (const window of input.windows) {
+      if (existingRuntime) {
+        existingWindowNames = await listWindowNames(sessionName)
+      } else if (firstWindow) {
+        await createSessionWindowLayout(sessionName, input.target.cwd, firstWindow)
+        existingWindowNames.add(firstWindow.name)
+        createdWindowNames.push(firstWindow.name)
+        windowsToCreate = input.windows.slice(1)
+      } else {
+        await execTmux(['new-session', '-d', '-s', sessionName, '-c', input.target.cwd])
+      }
+
+      for (const window of windowsToCreate) {
         if (existingWindowNames.has(window.name)) {
           skippedWindowNames.push(window.name)
           continue
@@ -211,19 +226,6 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
     },
     catch: (error) => mapTmuxError(error),
   })
-}
-
-async function ensureRuntimeSession(target: RuntimeTarget) {
-  const discovery = await listRuntimeDiscoverySafe()
-  const existingRuntime = findMatchingRuntime(discovery.runtimes, target)
-
-  if (existingRuntime) {
-    return existingRuntime.sessionName
-  }
-
-  const sessionName = formatSessionName(target)
-  await execTmux(['new-session', '-d', '-s', sessionName, '-c', target.cwd])
-  return sessionName
 }
 
 async function listWindowNames(sessionName: string) {
@@ -279,6 +281,66 @@ async function createWindowLayout(
   for (const pane of panes) {
     await sendPaneCommands(pane.id, pane.config.command)
   }
+}
+
+async function createSessionWindowLayout(
+  sessionName: string,
+  runtimeCwd: string,
+  window: RuntimeWindowCreation['windows'][number],
+) {
+  const firstPane = window.panes[0]
+  const firstPaneId = await createSessionWindowPane(
+    sessionName,
+    window.name,
+    firstPane ? resolvePaneCwd(runtimeCwd, firstPane.cwd) : runtimeCwd,
+  )
+
+  if (!firstPane) {
+    return
+  }
+
+  const panes = [{ id: firstPaneId, config: firstPane }]
+
+  await setPaneName(firstPaneId, firstPane.name)
+
+  for (const pane of window.panes.slice(1)) {
+    const paneId = await splitWindowPane(
+      firstPaneId,
+      resolvePaneCwd(runtimeCwd, pane.cwd),
+    )
+    await setPaneName(paneId, pane.name)
+    panes.push({ id: paneId, config: pane })
+  }
+
+  if (panes.length > 1) {
+    await execTmux(['select-layout', '-t', firstPaneId, 'tiled'])
+  }
+
+  for (const pane of panes) {
+    await sendPaneCommands(pane.id, pane.config.command)
+  }
+}
+
+async function createSessionWindowPane(
+  sessionName: string,
+  windowName: string,
+  cwd: string,
+) {
+  const { stdout } = await execFileAsync('tmux', [
+    'new-session',
+    '-d',
+    '-P',
+    '-F',
+    '#{pane_id}',
+    '-s',
+    sessionName,
+    '-n',
+    windowName,
+    '-c',
+    cwd,
+  ])
+
+  return stdout.trim()
 }
 
 async function createWindowPane(
