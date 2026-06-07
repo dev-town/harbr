@@ -177,58 +177,115 @@ function buildActionRows(
     return [
       makeActionRow(
         browseActionIds.openProjectRoot,
-        'Open',
+        `${getRuntimeVerbForContext(state, { projectId: target.projectId })} project`,
         'project runtime',
         target,
       ),
+      ...makeWindowActionRows(state, target, 'project'),
       ...closeAction,
     ]
   }
 
   if (target.kind === 'workspace') {
+    const project = getProjectRow(state, target.projectId)
+
     return [
       makeActionRow(
         browseActionIds.openWorkspaceRoot,
-        'Open',
+        `${getRuntimeVerbForContext(state, {
+          projectId: target.projectId,
+          workspaceId: target.workspaceId,
+        })} workspace`,
         'workspace runtime',
         target,
       ),
+      ...makeWindowActionRows(state, target, 'workspace'),
       makeActionRow(
         browseActionIds.createWorkspace,
-        'Create workspace',
+        'New workspace',
         'git worktree',
         target,
       ),
       makeActionRow(
         browseActionIds.openProjectRoot,
-        'Open project root',
+        `${getRuntimeVerbForContext(state, { projectId: target.projectId })} project root`,
         'project runtime',
         target,
+        undefined,
+        project ? { projectId: project.projectId } : undefined,
       ),
+      ...(project ? makeWindowActionRows(state, project, 'project') : []),
       ...closeAction,
     ]
   }
 
+  const workspace = getWorkspaceRow(state, target.workspaceId)
+  const project = getProjectRow(state, target.projectId)
+
   return [
     makeActionRow(
       browseActionIds.openModuleSession,
-      'Open',
+      `${getRuntimeVerbForContext(state, {
+        projectId: target.projectId,
+        workspaceId: target.workspaceId,
+        moduleId: target.moduleId,
+      })} module`,
       'module runtime',
       target,
     ),
+    ...makeWindowActionRows(state, target, 'module'),
     makeActionRow(
       browseActionIds.openWorkspaceRoot,
-      'Open workspace root',
+      `${getRuntimeVerbForContext(state, {
+        projectId: target.projectId,
+        workspaceId: target.workspaceId,
+      })} workspace root`,
       'workspace runtime',
       target,
+      undefined,
+      workspace
+        ? { projectId: workspace.projectId, workspaceId: workspace.workspaceId }
+        : undefined,
     ),
+    ...(workspace ? makeWindowActionRows(state, workspace, 'workspace') : []),
     makeActionRow(
       browseActionIds.openProjectRoot,
-      'Open project root',
+      `${getRuntimeVerbForContext(state, { projectId: target.projectId })} project root`,
       'project runtime',
       target,
+      undefined,
+      project ? { projectId: project.projectId } : undefined,
     ),
+    ...(project ? makeWindowActionRows(state, project, 'project') : []),
     ...closeAction,
+  ]
+}
+
+function makeWindowActionRows(
+  state: TuiStoreModel,
+  target: SupportedContextRow,
+  scope: 'module' | 'project' | 'workspace',
+): readonly ActionRow[] {
+  if (!hasProjectWindows(state, target.projectId)) {
+    return []
+  }
+
+  const actionId =
+    scope === 'module'
+      ? browseActionIds.createModuleWindows
+      : scope === 'workspace'
+        ? browseActionIds.createWorkspaceWindows
+        : browseActionIds.createProjectWindows
+
+  return [
+    makeActionRow(
+      actionId,
+      `Create ${scope} windows`,
+      'configured windows',
+      target,
+      undefined,
+      getContextForScope(target, scope),
+    ),
   ]
 }
 
@@ -300,21 +357,91 @@ function makeActionRow(
   metadata: string,
   target: SupportedContextRow,
   disabledNotice?: string,
+  targetContext = getContextForTarget(target),
 ): ActionRow {
   return {
-    id: `${actionId}:${target.id}`,
+    id: `${actionId}:${formatContextId(targetContext)}`,
     kind: 'action',
     label,
     isActive: true,
     metadata,
     actionId,
     ...(disabledNotice ? { disabledNotice } : {}),
-    target: {
-      projectId: target.projectId,
-      ...(target.kind === 'project' ? {} : { workspaceId: target.workspaceId }),
-      ...(target.kind === 'module' ? { moduleId: target.moduleId } : {}),
-    },
+    target: targetContext,
   }
+}
+
+function getContextForTarget(target: SupportedContextRow) {
+  return {
+    projectId: target.projectId,
+    ...(target.kind === 'project' ? {} : { workspaceId: target.workspaceId }),
+    ...(target.kind === 'module' ? { moduleId: target.moduleId } : {}),
+  }
+}
+
+function getContextForScope(
+  target: SupportedContextRow,
+  scope: 'module' | 'project' | 'workspace',
+) {
+  if (scope === 'project' || target.kind === 'project') {
+    return { projectId: target.projectId }
+  }
+
+  if (scope === 'workspace' || target.kind === 'workspace') {
+    return { projectId: target.projectId, workspaceId: target.workspaceId }
+  }
+
+  return {
+    projectId: target.projectId,
+    workspaceId: target.workspaceId,
+    moduleId: target.moduleId,
+  }
+}
+
+function getRuntimeVerbForContext(
+  state: TuiStoreModel,
+  context: ActionRow['target'],
+) {
+  const runtimeExists = state.data.activeRuntimeRows.some((runtime) => {
+    if (context.moduleId) {
+      return runtime.scope === 'module' && runtime.moduleId === context.moduleId
+    }
+
+    if (context.workspaceId) {
+      return (
+        runtime.scope === 'workspace' &&
+        runtime.workspaceId === context.workspaceId
+      )
+    }
+
+    return runtime.scope === 'project' && runtime.projectId === context.projectId
+  })
+
+  return runtimeExists ? 'Open' : 'Start'
+}
+
+function formatContextId(context: ActionRow['target']) {
+  return [context.projectId, context.workspaceId, context.moduleId]
+    .filter(Boolean)
+    .join(':')
+}
+
+function hasProjectWindows(state: TuiStoreModel, projectId: string) {
+  return (
+    state.data.projectWindows.find((entry) => entry.projectId === projectId)
+      ?.windows.length ?? 0
+  ) > 0
+}
+
+function getProjectRow(state: TuiStoreModel, projectId: string) {
+  return state.data.projectRows.find((row) => row.projectId === projectId) ?? null
+}
+
+function getWorkspaceRow(state: TuiStoreModel, workspaceId: string) {
+  return (
+    state.data.workspaceRows.find((row) => row.workspaceId === workspaceId) ??
+    null
+  )
 }
 
 function getBrowseRowScore(row: HarbourRow, query: string) {

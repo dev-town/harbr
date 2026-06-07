@@ -106,6 +106,11 @@ export function handleBrowseActionSelect(
       store.getState().openCreateWorkspaceForm(project.projectId)
       return
     }
+    case browseActionIds.createModuleWindows:
+    case browseActionIds.createProjectWindows:
+    case browseActionIds.createWorkspaceWindows:
+      store.getState().openWindowPicker(row.target)
+      return
     case browseActionIds.openProjectRoot: {
       const project = getProjectTarget(store, target)
 

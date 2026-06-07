@@ -8,6 +8,7 @@ import { BrowseActionsModal } from './components/actions-modal'
 import { BrowseRouteRow } from './components/row'
 import { useBrowseRoute } from './hooks/use-browse-route'
 import { CreateWorkspaceModal } from './components/create-workspace-modal'
+import { WindowPickerModal } from './components/window-picker-modal'
 
 export function BrowseRoute() {
   const browseRoute = useBrowseRoute()
@@ -45,6 +46,7 @@ export function BrowseRoute() {
         selectedId={browseRoute.selectedId}
       />
       <BrowseActionsModal />
+      <WindowPickerModal />
       <CreateWorkspaceModal />
     </BrowseRouteLayout>
   )

@@ -18,11 +18,12 @@ export function ActiveActionsModal() {
   const isOpen = useTuiStore(selectIsActiveActionsOpen)
   const selectedId = useTuiStore((state) => state.active.list.selectedId)
   const sourceRows = useTuiStore((state) => state.data.activeRuntimeRows)
+  const projectWindows = useTuiStore((state) => state.data.projectWindows)
   const currentRuntime = useTuiStore((state) => state.app.currentRuntime)
   const query = useTuiStore((state) => state.active.list.query)
   const rows = useMemo(
     () => selectActiveActionRows(tuiStore.getState()),
-    [currentRuntime, query, selectedId, sourceRows],
+    [currentRuntime, projectWindows, query, selectedId, sourceRows],
   )
   const onClose = useTuiStore((state) => state.closeActionsMenu)
 

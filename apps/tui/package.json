@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@harbour/config": "workspace:*",
     "@harbour/db": "workspace:*",
     "@harbour/domain": "workspace:*",
     "@harbour/reconciler": "workspace:*",

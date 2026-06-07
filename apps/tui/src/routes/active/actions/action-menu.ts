@@ -22,5 +22,15 @@ export function handleActiveActionSelect(
     return
   }
 
+  if (row.actionId === activeActionIds.createRuntimeWindows) {
+    if (!row.windowTarget) {
+      store.getState().setNotice('Window target missing', 'warning')
+      return
+    }
+
+    store.getState().openWindowPicker(row.windowTarget, row.target.contextLabel)
+    return
+  }
+
   void openActiveRuntime(services, store, row.target)
 }

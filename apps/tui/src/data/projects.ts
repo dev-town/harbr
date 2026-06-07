@@ -1,4 +1,5 @@
 import { ProjectService, makeProjectServiceLayer } from '@harbour/db'
+import { loadConfig, loadConfigAtPath } from '@harbour/config'
 import type { ActiveRuntimeSummary, HarbourContext } from '@harbour/domain'
 import { Effect } from 'effect'
 
@@ -48,4 +49,15 @@ export async function saveUiContext(context: HarbourContext, dbPath?: string) {
       Effect.provide(makeProjectServiceLayer(dbPath)),
     ),
   )
+}
+
+export async function listConfiguredProjectWindows(configPath?: string) {
+  const config = await Effect.runPromise(
+    configPath ? loadConfigAtPath(configPath) : loadConfig(),
+  )
+
+  return config.projects.map((project) => ({
+    projectName: project.name,
+    windows: project.windows ?? [],
+  }))
 }

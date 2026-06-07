@@ -1,3 +1,4 @@
+import type { HarbourContext } from '@harbour/domain'
 import type { StoreApi } from 'zustand/vanilla'
 
 import type { AppState } from './app/app-state'
@@ -24,6 +25,7 @@ export type TuiStoreActions = {
   changeBrowseQuery(value: string): void
   clearNotice(): void
   closeActionsMenu(): void
+  closeWindowPicker(): void
   closeWorktreeForm(): void
   hoverActiveRow(rowId: string | null): void
   hoverBrowseRow(rowId: string | null): void
@@ -32,6 +34,7 @@ export type TuiStoreActions = {
   openActiveActionsMenu(): void
   openBrowseActionsMenu(): void
   openCreateWorkspaceForm(projectId: string): void
+  openWindowPicker(target: HarbourContext, contextLabel?: string): void
   previousRoute(): void
   registerFocusTarget(id: SurfaceId, ref: FocusTargetRef | null): void
   resetActiveQuery(): void

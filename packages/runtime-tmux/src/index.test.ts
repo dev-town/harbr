@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { Effect, Layer } from 'effect'
 
 import type {
+  CreateRuntimeWindowsResult,
   CurrentRuntime,
   RuntimeDiscovery,
   RuntimeTarget,
@@ -14,6 +15,7 @@ import {
 } from './session-name.util'
 import {
   closeRuntime,
+  createRuntimeWindows,
   getCurrentRuntime,
   listRuntimes,
   openOrCreateRuntime,
@@ -137,6 +139,11 @@ describe('listRuntimes', () => {
 
     const layer = Layer.succeed(RuntimeTmuxService, {
       closeRuntime: (_sessionName: string) => Effect.void,
+      createRuntimeWindows: (_input) =>
+        Effect.succeed<CreateRuntimeWindowsResult>({
+          createdWindowNames: [],
+          skippedWindowNames: [],
+        }),
       listRuntimes: Effect.succeed(discovery),
       getCurrentRuntime: Effect.succeed(null),
       openOrCreateRuntime: (_target: RuntimeTarget) => Effect.void,
@@ -171,6 +178,11 @@ describe('getCurrentRuntime', () => {
 
     const layer = Layer.succeed(RuntimeTmuxService, {
       closeRuntime: (_sessionName: string) => Effect.void,
+      createRuntimeWindows: (_input) =>
+        Effect.succeed<CreateRuntimeWindowsResult>({
+          createdWindowNames: [],
+          skippedWindowNames: [],
+        }),
       listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
       getCurrentRuntime: Effect.succeed(currentRuntime),
       openOrCreateRuntime: (_target: RuntimeTarget) => Effect.void,
@@ -188,6 +200,7 @@ describe('getCurrentRuntime', () => {
 
   it('exports a usable current runtime program symbol', () => {
     expect(closeRuntime).toBeTypeOf('function')
+    expect(createRuntimeWindows).toBeTypeOf('function')
     expect(getCurrentRuntime).toBeTypeOf('function')
     expect(openOrCreateRuntime).toBeTypeOf('function')
   })

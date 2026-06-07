@@ -2,7 +2,7 @@ import { sync } from '@harbour/reconciler'
 import { Effect, Either } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'
-import { listActiveRuntimeSummaries, listProjectSummaries, loadCurrentRuntime, loadUiContext } from '../data'
+import { listActiveRuntimeSummaries, listConfiguredProjectWindows, listProjectSummaries, loadCurrentRuntime, loadUiContext } from '../data'
 import { formatError } from '../helpers/errors'
 import { projectsScope } from '../store'
 import { mapActiveRuntimeSummaryToRow, mapProjectSummaryToRow } from '../transforms'
@@ -24,12 +24,20 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       return
     }
 
-    const [summaries, activeRuntimeSummaries, currentRuntime, savedContext] = await Promise.all([
+    const [summaries, activeRuntimeSummaries, currentRuntime, savedContext, configuredWindows] = await Promise.all([
       listProjectSummaries(services.options.dbPath),
       listActiveRuntimeSummaries(services.options.dbPath),
       loadCurrentRuntime(),
       loadUiContext(services.options.dbPath),
+      listConfiguredProjectWindows(services.options.configPath),
     ])
+    const projectWindows = summaries.map((summary) => ({
+      projectId: summary.id,
+      projectName: summary.name,
+      windows:
+        configuredWindows.find((entry) => entry.projectName === summary.name)
+          ?.windows ?? [],
+    }))
 
     store.setState((state) => ({
       active: {
@@ -50,6 +58,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
         ...state.data,
         activeRuntimeRows: activeRuntimeSummaries.map(mapActiveRuntimeSummaryToRow),
         moduleRows: [],
+        projectWindows,
         projectRows: summaries.map(mapProjectSummaryToRow),
         workspaceRows: [],
       },
@@ -67,7 +76,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       active: { ...state.active, list: { ...state.active.list, selectedId: null } },
       app: { ...state.app, currentRuntime: null },
       browse: { ...state.browse, list: { ...state.browse.list, selectedId: null } },
-      data: { ...state.data, activeRuntimeRows: [], projectRows: [] },
+        data: { ...state.data, activeRuntimeRows: [], projectRows: [], projectWindows: [] },
     }))
     store.getState().setNotice(formatError(error), 'error')
   } finally {

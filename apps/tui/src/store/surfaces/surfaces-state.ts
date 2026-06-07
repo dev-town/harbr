@@ -1,8 +1,21 @@
-export type SurfaceId = 'actions' | 'browser' | 'confirm' | 'worktree-form'
+import type { HarbourContext } from '@harbour/domain'
+
+export type SurfaceId =
+  | 'actions'
+  | 'browser'
+  | 'confirm'
+  | 'window-picker'
+  | 'worktree-form'
 
 export type SurfaceState =
   | { kind: 'actions'; route: 'active' | 'browse' }
   | { kind: 'browser' }
+  | {
+      contextLabel?: string
+      kind: 'window-picker'
+      route: 'active' | 'browse'
+      target: HarbourContext
+    }
   | { kind: 'worktree-form' }
 
 export type FocusTarget = {
@@ -20,6 +33,7 @@ export type SurfacesState = {
   browserFocusTargetRef: FocusTargetRef | null
   focusRequestKey: number
   surface: SurfaceState
+  windowPickerFocusTargetRef: FocusTargetRef | null
   worktreeFormFocusTargetRef: FocusTargetRef | null
 }
 
@@ -29,6 +43,7 @@ export function createSurfacesState(): SurfacesState {
     browserFocusTargetRef: null,
     focusRequestKey: 0,
     surface: { kind: 'browser' },
+    windowPickerFocusTargetRef: null,
     worktreeFormFocusTargetRef: null,
   }
 }

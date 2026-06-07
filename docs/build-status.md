@@ -15,6 +15,8 @@
 - [x] `ui`: minimal popover renderer for project/workspace/module lists
 - [x] `apps/cli`: thin sync entrypoint
 - [x] `apps/tui`: popover with project -> workspace -> module drilldown and leaf open/attach behavior
+- [x] config-defined reusable named window/pane recipes
+- [x] TUI create-windows picker shell for project/workspace/module contexts in Browse and Active tabs
 
 ### Not Built Yet
 
@@ -23,7 +25,7 @@
 - [x] TUI actions menu shell
 - [x] TUI direct open/attach behavior for project/workspace/module leaves
 - [x] write-side runtime/session creation flows
-- [ ] write-side actions: create workspace/worktree, advanced create/jump runtime, restore layout
+- [ ] write-side actions: create workspace/worktree, configured tmux windows/panes, advanced create/jump runtime, restore layout
 
 ## Next Up
 
@@ -45,13 +47,14 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 - [x] derive canonical tmux session names from project/workspace/module context
 - [x] create missing tmux sessions on leaf open and switch the active client
 - [x] add contextual actions modal for project/workspace/module secondary actions
+- [x] add second-step multi-select window picker for configured windows
 - [x] route TUI commands through active surface + global layer semantics
 
 ### Why
 
 - current browse/open flow now covers config, git, modules, persistence, and tmux resume/create
 - biggest remaining UX gap is contextual actions and worktree creation flows
-- next product step is moving beyond default open/attach into explicit project/workspace/module actions
+- next product step is moving beyond default open/attach into explicit project/workspace/module actions and configured window creation
 
 ## Suggested Order
 
@@ -63,7 +66,7 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 6. [x] build read-only `apps/tui` nested selector
 7. [x] build TUI actions menu shell
 8. [x] replace read-only project/workspace/module notices with real open/attach behavior
-9. [ ] add write-side worktree/session creation flows beyond default open/create
+9. [ ] add write-side worktree/session/window creation flows beyond default open/create
 
 ## Notes
 
@@ -78,8 +81,13 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 - [x] default-workspace handling now skips the workspace breadcrumb/back hop when module mode came through the implicit default workspace
 - [x] actions menu now renders as a compact modal with project/workspace/module open actions
 - [x] current built actions are:
-  - project: open project root
-  - workspace: open workspace root, open project root
-  - module: open module session, open workspace root, open project root
+  - project: open/start project, create project windows
+  - workspace: open/start workspace, create workspace windows, new workspace form, open/start project root, create project windows
+  - module: open/start module, create module windows, open/start workspace root, create workspace windows, open/start project root, create project windows
+- [x] runtime action labels use `Open` when the exact runtime session exists and `Start` when it must be created
 - [x] TUI command routing now uses active surface handlers over global keymap commands
 - [ ] worktree creation flow and other write-side actions still need explicit command-handler wiring in `apps/tui`
+- [x] configured window picker now calls `runtime-tmux` to create selected windows/panes and skips windows that already exist
+- [x] Active tab actions can launch configured window picker for the selected active project/workspace/module runtime
+- [x] `runtime-tmux` has write-side API to ensure a semantic runtime session, create configured windows, create named panes, and send optional pane commands
+- [ ] hide already-existing configured windows from the picker later

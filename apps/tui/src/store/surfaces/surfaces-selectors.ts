@@ -5,6 +5,7 @@ import type { TuiStoreModel } from '../types'
 
 export const activeActionIds = {
   closeRuntimeSession: 'active.close_runtime_session',
+  createRuntimeWindows: 'active.create_runtime_windows',
   openRuntime: 'active.open_runtime',
 } as const
 
@@ -30,6 +31,10 @@ export function selectIsWorktreeFormOpen(state: TuiStoreModel) {
   return state.surfaces.surface.kind === 'worktree-form'
 }
 
+export function selectIsWindowPickerOpen(state: TuiStoreModel) {
+  return state.surfaces.surface.kind === 'window-picker'
+}
+
 export function selectActiveActionRows(
   state: TuiStoreModel,
 ): readonly ActiveActionRow[] {
@@ -47,6 +52,7 @@ export function selectActiveActionRows(
       label: 'Open',
       target,
     },
+    ...makeActiveWindowActionRows(state, target),
     {
       actionId: activeActionIds.closeRuntimeSession,
       ...(target.isCurrent
@@ -58,6 +64,59 @@ export function selectActiveActionRows(
       target,
     },
   ]
+}
+
+function makeActiveWindowActionRows(
+  state: TuiStoreModel,
+  target: ActiveActionRow['target'],
+): readonly ActiveActionRow[] {
+  const windowTarget = getActiveWindowTarget(target)
+
+  if (!windowTarget || !hasProjectWindows(state, target.projectId)) {
+    return []
+  }
+
+  return [
+    {
+      actionId: activeActionIds.createRuntimeWindows,
+      id: `action.create_windows:${target.id}`,
+      kind: 'active-action',
+      label: `Create ${target.scope} windows`,
+      target,
+      windowTarget,
+    },
+  ]
+}
+
+function getActiveWindowTarget(target: ActiveActionRow['target']) {
+  if (target.scope === 'project') {
+    return { projectId: target.projectId }
+  }
+
+  if (!target.workspaceId) {
+    return null
+  }
+
+  if (target.scope === 'workspace') {
+    return { projectId: target.projectId, workspaceId: target.workspaceId }
+  }
+
+  if (!target.moduleId) {
+    return null
+  }
+
+  return {
+    projectId: target.projectId,
+    workspaceId: target.workspaceId,
+    moduleId: target.moduleId,
+  }
+}
+
+function hasProjectWindows(state: TuiStoreModel, projectId: string) {
+  return (
+    state.data.projectWindows.find((entry) => entry.projectId === projectId)
+      ?.windows.length ?? 0
+  ) > 0
 }
 
 export function selectCurrentActionRows(state: TuiStoreModel) {
@@ -74,6 +133,8 @@ export function selectActiveFocusTarget(state: TuiStoreModel) {
   const ref =
     state.surfaces.surface.kind === 'worktree-form'
       ? state.surfaces.worktreeFormFocusTargetRef
+      : state.surfaces.surface.kind === 'window-picker'
+        ? state.surfaces.windowPickerFocusTargetRef
       : state.surfaces.surface.kind === 'actions'
         ? state.surfaces.actionsFocusTargetRef
         : state.surfaces.browserFocusTargetRef

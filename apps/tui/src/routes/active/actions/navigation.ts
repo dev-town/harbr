@@ -1,10 +1,15 @@
 import type { TuiServices, TuiStore } from '../../../app-context'
 import { openActiveRuntime } from '../../../actions/runtime'
-import { selectIsActiveActionsOpen, selectSelectedActiveRow } from '../../../store'
+import { selectIsActiveActionsOpen, selectIsWindowPickerOpen, selectSelectedActiveRow } from '../../../store'
 
 export function handleActiveRouteBack(services: TuiServices, store: TuiStore) {
   if (selectIsActiveActionsOpen(store.getState())) {
     store.getState().closeActionsMenu()
+    return
+  }
+
+  if (selectIsWindowPickerOpen(store.getState())) {
+    store.getState().closeWindowPicker()
     return
   }
 

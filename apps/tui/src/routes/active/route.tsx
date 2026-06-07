@@ -6,6 +6,7 @@ import { SearchBar } from '../../components/search-bar'
 import { ActiveRouteLayout } from './layout'
 import { ActiveActionsModal } from './components/actions-modal'
 import { ActiveRouteRow } from './components/row'
+import { WindowPickerModal } from '../browse/components/window-picker-modal'
 import { useActiveRoute } from './hooks/use-active-route'
 
 export function ActiveRoute() {
@@ -47,6 +48,7 @@ export function ActiveRoute() {
         selectedId={activeRoute.selectedId}
       />
       <ActiveActionsModal />
+      <WindowPickerModal />
     </ActiveRouteLayout>
   )
 }

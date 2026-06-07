@@ -7,6 +7,7 @@ import { useTuiServices } from '../../../hooks/useTuiServices'
 import type { ActiveRuntimeRow } from '../../../types/rows'
 import {
   selectIsActiveActionsOpen,
+  selectIsWindowPickerOpen,
   selectVisibleActiveRows,
   tuiStore,
   useTuiStore,
@@ -20,6 +21,7 @@ export function useActiveRoute() {
     (state) => state.surfaces.focusRequestKey,
   )
   const isActionsOpen = useTuiStore(selectIsActiveActionsOpen)
+  const isWindowPickerOpen = useTuiStore(selectIsWindowPickerOpen)
   const query = useTuiStore((state) => state.active.list.query)
   const selectedId = useTuiStore((state) => state.active.list.selectedId)
   const sourceRows = useTuiStore((state) => state.data.activeRuntimeRows)
@@ -38,12 +40,12 @@ export function useActiveRoute() {
   useActiveKeybindings(searchRef)
 
   useEffect(() => {
-    if (isActionsOpen) {
+    if (isActionsOpen || isWindowPickerOpen) {
       return
     }
 
     searchRef.current?.focus?.()
-  }, [focusSearchNonce, isActionsOpen, rows.length, selectedId])
+  }, [focusSearchNonce, isActionsOpen, isWindowPickerOpen, rows.length, selectedId])
 
   return {
     hoveredId: useTuiStore((state) => state.active.list.hoveredId),
@@ -58,7 +60,7 @@ export function useActiveRoute() {
     query,
     rows,
     searchRef,
-    searchFocused: !isActionsOpen,
+    searchFocused: !isActionsOpen && !isWindowPickerOpen,
     selectedId,
     selectedRow,
   }

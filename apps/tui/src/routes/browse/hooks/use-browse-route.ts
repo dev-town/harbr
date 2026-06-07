@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { selectBrowseBreadcrumb, selectIsBrowseActionsOpen, selectIsWorktreeFormOpen, selectVisibleBrowseRows, tuiStore, useTuiStore } from '../../../store'
+import { selectBrowseBreadcrumb, selectIsBrowseActionsOpen, selectIsWindowPickerOpen, selectIsWorktreeFormOpen, selectVisibleBrowseRows, tuiStore, useTuiStore } from '../../../store'
 import { useBrowseSearch } from './use-browse-search'
 import { useBrowseSection } from './use-browse-section'
 
@@ -38,6 +38,11 @@ export function useBrowseRoute() {
 
       if (selectIsBrowseActionsOpen(tuiStore.getState())) {
         tuiStore.getState().closeActionsMenu()
+        return
+      }
+
+      if (selectIsWindowPickerOpen(tuiStore.getState())) {
+        tuiStore.getState().closeWindowPicker()
         return
       }
 

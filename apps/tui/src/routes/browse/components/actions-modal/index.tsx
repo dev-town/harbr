@@ -19,6 +19,7 @@ export function BrowseActionsModal() {
   const selectedId = useTuiStore((state) => state.browse.list.selectedId)
   const activeRuntimeRows = useTuiStore((state) => state.data.activeRuntimeRows)
   const projectRows = useTuiStore((state) => state.data.projectRows)
+  const projectWindows = useTuiStore((state) => state.data.projectWindows)
   const workspaceRows = useTuiStore((state) => state.data.workspaceRows)
   const moduleRows = useTuiStore((state) => state.data.moduleRows)
   const currentRuntime = useTuiStore((state) => state.app.currentRuntime)
@@ -32,6 +33,7 @@ export function BrowseActionsModal() {
       currentRuntime,
       moduleRows,
       projectRows,
+      projectWindows,
       query,
       scope,
       selectedId,

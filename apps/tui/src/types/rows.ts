@@ -59,6 +59,7 @@ export type ActiveActionRow = {
   id: string
   kind: 'active-action'
   label: string
+  windowTarget?: HarbourContext
   target: ActiveRuntimeRow
 }
 
