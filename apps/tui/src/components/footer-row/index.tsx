@@ -27,13 +27,11 @@ export function FooterRow() {
         {notice ? (
           <span fg={noticeColor(notice.level)}>
             {' '}
-            {noticeIcon(notice.level)} {noticeLabel(notice.level)} {notice.message}
+            {noticeIcon(notice.level)} {noticeLabel(notice.level)}{' '}
+            {notice.message}
           </span>
         ) : (
-          <span fg={theme.muted}>
-            {' '}
-            {breadcrumbLabel(breadcrumb)}
-          </span>
+          <span fg={theme.muted}> {breadcrumbLabel(breadcrumb)}</span>
         )}
       </text>
     </box>

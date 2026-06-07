@@ -25,6 +25,9 @@ const renderer = await createCliRenderer({
   },
 })
 
+// Debug console
+// renderer.console.toggle()
+
 const services: TuiServices = {
   options,
   renderer,

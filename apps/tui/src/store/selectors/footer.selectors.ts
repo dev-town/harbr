@@ -1,5 +1,9 @@
 import type { TuiStoreModel } from '../types'
-import { selectBrowseBreadcrumb, selectCurrentBrowseSection, selectVisibleBrowseRows } from '../browse/browse-selectors'
+import {
+  selectBrowseBreadcrumb,
+  selectCurrentBrowseSection,
+  selectVisibleBrowseRows,
+} from '../browse/browse-selectors'
 import { selectIsActionsOpen } from '../surfaces/surfaces-selectors'
 
 export function selectEffectiveVisibility(state: TuiStoreModel) {
@@ -11,7 +15,9 @@ export function selectEffectiveVisibility(state: TuiStoreModel) {
     return 'all'
   }
 
-  return selectVisibleBrowseRows(state).some((row) => row.isActive) ? 'active' : 'all'
+  return selectVisibleBrowseRows(state).some((row) => row.isActive)
+    ? 'active'
+    : 'all'
 }
 
 export function selectFooterHints(state: TuiStoreModel) {
@@ -29,7 +35,10 @@ export function selectFooterHints(state: TuiStoreModel) {
       { key: 'Ctrl+A', label: 'actions' },
       { key: 'Tab', label: 'next tab' },
       { key: 'Shift+Tab', label: 'prev tab' },
-      { key: 'Esc', label: state.active.list.query.length > 0 ? 'clear query' : 'close' },
+      {
+        key: 'Esc',
+        label: state.active.list.query.length > 0 ? 'clear query' : 'close',
+      },
     ]
   }
 
@@ -68,4 +77,10 @@ export function selectFooterHints(state: TuiStoreModel) {
   ]
 }
 
-export const selectBreadcrumb = selectBrowseBreadcrumb
+export function selectBreadcrumb(state: TuiStoreModel) {
+  const route = state.app.currentRoute
+
+  if (route == 'active') return ''
+
+  return selectBrowseBreadcrumb(state)
+}
