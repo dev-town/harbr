@@ -6,5 +6,5 @@ export type HarbourProject = ProjectConfig
 export type HarbourConfig = {
   $schema?: string
   configPath: string
-  projects: ProjectConfig[]
+  projects: HarbourProject[]
 }

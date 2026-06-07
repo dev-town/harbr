@@ -1,10 +1,13 @@
 import { Data } from 'effect'
 
 export type HarbourConfigIssueCode =
+  | 'duplicate_pane_name'
   | 'duplicate_project_name'
+  | 'duplicate_window_name'
   | 'module_path_not_relative'
   | 'repo_not_found'
   | 'schema'
+  | 'unknown_window_ref'
 
 export type HarbourConfigIssue = {
   code: HarbourConfigIssueCode

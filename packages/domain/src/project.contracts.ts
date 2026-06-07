@@ -3,12 +3,14 @@ import { z } from 'zod'
 import { ModuleSelectorSchema, ResolvedModuleSchema } from './module.contracts'
 import { RuntimeFactSchema } from './runtime.contracts'
 import { RepoKindSchema, RuntimeIssueSchema } from './shared.contracts'
+import { WindowConfigSchema } from './window.contracts'
 import { WorkspaceObservationSchema } from './workspace.contracts'
 
 export const ProjectConfigSchema = z.object({
   modules: z.array(ModuleSelectorSchema),
   name: z.string(),
   repo: z.string(),
+  windows: z.array(WindowConfigSchema).optional(),
 })
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>
 

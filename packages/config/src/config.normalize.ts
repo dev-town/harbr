@@ -55,7 +55,9 @@ function getSchemaIssueCode(issue: ZodIssue): HarbourConfigIssueCode {
     issue.code === 'custom' ? issue.params?.issueCode : undefined
 
   if (
+    customCode === 'duplicate_pane_name' ||
     customCode === 'duplicate_project_name' ||
+    customCode === 'duplicate_window_name' ||
     customCode === 'module_path_not_relative'
   ) {
     return customCode

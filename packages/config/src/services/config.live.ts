@@ -1,7 +1,7 @@
 import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { ModuleSelector, ProjectConfig } from '@harbour/domain'
+import type { ModuleSelector, WindowConfig } from '@harbour/domain'
 import { Effect, Layer } from 'effect'
 import {
   ConfigNotFoundError,
@@ -18,7 +18,7 @@ import {
 import { getDefaultConfigPath, resolveTopLevelPath } from '../config.path'
 import { configSchema, type HarbourConfigInput } from '../schema'
 import { ConfigService, type ConfigServiceApi } from './config.service'
-import type { HarbourConfig } from '../config.types'
+import type { HarbourConfig, HarbourProject } from '../config.types'
 
 export function loadConfig() {
   return Effect.flatMap(ConfigService, (service) => service.load).pipe(
@@ -84,7 +84,8 @@ function loadConfigFile(configPath: string) {
       )
     }
 
-    const projects: ProjectConfig[] = []
+    const windows = parsedConfig.data.windows ?? []
+    const projects: HarbourProject[] = []
     const issues: HarbourConfigIssue[] = []
 
     for (const [projectIndex, project] of parsedConfig.data.projects.entries()) {
@@ -125,10 +126,19 @@ function loadConfigFile(configPath: string) {
         })
       }
 
+      const projectWindows = resolveProjectWindows({
+        globalWindows: windows,
+        project,
+        projectIndex,
+        projectName: project.name,
+        issues,
+      })
+
       projects.push({
         name: project.name,
         repo: repoPath,
         modules,
+        windows: projectWindows,
       })
     }
 
@@ -149,6 +159,89 @@ function loadConfigFile(configPath: string) {
         : {}),
     } satisfies HarbourConfig
   }) as Effect.Effect<HarbourConfig, HarbourConfigError>
+}
+
+function resolveProjectWindows(input: {
+  globalWindows: readonly WindowConfig[]
+  issues: HarbourConfigIssue[]
+  project: HarbourConfigInput['projects'][number]
+  projectIndex: number
+  projectName: string
+}) {
+  const windows = input.project.windows ?? input.globalWindows
+  const resolvedWindows: WindowConfig[] = []
+  const seenWindows = new Set<string>()
+
+  for (const [windowIndex, window] of windows.entries()) {
+    if (typeof window === 'string') {
+      const resolvedWindow = resolveGlobalWindow(input.globalWindows, window)
+
+      if (!resolvedWindow) {
+        input.issues.push({
+          code: 'unknown_window_ref',
+          path: ['projects', input.projectIndex, 'windows', windowIndex],
+          message: `unknown window ref: ${window}`,
+          projectName: input.projectName,
+          value: window,
+        })
+        continue
+      }
+
+      appendResolvedWindow({
+        issues: input.issues,
+        projectIndex: input.projectIndex,
+        projectName: input.projectName,
+        resolvedWindows,
+        seenWindows,
+        window: resolvedWindow,
+        windowIndex,
+      })
+      continue
+    }
+
+    appendResolvedWindow({
+      issues: input.issues,
+      projectIndex: input.projectIndex,
+      projectName: input.projectName,
+      resolvedWindows,
+      seenWindows,
+      window,
+      windowIndex,
+    })
+  }
+
+  return resolvedWindows
+}
+
+function appendResolvedWindow(input: {
+  issues: HarbourConfigIssue[]
+  projectIndex: number
+  projectName: string
+  resolvedWindows: WindowConfig[]
+  seenWindows: Set<string>
+  window: WindowConfig
+  windowIndex: number
+}) {
+  if (input.seenWindows.has(input.window.name)) {
+    input.issues.push({
+      code: 'duplicate_window_name',
+      path: ['projects', input.projectIndex, 'windows', input.windowIndex],
+      message: `duplicate window name: ${input.window.name}`,
+      projectName: input.projectName,
+      value: input.window.name,
+    })
+    return
+  }
+
+  input.seenWindows.add(input.window.name)
+  input.resolvedWindows.push(input.window)
+}
+
+function resolveGlobalWindow(
+  globalWindows: readonly WindowConfig[],
+  windowName: string,
+) {
+  return globalWindows.find((window) => window.name === windowName) ?? null
 }
 
 async function isDirectory(targetPath: string) {

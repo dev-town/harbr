@@ -115,6 +115,7 @@ describe('loadConfigAtPath', () => {
               mode: 'explicit',
             },
           ],
+          windows: [],
         },
       ],
     })
@@ -179,6 +180,7 @@ describe('loadConfigAtPath', () => {
             { raw: 'packages/', path: 'packages', mode: 'children' },
             { raw: 'docs', path: 'docs', mode: 'explicit' },
           ],
+          windows: [],
         },
       ],
     })
@@ -248,6 +250,7 @@ describe('loadConfigAtPath', () => {
             { raw: './docs', path: 'docs', mode: 'explicit' },
             { raw: 'docs/', path: 'docs', mode: 'children' },
           ],
+          windows: [],
         },
       ],
     })
@@ -319,6 +322,7 @@ describe('loadConfigAtPath', () => {
             { raw: './apps/', path: 'apps', mode: 'children' },
             { raw: 'docs', path: 'docs', mode: 'explicit' },
           ],
+          windows: [],
         },
       ],
     })
@@ -356,9 +360,252 @@ describe('loadConfigAtPath', () => {
             { raw: 'packages/', path: 'packages', mode: 'children' },
             { raw: 'docs', path: 'docs', mode: 'explicit' },
           ],
+          windows: [],
         },
       ],
     })
+  })
+
+  it('uses all global windows when project windows are omitted', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      windows: [
+        { name: 'Shell', panes: [{ name: 'Shell' }] },
+        {
+          name: 'Dev',
+          panes: [
+            { name: 'Server', command: 'bun run dev' },
+            { name: 'Tests', command: ['bun run test', 'bun run lint'] },
+          ],
+        },
+      ],
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: ['.'],
+        },
+      ],
+    })
+
+    await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [{ raw: '.', path: '.', mode: 'explicit' }],
+          windows: [
+            { name: 'Shell', panes: [{ name: 'Shell' }] },
+            {
+              name: 'Dev',
+              panes: [
+                { name: 'Server', command: 'bun run dev' },
+                { name: 'Tests', command: ['bun run test', 'bun run lint'] },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+  })
+
+  it('allows projects to disable windows with an empty list', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      windows: [{ name: 'Shell', panes: [{ name: 'Shell' }] }],
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: ['.'],
+          windows: [],
+        },
+      ],
+    })
+
+    await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [{ raw: '.', path: '.', mode: 'explicit' }],
+          windows: [],
+        },
+      ],
+    })
+  })
+
+  it('resolves project window refs and inline windows in order', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      windows: [
+        { name: 'Shell', panes: [{ name: 'Shell' }] },
+        { name: 'Dev', panes: [{ name: 'Server' }] },
+      ],
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: ['.'],
+          windows: [
+            'Dev',
+            {
+              name: 'Agents',
+              panes: [{ name: 'Planner' }, { name: 'Builder' }],
+            },
+            'Shell',
+          ],
+        },
+      ],
+    })
+
+    await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [{ raw: '.', path: '.', mode: 'explicit' }],
+          windows: [
+            { name: 'Dev', panes: [{ name: 'Server' }] },
+            {
+              name: 'Agents',
+              panes: [{ name: 'Planner' }, { name: 'Builder' }],
+            },
+            { name: 'Shell', panes: [{ name: 'Shell' }] },
+          ],
+        },
+      ],
+    })
+  })
+
+  it('rejects unknown window refs', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      windows: [{ name: 'Shell', panes: [{ name: 'Shell' }] }],
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: ['.'],
+          windows: ['Missing'],
+        },
+      ],
+    })
+
+    const result = await runEither(loadConfigAtPath(configPath))
+
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
+      return
+    }
+
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
+      return
+    }
+
+    expect(result.left.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'unknown_window_ref' }),
+      ]),
+    )
+  })
+
+  it('rejects duplicate window names after project resolution', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      windows: [{ name: 'Shell', panes: [{ name: 'Shell' }] }],
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: ['.'],
+          windows: ['Shell', { name: 'Shell', panes: [{ name: 'Other' }] }],
+        },
+      ],
+    })
+
+    const result = await runEither(loadConfigAtPath(configPath))
+
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
+      return
+    }
+
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
+      return
+    }
+
+    expect(result.left.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'duplicate_window_name' }),
+      ]),
+    )
+  })
+
+  it('rejects duplicate pane names', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      windows: [
+        {
+          name: 'Dev',
+          panes: [{ name: 'Server' }, { name: 'Server' }],
+        },
+      ],
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: ['.'],
+        },
+      ],
+    })
+
+    const result = await runEither(loadConfigAtPath(configPath))
+
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
+      return
+    }
+
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
+      return
+    }
+
+    expect(result.left.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'duplicate_pane_name' }),
+      ]),
+    )
   })
 })
 
