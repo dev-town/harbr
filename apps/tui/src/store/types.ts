@@ -32,6 +32,8 @@ export type TuiStoreActions = {
   closeHelpModal(): void
   closeWindowPicker(): void
   closeWorktreeForm(): void
+  enterInputMode(): void
+  exitInputMode(): void
   hoverActiveRow(rowId: string | null): void
   hoverBrowseRow(rowId: string | null): void
   moveActiveSelection(delta: number): void

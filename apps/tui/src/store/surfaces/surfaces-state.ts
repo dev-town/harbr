@@ -20,6 +20,8 @@ export type SurfaceState =
     }
   | { kind: 'worktree-form' }
 
+export type InteractionMode = 'input' | 'normal'
+
 export type FocusTarget = {
   blur?: () => void
   focus?: () => void
@@ -35,6 +37,7 @@ export type SurfacesState = {
   browserFocusTargetRef: FocusTargetRef | null
   focusRequestKey: number
   helpFocusTargetRef: FocusTargetRef | null
+  interactionMode: InteractionMode
   surface: SurfaceState
   windowPickerFocusTargetRef: FocusTargetRef | null
   worktreeFormFocusTargetRef: FocusTargetRef | null
@@ -46,6 +49,7 @@ export function createSurfacesState(): SurfacesState {
     browserFocusTargetRef: null,
     focusRequestKey: 0,
     helpFocusTargetRef: null,
+    interactionMode: 'input',
     surface: { kind: 'browser' },
     windowPickerFocusTargetRef: null,
     worktreeFormFocusTargetRef: null,

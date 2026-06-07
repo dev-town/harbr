@@ -1,8 +1,8 @@
-import type { TuiServices, TuiStore } from '../../../app-context'
+import type { TuiStore } from '../../../app-context'
 
 import { selectCurrentBrowseSection, selectIsBrowseActionsOpen, selectIsWorktreeFormOpen } from '../../../store'
 
-export function handleBrowseRouteBack(services: TuiServices, store: TuiStore) {
+export function handleBrowseRouteBack(store: TuiStore) {
   if (selectIsWorktreeFormOpen(store.getState())) {
     store.getState().backWorktreeForm()
     return
@@ -33,5 +33,5 @@ export function handleBrowseRouteBack(services: TuiServices, store: TuiStore) {
     return
   }
 
-  services.renderer.destroy()
+  store.getState().clearNotice()
 }

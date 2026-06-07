@@ -162,17 +162,19 @@ function makeHelpRows(keymap: ReturnType<typeof useKeymap>): readonly HelpRow[] 
 function groupOrder(group: string) {
   return group === 'Global'
     ? 0
-    : group === 'Active'
+    : group === 'Search'
       ? 1
-    : group === 'Browse'
-      ? 2
-        : group === 'Action modal'
+      : group === 'Active'
+        ? 2
+        : group === 'Browse'
           ? 3
+        : group === 'Action modal'
+          ? 4
           : group === 'Window picker'
-            ? 4
+            ? 5
             : group === 'Create workspace'
-              ? 5
+              ? 6
               : group === 'Help'
-                ? 6
-                : 7
+                ? 7
+                : 8
 }

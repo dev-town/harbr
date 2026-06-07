@@ -27,6 +27,7 @@ export function useActiveRoute() {
   const selectedId = useTuiStore((state) => state.active.list.selectedId)
   const sourceRows = useTuiStore((state) => state.data.activeRuntimeRows)
   const currentRuntime = useTuiStore((state) => state.app.currentRuntime)
+  const interactionMode = useTuiStore((state) => state.surfaces.interactionMode)
   const onSelectRow = useTuiStore((state) => state.selectActiveRow)
   const rows = useMemo(
     () => selectVisibleActiveRows(tuiStore.getState()),
@@ -38,16 +39,18 @@ export function useActiveRoute() {
   )
 
   useRegisterFocusTarget('browser', searchRef)
-  useActiveKeybindings(searchRef)
+  useActiveKeybindings()
 
   useEffect(() => {
-    if (isActionsOpen || isWindowPickerOpen) {
+    if (isActionsOpen || isWindowPickerOpen || interactionMode !== 'input') {
+      searchRef.current?.blur?.()
       return
     }
 
     searchRef.current?.focus?.()
   }, [
     focusSearchNonce,
+    interactionMode,
     isActionsOpen,
     isWindowPickerOpen,
     rows.length,
@@ -67,7 +70,7 @@ export function useActiveRoute() {
     query,
     rows,
     searchRef,
-    searchFocused: !isActionsOpen && !isWindowPickerOpen,
+    searchFocused: interactionMode === 'input' && !isActionsOpen && !isWindowPickerOpen,
     selectedId,
     selectedRow,
   }

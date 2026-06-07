@@ -25,6 +25,7 @@ export function createAppActions(set: TuiStoreSet, get: TuiStoreGet): Pick<
       surfaces: {
         ...state.surfaces,
         focusRequestKey: state.surfaces.focusRequestKey + 1,
+        interactionMode: 'input',
         surface: { kind: 'browser' },
       },
       worktreeForm: createWorktreeFormState(),

@@ -5,6 +5,8 @@ export function createSurfacesActions(set: TuiStoreSet, _get: TuiStoreGet): Pick
   | 'closeActionsMenu'
   | 'closeHelpModal'
   | 'closeWindowPicker'
+  | 'enterInputMode'
+  | 'exitInputMode'
   | 'openHelpModal'
   | 'openWindowPicker'
   | 'registerFocusTarget'
@@ -42,6 +44,16 @@ export function createSurfacesActions(set: TuiStoreSet, _get: TuiStoreGet): Pick
           target,
         },
       },
+    })),
+    enterInputMode: () => set((state) => ({
+      surfaces: {
+        ...state.surfaces,
+        focusRequestKey: state.surfaces.focusRequestKey + 1,
+        interactionMode: 'input',
+      },
+    })),
+    exitInputMode: () => set((state) => ({
+      surfaces: { ...state.surfaces, interactionMode: 'normal' },
     })),
     openHelpModal: () => set((state) => ({
       app: { ...state.app, notice: null },

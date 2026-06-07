@@ -1,35 +1,42 @@
-import type { InputRenderable } from '@opentui/core'
 import { useBindings } from '@opentui/keymap/react'
-import type { RefObject } from 'react'
+import { useTerminalDimensions } from '@opentui/react'
 
 import { loadProjects } from '../../../actions/refresh'
 import { makeActiveBindings } from '../../../keymap/bindings'
 import { keymapPriority } from '../../../keymap/priorities'
 import { handleActiveRouteBack, handleActiveRouteSelect } from '../actions'
 import { useTuiServices } from '../../../hooks/useTuiServices'
-import { tuiStore } from '../../../store'
+import { tuiStore, useTuiStore } from '../../../store'
 
-export function useActiveKeybindings(
-  searchRef: RefObject<InputRenderable | null>,
-) {
+export function useActiveKeybindings() {
   const services = useTuiServices()
+  const { height } = useTerminalDimensions()
+  const interactionMode = useTuiStore((state) => state.surfaces.interactionMode)
+  const surfaceKind = useTuiStore((state) => state.surfaces.surface.kind)
+  const pageDelta = Math.max(1, Math.floor(height / 2))
 
   useBindings(
-    () => ({
-      targetRef: searchRef,
-      targetMode: 'focus-within',
-      priority: keymapPriority.route,
-      bindings: makeActiveBindings({
-        onActions: () => tuiStore.getState().openActiveActionsMenu(),
-        onBack: () => handleActiveRouteBack(services, tuiStore),
-        onMoveDown: () => tuiStore.getState().moveActiveSelection(1),
-        onMoveUp: () => tuiStore.getState().moveActiveSelection(-1),
-        onNextRoute: () => tuiStore.getState().nextRoute(),
-        onPreviousRoute: () => tuiStore.getState().previousRoute(),
-        onRefresh: () => void loadProjects(services, tuiStore),
-        onSelect: () => handleActiveRouteSelect(services, tuiStore),
-      }),
-    }),
-    [searchRef, services],
+    () =>
+      surfaceKind === 'browser'
+        ? {
+            priority: keymapPriority.route,
+            bindings: makeActiveBindings({
+              interactionMode,
+              onActions: () => tuiStore.getState().openActiveActionsMenu(),
+              onBack: () => handleActiveRouteBack(tuiStore),
+              onEnterInputMode: () => tuiStore.getState().enterInputMode(),
+              onExitInputMode: () => tuiStore.getState().exitInputMode(),
+              onMoveDown: () => tuiStore.getState().moveActiveSelection(1),
+              onMoveUp: () => tuiStore.getState().moveActiveSelection(-1),
+              onNextRoute: () => tuiStore.getState().nextRoute(),
+              onPageDown: () => tuiStore.getState().moveActiveSelection(pageDelta),
+              onPageUp: () => tuiStore.getState().moveActiveSelection(-pageDelta),
+              onPreviousRoute: () => tuiStore.getState().previousRoute(),
+              onRefresh: () => void loadProjects(services, tuiStore),
+              onSelect: () => handleActiveRouteSelect(services, tuiStore),
+            }),
+          }
+        : { bindings: [] },
+    [interactionMode, pageDelta, services, surfaceKind],
   )
 }

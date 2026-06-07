@@ -2,7 +2,7 @@ import type { TuiServices, TuiStore } from '../../../app-context'
 import { openActiveRuntime } from '../../../actions/runtime'
 import { selectIsActiveActionsOpen, selectIsWindowPickerOpen, selectSelectedActiveRow } from '../../../store'
 
-export function handleActiveRouteBack(services: TuiServices, store: TuiStore) {
+export function handleActiveRouteBack(store: TuiStore) {
   if (selectIsActiveActionsOpen(store.getState())) {
     store.getState().closeActionsMenu()
     return
@@ -22,7 +22,7 @@ export function handleActiveRouteBack(services: TuiServices, store: TuiStore) {
     return
   }
 
-  services.renderer.destroy()
+  store.getState().clearNotice()
 }
 
 export function handleActiveRouteSelect(services: TuiServices, store: TuiStore) {

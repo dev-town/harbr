@@ -116,7 +116,9 @@ export function selectActiveFocusTarget(state: TuiStoreModel) {
         ? state.surfaces.windowPickerFocusTargetRef
         : state.surfaces.surface.kind === 'actions'
           ? state.surfaces.actionsFocusTargetRef
-          : state.surfaces.browserFocusTargetRef
+          : state.surfaces.interactionMode === 'input'
+            ? state.surfaces.browserFocusTargetRef
+            : null
 
   return ref?.current ?? null
 }

@@ -1,4 +1,5 @@
 import type { Binding } from '@opentui/keymap'
+import type { InteractionMode } from '../store'
 
 export type HelpBinding = Binding & {
   desc: string
@@ -18,18 +19,49 @@ export function makeRootBindings(input: {
 }
 
 export function makeActiveBindings(input: {
+  interactionMode: InteractionMode
   onActions: () => void
   onBack: () => void
+  onEnterInputMode: () => void
+  onExitInputMode: () => void
   onMoveDown: () => void
   onMoveUp: () => void
   onNextRoute: () => void
+  onPageDown: () => void
+  onPageUp: () => void
   onPreviousRoute: () => void
   onRefresh: () => void
   onSelect: () => void
 }): readonly HelpBinding[] {
+  if (input.interactionMode === 'input') {
+    return [
+      { key: 'escape', cmd: input.onExitInputMode, group: 'Search', desc: 'Leave search' },
+      { key: 'up', cmd: input.onMoveUp, group: 'Active', desc: 'Move up' },
+      { key: 'down', cmd: input.onMoveDown, group: 'Active', desc: 'Move down' },
+      { key: 'return', cmd: input.onSelect, group: 'Active', desc: 'Switch session' },
+      { key: 'tab', cmd: input.onNextRoute, group: 'Global', desc: 'Next tab' },
+      {
+        key: 'shift+tab',
+        cmd: input.onPreviousRoute,
+        group: 'Global',
+        desc: 'Previous tab',
+      },
+      { key: 'ctrl+r', cmd: input.onRefresh, group: 'Global', desc: 'Refresh' },
+      { key: 'ctrl+a', cmd: input.onActions, group: 'Active', desc: 'Open actions' },
+    ]
+  }
+
   return [
+    { key: 'i', cmd: input.onEnterInputMode, group: 'Search', desc: 'Focus search' },
+    { key: '/', cmd: input.onEnterInputMode, group: 'Search', desc: 'Focus search' },
     { key: 'up', cmd: input.onMoveUp, group: 'Active', desc: 'Move up' },
+    { key: 'k', cmd: input.onMoveUp, group: 'Active', desc: 'Move up' },
     { key: 'down', cmd: input.onMoveDown, group: 'Active', desc: 'Move down' },
+    { key: 'j', cmd: input.onMoveDown, group: 'Active', desc: 'Move down' },
+    { key: 'pageup', cmd: input.onPageUp, group: 'Active', desc: 'Page up' },
+    { key: 'ctrl+u', cmd: input.onPageUp, group: 'Active', desc: 'Page up' },
+    { key: 'pagedown', cmd: input.onPageDown, group: 'Active', desc: 'Page down' },
+    { key: 'ctrl+d', cmd: input.onPageDown, group: 'Active', desc: 'Page down' },
     { key: 'return', cmd: input.onSelect, group: 'Active', desc: 'Switch session' },
     { key: 'escape', cmd: input.onBack, group: 'Active', desc: 'Back' },
     { key: 'tab', cmd: input.onNextRoute, group: 'Global', desc: 'Next tab' },
@@ -45,19 +77,56 @@ export function makeActiveBindings(input: {
 }
 
 export function makeBrowseBindings(input: {
+  interactionMode: InteractionMode
   onActions: () => void
   onBack: () => void
+  onEnterInputMode: () => void
+  onExitInputMode: () => void
   onMoveDown: () => void
   onMoveUp: () => void
   onNextRoute: () => void
+  onPageDown: () => void
+  onPageUp: () => void
   onPreviousRoute: () => void
   onRefresh: () => void
   onSelect: () => void
   onToggleVisibility: () => void
 }): readonly HelpBinding[] {
+  if (input.interactionMode === 'input') {
+    return [
+      { key: 'escape', cmd: input.onExitInputMode, group: 'Search', desc: 'Leave search' },
+      { key: 'up', cmd: input.onMoveUp, group: 'Browse', desc: 'Move up' },
+      { key: 'down', cmd: input.onMoveDown, group: 'Browse', desc: 'Move down' },
+      { key: 'return', cmd: input.onSelect, group: 'Browse', desc: 'Select' },
+      { key: 'tab', cmd: input.onNextRoute, group: 'Global', desc: 'Next tab' },
+      {
+        key: 'shift+tab',
+        cmd: input.onPreviousRoute,
+        group: 'Global',
+        desc: 'Previous tab',
+      },
+      { key: 'ctrl+r', cmd: input.onRefresh, group: 'Global', desc: 'Refresh' },
+      {
+        key: 'ctrl+f',
+        cmd: input.onToggleVisibility,
+        group: 'Browse',
+        desc: 'Toggle active/all',
+      },
+      { key: 'ctrl+a', cmd: input.onActions, group: 'Browse', desc: 'Open actions' },
+    ]
+  }
+
   return [
+    { key: 'i', cmd: input.onEnterInputMode, group: 'Search', desc: 'Focus search' },
+    { key: '/', cmd: input.onEnterInputMode, group: 'Search', desc: 'Focus search' },
     { key: 'up', cmd: input.onMoveUp, group: 'Browse', desc: 'Move up' },
+    { key: 'k', cmd: input.onMoveUp, group: 'Browse', desc: 'Move up' },
     { key: 'down', cmd: input.onMoveDown, group: 'Browse', desc: 'Move down' },
+    { key: 'j', cmd: input.onMoveDown, group: 'Browse', desc: 'Move down' },
+    { key: 'pageup', cmd: input.onPageUp, group: 'Browse', desc: 'Page up' },
+    { key: 'ctrl+u', cmd: input.onPageUp, group: 'Browse', desc: 'Page up' },
+    { key: 'pagedown', cmd: input.onPageDown, group: 'Browse', desc: 'Page down' },
+    { key: 'ctrl+d', cmd: input.onPageDown, group: 'Browse', desc: 'Page down' },
     { key: 'return', cmd: input.onSelect, group: 'Browse', desc: 'Select' },
     { key: 'escape', cmd: input.onBack, group: 'Browse', desc: 'Back' },
     { key: 'tab', cmd: input.onNextRoute, group: 'Global', desc: 'Next tab' },
@@ -141,25 +210,50 @@ export function getHelpBindingGroups(): readonly (readonly HelpBinding[])[] {
   return [
     makeRootBindings({ onHelp: noop, onQuit: noop }),
     makeActiveBindings({
+      interactionMode: 'normal',
       onActions: noop,
       onBack: noop,
+      onEnterInputMode: noop,
+      onExitInputMode: noop,
       onMoveDown: noop,
       onMoveUp: noop,
       onNextRoute: noop,
+      onPageDown: noop,
+      onPageUp: noop,
       onPreviousRoute: noop,
       onRefresh: noop,
       onSelect: noop,
     }),
     makeBrowseBindings({
+      interactionMode: 'normal',
       onActions: noop,
       onBack: noop,
+      onEnterInputMode: noop,
+      onExitInputMode: noop,
       onMoveDown: noop,
       onMoveUp: noop,
       onNextRoute: noop,
+      onPageDown: noop,
+      onPageUp: noop,
       onPreviousRoute: noop,
       onRefresh: noop,
       onSelect: noop,
       onToggleVisibility: noop,
+    }),
+    makeActiveBindings({
+      interactionMode: 'input',
+      onActions: noop,
+      onBack: noop,
+      onEnterInputMode: noop,
+      onExitInputMode: noop,
+      onMoveDown: noop,
+      onMoveUp: noop,
+      onNextRoute: noop,
+      onPageDown: noop,
+      onPageUp: noop,
+      onPreviousRoute: noop,
+      onRefresh: noop,
+      onSelect: noop,
     }),
     makeActionsModalBindings({
       onClose: noop,

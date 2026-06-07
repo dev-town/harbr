@@ -11,6 +11,7 @@ import { visibilityColor } from './utils/visibility-color'
 export function FooterRow() {
   const breadcrumb = useTuiStore(selectBreadcrumb)
   const currentRoute = useTuiStore((state) => state.app.currentRoute)
+  const interactionMode = useTuiStore((state) => state.surfaces.interactionMode)
   const notice = useTuiStore((state) => state.app.notice)
   const visibility = useTuiStore(selectEffectiveVisibility)
   const showVisibility = currentRoute === 'browse'
@@ -41,6 +42,9 @@ export function FooterRow() {
         )}
       </text>
       <text>
+        <span fg={theme.active}>{interactionMode === 'input' ? 'Esc' : 'i'}</span>
+        <span fg={theme.muted}>{interactionMode === 'input' ? ' Normal' : ' Search'}</span>
+        <span fg={theme.muted}>  </span>
         <span fg={theme.active}>?</span>
         <span fg={theme.muted}> Help</span>
       </text>

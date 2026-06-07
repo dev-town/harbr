@@ -27,6 +27,7 @@ export function useBrowseSearch() {
   const currentRuntime = useTuiStore((state) => state.app.currentRuntime)
   const scope = useTuiStore((state) => state.browse.scope)
   const visibility = useTuiStore((state) => state.browse.visibility)
+  const interactionMode = useTuiStore((state) => state.surfaces.interactionMode)
   const rows = useMemo(
     () => selectVisibleBrowseRows(tuiStore.getState()),
     [
@@ -41,13 +42,14 @@ export function useBrowseSearch() {
   )
   const isActionsOpen = useTuiStore(selectIsBrowseActionsOpen)
   const isWorktreeFormOpen = useTuiStore(selectIsWorktreeFormOpen)
-  const isSearchFocused = !isActionsOpen && !isWorktreeFormOpen
+  const isSearchFocused = interactionMode === 'input' && !isActionsOpen && !isWorktreeFormOpen
 
   useRegisterFocusTarget('browser', searchRef)
-  useBrowseKeybindings(searchRef)
+  useBrowseKeybindings()
 
   useEffect(() => {
     if (!isSearchFocused) {
+      searchRef.current?.blur?.()
       return
     }
 
