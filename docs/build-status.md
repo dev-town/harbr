@@ -25,7 +25,7 @@
 - [x] TUI actions menu shell
 - [x] TUI direct open/attach behavior for project/workspace/module leaves
 - [x] write-side runtime/session creation flows
-- [ ] write-side actions: create workspace/worktree, configured tmux windows/panes, advanced create/jump runtime, restore layout
+- [x] write-side actions: create workspace/worktree, configured tmux windows/panes, advanced create/jump runtime, restore layout
 
 ## Next Up
 
@@ -66,7 +66,7 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 6. [x] build read-only `apps/tui` nested selector
 7. [x] build TUI actions menu shell
 8. [x] replace read-only project/workspace/module notices with real open/attach behavior
-9. [ ] add write-side worktree/session/window creation flows beyond default open/create
+9. [x] add write-side worktree/session/window creation flows beyond default open/create
 
 ## Notes
 
