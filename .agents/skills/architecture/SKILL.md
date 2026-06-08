@@ -105,6 +105,7 @@ public programs/services
 
 ## Effect and file conventions
 
+- For detailed Effect API and idiom questions, use the `effect-reference` skill.
 - `index.ts` should be export-only.
 - Put service contracts in `services/*.service.ts`.
 - Put live layers and implementation wiring in `services/*.live.ts`.
