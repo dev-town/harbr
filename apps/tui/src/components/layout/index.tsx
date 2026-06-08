@@ -48,6 +48,7 @@ function TabsSlot({ children }: LayoutSlotProps) {
       flexDirection="column"
       height={3}
       marginBottom={1}
+      paddingLeft={2}
       width="100%"
     >
       {children}
