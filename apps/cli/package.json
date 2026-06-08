@@ -8,9 +8,10 @@
   "dependencies": {
     "@harbour/config": "workspace:*",
     "@harbour/reconciler": "workspace:*",
-    "effect": "^3.21.2"
+    "effect": "catalog:"
   },
   "scripts": {
+    "build": "bun build --compile --minify --sourcemap src/index.ts --outfile dist/harbour-sync",
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
     "start": "bun src/index.ts",

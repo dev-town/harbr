@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@harbour/domain": "workspace:*",
-    "effect": "^3.21.2",
+    "effect": "catalog:",
     "zod": "^4.4.3"
   }
 }

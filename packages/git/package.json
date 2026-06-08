@@ -12,6 +12,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "effect": "^3.21.2"
+    "effect": "catalog:"
   }
 }

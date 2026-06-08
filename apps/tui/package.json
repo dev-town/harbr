@@ -8,17 +8,18 @@
     "@harbour/domain": "workspace:*",
     "@harbour/reconciler": "workspace:*",
     "@harbour/runtime-tmux": "workspace:*",
-    "@opentui/core": "^0.2.12",
-    "@opentui/keymap": "^0.2.12",
-    "@opentui/react": "^0.2.12",
-    "effect": "^3.21.2",
-    "react": "^19.2.0",
-    "zustand": "^5.0.8"
+    "@opentui/core": "^0.2.16",
+    "@opentui/keymap": "^0.2.16",
+    "@opentui/react": "^0.2.16",
+    "effect": "catalog:",
+    "react": "^19.2.7",
+    "zustand": "^5.0.14"
   },
   "exports": {
     ".": "./src/index.tsx"
   },
   "scripts": {
+    "build": "bun scripts/build.ts",
     "dev": "bun --watch src/index.tsx",
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
@@ -26,6 +27,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@types/react": "^19.2.15"
+    "@types/react": "^19.2.17"
   }
 }

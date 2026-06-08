@@ -6,7 +6,10 @@ import { promisify } from 'node:util'
 
 import type { ProjectConfig } from '@harbour/domain'
 import { GitService, type GitServiceApi } from '@harbour/git'
-import { RuntimeTmuxService, type RuntimeTmuxServiceApi } from '@harbour/runtime-tmux'
+import {
+  RuntimeTmuxService,
+  type RuntimeTmuxServiceApi,
+} from '@harbour/runtime-tmux'
 import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -36,17 +39,20 @@ describe('resolveProjectModules', () => {
 
     await mkdir(workspacePath, { recursive: true })
 
-    const project = createProject([{ raw: 'apps', path: 'apps', mode: 'explicit' }])
+    const project = createProject([
+      { raw: 'apps', path: 'apps', mode: 'explicit' },
+    ])
 
-    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves
-      .toEqual([
-        {
-          name: 'apps',
-          path: 'apps',
-          workspacePath: path.join(workspacePath, 'apps'),
-          selector: { raw: 'apps', path: 'apps', mode: 'explicit' },
-        },
-      ])
+    await expect(
+      runSuccess(resolveProjectModules(project, workspacePath)),
+    ).resolves.toEqual([
+      {
+        name: 'apps',
+        path: 'apps',
+        workspacePath: path.join(workspacePath, 'apps'),
+        selector: { raw: 'apps', path: 'apps', mode: 'explicit' },
+      },
+    ])
   })
 
   it('resolves root selectors to workspace root', async () => {
@@ -57,7 +63,9 @@ describe('resolveProjectModules', () => {
 
     const project = createProject([{ raw: '.', path: '.', mode: 'explicit' }])
 
-    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves.toEqual([
+    await expect(
+      runSuccess(resolveProjectModules(project, workspacePath)),
+    ).resolves.toEqual([
       {
         name: '/',
         path: '.',
@@ -76,27 +84,32 @@ describe('resolveProjectModules', () => {
     await mkdir(path.join(workspacePath, 'apps', 'cli', 'nested'), {
       recursive: true,
     })
-    await writeFile(path.join(workspacePath, 'apps', 'README.md'), 'docs\n', 'utf8')
+    await writeFile(
+      path.join(workspacePath, 'apps', 'README.md'),
+      'docs\n',
+      'utf8',
+    )
 
     const project = createProject([
       { raw: 'apps/', path: 'apps', mode: 'children' },
     ])
 
-    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves
-      .toEqual([
-        {
-          name: 'apps/cli',
-          path: 'apps/cli',
-          workspacePath: path.join(workspacePath, 'apps', 'cli'),
-          selector: { raw: 'apps/', path: 'apps', mode: 'children' },
-        },
-        {
-          name: 'apps/tui',
-          path: 'apps/tui',
-          workspacePath: path.join(workspacePath, 'apps', 'tui'),
-          selector: { raw: 'apps/', path: 'apps', mode: 'children' },
-        },
-      ])
+    await expect(
+      runSuccess(resolveProjectModules(project, workspacePath)),
+    ).resolves.toEqual([
+      {
+        name: 'apps/cli',
+        path: 'apps/cli',
+        workspacePath: path.join(workspacePath, 'apps', 'cli'),
+        selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+      },
+      {
+        name: 'apps/tui',
+        path: 'apps/tui',
+        workspacePath: path.join(workspacePath, 'apps', 'tui'),
+        selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+      },
+    ])
   })
 
   it('uses workspace path instead of repo path', async () => {
@@ -105,8 +118,12 @@ describe('resolveProjectModules', () => {
     const workspacePath = path.join(tempRoot, 'workspace')
 
     await mkdir(repoPath, { recursive: true })
-    await mkdir(path.join(workspacePath, 'packages', 'config'), { recursive: true })
-    await mkdir(path.join(workspacePath, 'packages', 'git'), { recursive: true })
+    await mkdir(path.join(workspacePath, 'packages', 'config'), {
+      recursive: true,
+    })
+    await mkdir(path.join(workspacePath, 'packages', 'git'), {
+      recursive: true,
+    })
 
     const project: ProjectConfig = {
       name: 'alpha',
@@ -114,21 +131,22 @@ describe('resolveProjectModules', () => {
       modules: [{ raw: 'packages/', path: 'packages', mode: 'children' }],
     }
 
-    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves
-      .toEqual([
-        {
-          name: 'packages/config',
-          path: 'packages/config',
-          workspacePath: path.join(workspacePath, 'packages', 'config'),
-          selector: { raw: 'packages/', path: 'packages', mode: 'children' },
-        },
-        {
-          name: 'packages/git',
-          path: 'packages/git',
-          workspacePath: path.join(workspacePath, 'packages', 'git'),
-          selector: { raw: 'packages/', path: 'packages', mode: 'children' },
-        },
-      ])
+    await expect(
+      runSuccess(resolveProjectModules(project, workspacePath)),
+    ).resolves.toEqual([
+      {
+        name: 'packages/config',
+        path: 'packages/config',
+        workspacePath: path.join(workspacePath, 'packages', 'config'),
+        selector: { raw: 'packages/', path: 'packages', mode: 'children' },
+      },
+      {
+        name: 'packages/git',
+        path: 'packages/git',
+        workspacePath: path.join(workspacePath, 'packages', 'git'),
+        selector: { raw: 'packages/', path: 'packages', mode: 'children' },
+      },
+    ])
   })
 
   it('returns no modules when child selector dir is missing', async () => {
@@ -141,8 +159,9 @@ describe('resolveProjectModules', () => {
       { raw: 'packages/', path: 'packages', mode: 'children' },
     ])
 
-    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves
-      .toEqual([])
+    await expect(
+      runSuccess(resolveProjectModules(project, workspacePath)),
+    ).resolves.toEqual([])
   })
 })
 
@@ -161,19 +180,21 @@ describe('scanProject', () => {
       modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
     }
 
-    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual({
-      projectName: 'alpha',
-      repoPath,
-      workspacePath,
-      modules: [
-        {
-          name: 'apps/cli',
-          path: 'apps/cli',
-          workspacePath: path.join(workspacePath, 'apps', 'cli'),
-          selector: { raw: 'apps/', path: 'apps', mode: 'children' },
-        },
-      ],
-    })
+    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual(
+      {
+        projectName: 'alpha',
+        repoPath,
+        workspacePath,
+        modules: [
+          {
+            name: 'apps/cli',
+            path: 'apps/cli',
+            workspacePath: path.join(workspacePath, 'apps', 'cli'),
+            selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+          },
+        ],
+      },
+    )
   })
 
   it('includes root module labels in scan output', async () => {
@@ -189,19 +210,21 @@ describe('scanProject', () => {
       modules: [{ raw: '.', path: '.', mode: 'explicit' }],
     }
 
-    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual({
-      projectName: 'alpha',
-      repoPath,
-      workspacePath,
-      modules: [
-        {
-          name: '/',
-          path: '.',
-          workspacePath,
-          selector: { raw: '.', path: '.', mode: 'explicit' },
-        },
-      ],
-    })
+    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual(
+      {
+        projectName: 'alpha',
+        repoPath,
+        workspacePath,
+        modules: [
+          {
+            name: '/',
+            path: '.',
+            workspacePath,
+            selector: { raw: '.', path: '.', mode: 'explicit' },
+          },
+        ],
+      },
+    )
   })
 })
 
@@ -267,6 +290,8 @@ describe('observeProject', () => {
     }
 
     const runtimeTmux: RuntimeTmuxServiceApi = {
+      closeRuntime: () => Effect.die('not used'),
+      createRuntimeWindows: () => Effect.die('not used'),
       getCurrentRuntime: Effect.succeed(null),
       listRuntimes: Effect.succeed({
         runtimes: [
@@ -286,7 +311,9 @@ describe('observeProject', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
+        Effect.flatMap(ScannerService, (service) =>
+          service.observeProject(project),
+        ).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
               Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
@@ -329,6 +356,8 @@ describe('observeProject', () => {
     }
 
     const runtimeTmux: RuntimeTmuxServiceApi = {
+      closeRuntime: () => Effect.die('not used'),
+      createRuntimeWindows: () => Effect.die('not used'),
       getCurrentRuntime: Effect.succeed(null),
       listRuntimes: Effect.succeed({
         runtimes: [
@@ -372,7 +401,9 @@ describe('observeProject', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
+        Effect.flatMap(ScannerService, (service) =>
+          service.observeProject(project),
+        ).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
               Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
@@ -466,6 +497,8 @@ describe('observeProject', () => {
     }
 
     const runtimeTmux: RuntimeTmuxServiceApi = {
+      closeRuntime: () => Effect.die('not used'),
+      createRuntimeWindows: () => Effect.die('not used'),
       getCurrentRuntime: Effect.succeed(null),
       listRuntimes: Effect.succeed({
         runtimes: [
@@ -493,7 +526,9 @@ describe('observeProject', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
+        Effect.flatMap(ScannerService, (service) =>
+          service.observeProject(project),
+        ).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
               Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),

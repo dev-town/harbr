@@ -10,7 +10,7 @@
     "@harbour/db": "workspace:*",
     "@harbour/domain": "workspace:*",
     "@harbour/scanner": "workspace:*",
-    "effect": "^3.21.2"
+    "effect": "catalog:"
   },
   "scripts": {
     "lint": "eslint src --max-warnings=0",

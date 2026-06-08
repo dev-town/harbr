@@ -8,7 +8,7 @@ export function App() {
   useRootKeybindings()
 
   return (
-    <box flexDirection="column" height="100%" padding={1} width="100%">
+    <box flexDirection="column" height="100%" width="100%">
       <SurfaceFocusManager />
       <box flexGrow={1}>
         <Shell />

@@ -26,7 +26,9 @@ const tempRoots: string[] = []
 
 afterEach(async () => {
   await Promise.all(
-    tempRoots.splice(0).map((tempRoot) => rm(tempRoot, { recursive: true, force: true })),
+    tempRoots
+      .splice(0)
+      .map((tempRoot) => rm(tempRoot, { recursive: true, force: true })),
   )
 })
 
@@ -65,7 +67,9 @@ describe('reconciler', () => {
       status: 'synced',
       errorTag: null,
     })
-    expect([null, 'tmux_not_found']).toContain(result.projects[0]?.runtimeIssue ?? null)
+    expect([null, 'tmux_not_found']).toContain(
+      result.projects[0]?.runtimeIssue ?? null,
+    )
 
     const database = await openDatabase(dbPath)
     try {
@@ -99,7 +103,9 @@ describe('reconciler', () => {
       'utf8',
     )
 
-    const result = await Effect.runPromise(refreshProject('alpha', { configPath, dbPath }))
+    const result = await Effect.runPromise(
+      refreshProject('alpha', { configPath, dbPath }),
+    )
 
     expect(result).toMatchObject({
       projectName: 'alpha',
@@ -154,7 +160,9 @@ describe('reconciler', () => {
       status: 'synced',
       errorTag: null,
     })
-    expect([null, 'tmux_not_found']).toContain(result.projects[0]?.runtimeIssue ?? null)
+    expect([null, 'tmux_not_found']).toContain(
+      result.projects[0]?.runtimeIssue ?? null,
+    )
     expect(result.projects[1]).toEqual({
       projectName: 'beta',
       repoPath: plainDirPath,
@@ -197,6 +205,7 @@ describe('reconciler', () => {
         Layer.succeed(ProjectService, {
           findByName: () => Effect.succeed(null),
           loadUiContext: Effect.succeed({}),
+          listActiveRuntimeSummaries: Effect.die('not used'),
           listModuleSummaries: () => Effect.die('not used'),
           listProjectSummaries: Effect.die('not used'),
           listWorkspaceSummaries: () => Effect.die('not used'),
@@ -212,27 +221,25 @@ describe('reconciler', () => {
                 createdAt: 0,
                 updatedAt: 0,
               },
-                workspaces: input.workspaces.map((workspace) => ({
-                  id: `${input.projectName}-${workspace.workspaceName}`,
-                  projectId: input.projectName,
-                  kind: workspace.kind,
-                  name: workspace.workspaceName,
-                  workspacePath: workspace.workspacePath,
-                  createdAt: 0,
-                  updatedAt: 0,
-                })),
-                modules: [],
-                runtimes: [],
-              })
-            },
-          }),
+              workspaces: input.workspaces.map((workspace) => ({
+                id: `${input.projectName}-${workspace.workspaceName}`,
+                projectId: input.projectName,
+                kind: workspace.kind,
+                name: workspace.workspaceName,
+                workspacePath: workspace.workspacePath,
+                createdAt: 0,
+                updatedAt: 0,
+              })),
+              modules: [],
+              runtimes: [],
+            })
+          },
+        }),
       ),
     )
 
     await expect(
-      Effect.runPromise(
-        syncProgram.pipe(Effect.provide(layer)),
-      ),
+      Effect.runPromise(syncProgram.pipe(Effect.provide(layer))),
     ).resolves.toEqual({
       projects: [
         {
@@ -285,6 +292,7 @@ describe('reconciler', () => {
         Layer.succeed(ProjectService, {
           findByName: () => Effect.succeed(null),
           loadUiContext: Effect.succeed({}),
+          listActiveRuntimeSummaries: Effect.die('not used'),
           listModuleSummaries: () => Effect.die('not used'),
           listProjectSummaries: Effect.die('not used'),
           listWorkspaceSummaries: () => Effect.die('not used'),
@@ -306,7 +314,9 @@ describe('reconciler', () => {
     }
 
     expect(result.left).toBeInstanceOf(ProjectNotFoundError)
-    expect(result.left).toEqual(new ProjectNotFoundError({ projectName: 'missing' }))
+    expect(result.left).toEqual(
+      new ProjectNotFoundError({ projectName: 'missing' }),
+    )
   })
 })
 

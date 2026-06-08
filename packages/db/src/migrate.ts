@@ -1,16 +1,20 @@
-import { fileURLToPath } from 'node:url'
+import type { MigrationMeta } from 'drizzle-orm/migrator'
 
-import type { HarbourDatabaseConnection } from './db.types'
+import type { HarbourDatabase, HarbourDatabaseConnection } from './db.types'
+import { getEmbeddedMigrations } from './migrations'
 
-const migrationsFolder = fileURLToPath(new URL('../drizzle', import.meta.url))
+type MigratableDatabase = HarbourDatabase & {
+  dialect: {
+    migrate(
+      migrations: MigrationMeta[],
+      session: unknown,
+      config?: { migrationsTable?: string },
+    ): void
+  }
+  session: unknown
+}
 
 export async function migrateDatabase(database: HarbourDatabaseConnection) {
-  if (database.driver === 'bun-sqlite') {
-    const { migrate } = await import('drizzle-orm/bun-sqlite/migrator')
-    migrate(database.db, { migrationsFolder })
-    return
-  }
-
-  const { migrate } = await import('drizzle-orm/better-sqlite3/migrator')
-  migrate(database.db, { migrationsFolder })
+  const db = database.db as MigratableDatabase
+  db.dialect.migrate(getEmbeddedMigrations(), db.session)
 }
