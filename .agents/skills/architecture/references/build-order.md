@@ -5,23 +5,20 @@ Use this doc when planning implementation sequence or a first vertical slice.
 ### Package order
 
 1. `domain`
-2. `observability`
-3. `config`
-4. `git`
-5. `runtime-tmux`
-6. `db`
-7. `events`
-8. `scanner`
-9. `reconciler`
-10. `ui`
-11. `apps/tui`
-12. `apps/cli`
-13. `test-utils` hardening throughout
+2. `config`
+3. `git`
+4. `runtime-tmux`
+5. `db`
+6. `scanner`
+7. `reconciler`
+8. `ui`
+9. `apps/tui`
+10. `apps/cli`
+11. `test-utils` hardening throughout
 
 ### Why this order
 
 - `domain` first because everything else speaks Harbour language.
-- `observability` early so scanners, adapters, and reconcilers share the same diagnostics.
 - `config` before scanner because scan behavior depends on stable project intent.
 - `git` and `runtime-tmux` before db because external read models come first.
 - `db` before `reconciler` because belief needs durable storage.
@@ -47,7 +44,7 @@ This yields the first real Harbour loop: observe reality, store belief, render c
 ### Milestones
 
 1. Foundation
-   Repo config, strict TypeScript, lint boundaries, package deps, observability baseline, test harness.
+   Repo config, strict TypeScript, lint boundaries, package deps, test harness.
 
 2. Read model
    `config`, `git`, `runtime-tmux`, `scanner`, `db`, `reconciler`.

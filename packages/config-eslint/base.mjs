@@ -10,8 +10,6 @@ const layerNames = [
   'runtime-tmux',
   'scanner',
   'reconciler',
-  'events',
-  'observability',
   'ui',
   'test-utils',
 ]
@@ -94,16 +92,6 @@ export const boundaryConfig = {
         mode: 'full',
       },
       {
-        type: 'events',
-        pattern: 'packages/events/src/**',
-        mode: 'full',
-      },
-      {
-        type: 'observability',
-        pattern: 'packages/observability/src/**',
-        mode: 'full',
-      },
-      {
         type: 'ui',
         pattern: 'packages/ui/src/**',
         mode: 'full',
@@ -136,7 +124,7 @@ export const boundaryConfig = {
           },
           {
             from: ['db'],
-            allow: ['domain', 'observability'],
+            allow: ['domain'],
           },
           {
             from: ['config'],
@@ -144,27 +132,19 @@ export const boundaryConfig = {
           },
           {
             from: ['git'],
-            allow: ['domain', 'observability'],
+            allow: ['domain'],
           },
           {
             from: ['runtime-tmux'],
-            allow: ['domain', 'observability'],
+            allow: ['domain'],
           },
           {
             from: ['scanner'],
-            allow: ['domain', 'config', 'git', 'observability'],
+            allow: ['domain', 'config', 'git'],
           },
           {
             from: ['reconciler'],
-            allow: ['domain', 'db', 'scanner', 'events', 'observability'],
-          },
-          {
-            from: ['events'],
-            allow: ['domain', 'observability'],
-          },
-          {
-            from: ['observability'],
-            allow: ['domain'],
+            allow: ['domain', 'db', 'scanner'],
           },
           {
             from: ['test-utils'],

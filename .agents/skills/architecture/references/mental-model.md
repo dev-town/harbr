@@ -32,7 +32,7 @@ Read path:
 ```text
 observed external state
 -> scanners
--> facts/events
+-> facts
 -> reconciler
 -> SQLite/Drizzle state
 -> TUI view state
@@ -59,8 +59,6 @@ git/tmux      = external reality adapters
 scanner       = what exists?
 reconciler    = what changed and what should Harbour believe?
 db            = what Harbour remembers
-events        = why things changed
-observability = what happened internally
 ui            = what the user sees
 apps          = how the user enters Harbour and handles app-local keybindings
 agent skills  = how agents stay inside the architecture

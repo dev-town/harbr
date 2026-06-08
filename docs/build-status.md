@@ -20,8 +20,6 @@
 
 ### Not Built Yet
 
-- [ ] `events`: append-only event recording
-- [ ] `observability`: logs/spans/diagnostics baseline
 - [x] TUI actions menu shell
 - [x] TUI direct open/attach behavior for project/workspace/module leaves
 - [x] write-side runtime/session creation flows

@@ -38,7 +38,7 @@ Read path:
 ```text
 observed external state
 -> scanners
--> facts/events
+-> facts
 -> reconciler
 -> SQLite/Drizzle state
 -> TUI view state
@@ -63,9 +63,7 @@ key press
 - `git` and `runtime-tmux` adapt external systems.
 - `scanner` observes reality and emits facts only.
 - `reconciler` owns belief, state transitions, and durable updates.
-- `db` stores Harbour metadata, cache, history, and event-adjacent state. It is not source of truth for Git or tmux.
-- `events` records why things changed.
-- `observability` captures logs, spans, and diagnostics.
+- `db` stores Harbour metadata, cache, and history. It is not source of truth for Git or tmux.
 - `ui` renders state and dispatches actions. Keep shell logic out.
 - `apps/tui` wires runtime, subscriptions, command handlers, OpenTUI keybindings, and render tree.
 

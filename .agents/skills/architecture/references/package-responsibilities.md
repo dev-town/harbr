@@ -40,29 +40,19 @@ Use this doc to decide where new code belongs.
 ### `reconciler`
 
 - Owns core product logic.
-- Decides what changed, what Harbour should believe, what to persist, and which events to emit.
+- Decides what changed, what Harbour should believe, and what to persist.
 - This is the right home for durable state transitions.
 - Export reconciler programs and layer factories for app entrypoints.
 
 ### `db`
 
 - Owns Drizzle schema, migrations, exported persistence services, internal repos, and SQLite access.
-- Stores Harbour metadata, cache, history, and event-related state.
+- Stores Harbour metadata, cache, and history.
 - It does not become source of truth for Git or tmux reality.
 - DB row/table types stay local to `db`.
 - Map internal rows into `domain` contracts at the public package boundary.
 - Outside `db`, consume public services, not internal repos or low-level clients.
 - Inside `db`, prefer service -> repo -> client layering when the complexity warrants it.
-
-### `events`
-
-- Owns append-only event recording and event-shape persistence.
-- Use for why things changed, not for primary business logic.
-
-### `observability`
-
-- Owns logs, spans, diagnostic helpers, and internal visibility.
-- Keep it cross-cutting and low-friction.
 
 ### app-local components
 
@@ -101,8 +91,6 @@ Depends on:
 @harbour/scanner
 @harbour/reconciler
 @harbour/runtime-tmux
-@harbour/events
-@harbour/observability
 ```
 
 Must not contain:

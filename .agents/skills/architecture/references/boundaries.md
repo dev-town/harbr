@@ -10,38 +10,25 @@ apps/*
 
 db
   -> domain
-  -> observability
 
 config
   -> domain
 
 git
   -> domain
-  -> observability
 
 runtime-tmux
   -> domain
-  -> observability
 
 scanner
   -> domain
   -> config
   -> git
-  -> observability
 
 reconciler
   -> domain
   -> db
   -> scanner
-  -> events
-  -> observability
-
-events
-  -> domain
-  -> observability
-
-observability
-  -> domain optional
 
 test-utils
   -> domain

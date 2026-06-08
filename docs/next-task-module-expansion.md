@@ -59,7 +59,7 @@ Normalized resolved module facts, suitable for scanner output.
 - branch/head state
 - dirty state
 - runtime mapping
-- observability beyond basic inline debugging
+- diagnostics beyond basic inline debugging
 
 ## Acceptance
 

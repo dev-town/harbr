@@ -28,7 +28,7 @@ Built today:
 Known gaps:
 
 - Full worktree creation wiring is still incomplete.
-- Events and observability packages are scaffolded but not fully wired.
+- Durable events and OpenTelemetry export are deferred until product/debugging needs justify them.
 - Some docs describe the target product, not only current behavior.
 
 ## Install
@@ -294,9 +294,7 @@ packages/
   config/              config schema, loading, validation, normalization
   db/                  SQLite client, schema, migrations, project snapshots
   domain/              shared domain types
-  events/              event package scaffold
   git/                 Git repository and workspace inspection
-  observability/       observability package scaffold
   reconciler/          sync/reconcile programs
   runtime-tmux/        tmux runtime adapter
   scanner/             project/workspace/module scanning

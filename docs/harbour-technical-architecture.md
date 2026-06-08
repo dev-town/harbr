@@ -30,7 +30,7 @@ That means:
 ```text
 observed external state
 → scanners
-→ facts/events
+→ facts
 → reconciler
 → SQLite/Drizzle state
 → TUI view state
@@ -48,7 +48,7 @@ key press
 → scanners observe again
 ```
 
-The database is not the ultimate source of truth for Git or tmux. It stores Harbour’s durable metadata, cache, history, and event log.
+The database is not the ultimate source of truth for Git or tmux. It stores Harbour’s durable metadata, cache, and history.
 
 ---
 
@@ -74,16 +74,14 @@ The database is not the ultimate source of truth for Git or tmux. It stores Harb
 
 ### Orchestration
 
-- Effect for scanners, reconcilers, adapters, pipelines, errors, retries, scheduling, dependency injection, and observability
+- Effect for scanners, reconcilers, adapters, pipelines, errors, retries, scheduling, dependency injection, logs, and spans
 - Effect should not be used inside React/OpenTUI components except at app/service boundaries
 
 ### Observability
 
-- Effect spans
-- structured logs
-- events table
-- local diagnostic logs
-- optional OpenTelemetry export later
+- Use Effect logs and spans directly when needed.
+- Keep OpenTelemetry export deferred until slow-debugging needs justify it.
+- Add append-only history only if Harbour needs product-visible or auditable change records.
 
 ### Config
 
@@ -131,8 +129,6 @@ harbour/
     runtime-tmux/
     scanner/
     reconciler/
-    events/
-    observability/
     keymap/
     ui/
     test-utils/
@@ -201,8 +197,6 @@ Depends on:
 @harbour/scanner
 @harbour/reconciler
 @harbour/runtime-tmux
-@harbour/events
-@harbour/observability
 apps/tui keymap
 ```
 
@@ -232,38 +226,25 @@ keymap
 
 db
   → domain
-  → observability
 
 config
   → domain
 
 git
   → domain
-  → observability
 
 runtime-tmux
   → domain
-  → observability
 
 scanner
   → domain
   → config
   → git
-  → observability
 
 reconciler
   → domain
   → db
   → scanner
-  → events
-  → observability
-
-events
-  → domain
-  → observability
-
-observability
-  → domain optional
 
 test-utils
   → domain
@@ -299,8 +280,6 @@ git/tmux      = external reality adapters
 scanner       = what exists?
 reconciler    = what changed and what should Harbour believe?
 db            = what Harbour remembers
-events        = why things changed
-observability = what happened internally
 keymap        = key → command
 ui            = what the user sees
 apps          = how the user enters Harbour
