@@ -1,8 +1,5 @@
 import { ConfigService, makeConfigServiceLayer } from '@harbour/config'
-import {
-  ProjectService,
-  makeProjectServiceLayer,
-} from '@harbour/db'
+import { ProjectService, makeProjectServiceLayer } from '@harbour/db'
 import { ScannerService, makeScannerServiceLayer } from '@harbour/scanner'
 import { Effect, Layer } from 'effect'
 

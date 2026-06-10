@@ -51,16 +51,16 @@ Build only the TUI:
 bun run build:tui
 ```
 
-Build only the CLI:
+Build the single Harbour binary:
 
 ```sh
-bun run build:cli
+bun run build:tui
 ```
 
 Build outputs:
 
-- TUI: `apps/tui/dist/harbour`
-- CLI: `apps/cli/dist/harbour-sync`
+- App: `apps/tui/dist/harbour`
+- Headless sync: `apps/tui/dist/harbour sync`
 
 ## Config
 
@@ -152,22 +152,22 @@ Run the compiled TUI:
 ./apps/tui/dist/harbour
 ```
 
-Run CLI sync from source:
+Run headless sync from source:
 
 ```sh
-bun run --cwd apps/cli start
+bun run --cwd apps/tui start -- sync
 ```
 
-Run CLI sync with JSON output:
+Run headless sync with JSON output:
 
 ```sh
-bun run --cwd apps/cli start -- --json
+bun run --cwd apps/tui start -- sync --json
 ```
 
-Run CLI sync with an explicit config path:
+Run headless sync with an explicit config path:
 
 ```sh
-bun run --cwd apps/cli start -- --path ~/.config/harbour/config.json
+bun run --cwd apps/tui start -- sync --path ~/.config/harbour/config.json
 ```
 
 ## TUI Usage

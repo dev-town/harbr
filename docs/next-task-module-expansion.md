@@ -25,7 +25,7 @@ Support:
 
 Examples:
 
-- `apps/cli`
+- `apps/tui`
 - `apps/tui`
 - `packages/config`
 

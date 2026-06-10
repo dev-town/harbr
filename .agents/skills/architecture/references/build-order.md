@@ -13,8 +13,7 @@ Use this doc when planning implementation sequence or a first vertical slice.
 7. `reconciler`
 8. `ui`
 9. `apps/tui`
-10. `apps/cli`
-11. `test-utils` hardening throughout
+10. `test-utils` hardening throughout
 
 ### Why this order
 

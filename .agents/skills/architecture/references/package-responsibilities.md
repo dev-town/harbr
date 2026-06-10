@@ -102,12 +102,12 @@ Must not contain:
 - reconciliation logic
 - DB row/table shapes shared as app contracts
 
-### `apps/cli`
+### `apps/tui`
 
-- Owns CLI entrypoints once core services exist.
-- Good homes: `scan`, `doctor`, and list/read commands.
+- Owns the single `harbour` app entrypoint.
+- Good homes: TUI launch wiring plus thin headless commands such as `sync`, `doctor`, and list/read commands.
 - Prefer exported programs and layer factories from packages.
-- Keep CLI thin: parse args, choose program, provide layers, render output.
+- Keep app commands thin: parse args, choose program, provide layers, render output.
 
 ## Shared organization conventions
 

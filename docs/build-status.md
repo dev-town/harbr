@@ -13,8 +13,7 @@
 - [x] `runtime-tmux`: read-only tmux session discovery and Harbour context parsing
 - [x] `keymap`: Harbour browse keymap over `@opentui/keymap`
 - [x] `ui`: minimal popover renderer for project/workspace/module lists
-- [x] `apps/cli`: thin sync entrypoint
-- [x] `apps/tui`: popover with project -> workspace -> module drilldown and leaf open/attach behavior
+- [x] `apps/tui`: popover plus headless sync command with project -> workspace -> module drilldown and leaf open/attach behavior
 - [x] config-defined reusable named window/pane recipes
 - [x] TUI create-windows picker shell for project/workspace/module contexts in Browse and Active tabs
 

@@ -1,44 +1,25 @@
-import { createCliRenderer } from '@opentui/core'
-import { KeymapProvider } from '@opentui/keymap/react'
-import { createRoot } from '@opentui/react'
-
-import { App } from './app'
-import { TuiServicesProvider, type TuiServices } from './app-context'
-import { readArgValue } from './helpers/args'
-import { createTuiKeymap } from './keymap/create-keymap'
-import type { TuiOptions } from './types'
-
 const args = process.argv.slice(2)
-const configPath = readArgValue(args, '--path')
-const dbPath = readArgValue(args, '--db-path')
+const command = args[0]?.startsWith('-') ? undefined : args[0]
+const commandArgs = command ? args.slice(1) : args
 
-const options: TuiOptions = {
-  configPath,
-  dbPath,
+if (!command || command === 'tui') {
+  const { launchTui } = await import('./launch-tui')
+  await launchTui(commandArgs)
+} else if (command === 'sync') {
+  const { runSyncCommand } = await import('./commands/sync')
+  await runSyncCommand(commandArgs)
+} else {
+  console.error(formatHelp(command))
+  process.exitCode = 1
 }
 
-const renderer = await createCliRenderer({
-  clearOnShutdown: false,
-  exitOnCtrlC: false,
-  consoleOptions: {
-    sizePercent: 30,
-  },
-})
-
-// Debug console
-// renderer.console.toggle()
-
-const services: TuiServices = {
-  options,
-  renderer,
+function formatHelp(command: string) {
+  return [
+    `unknown command: ${command}`,
+    '',
+    'usage:',
+    '  harbour [--path <config>] [--db-path <db>]',
+    '  harbour tui [--path <config>] [--db-path <db>]',
+    '  harbour sync [--json] [--path <config>] [--db-path <db>]',
+  ].join('\n')
 }
-
-const keymap = createTuiKeymap(renderer)
-
-createRoot(renderer).render(
-  <TuiServicesProvider value={services}>
-    <KeymapProvider keymap={keymap}>
-      <App />
-    </KeymapProvider>
-  </TuiServicesProvider>,
-)

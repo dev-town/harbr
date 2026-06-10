@@ -13,7 +13,6 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "build:cli": "bun run --cwd apps/cli build",
     "build:tui": "bun run --cwd apps/tui build",
     "check:migrations": "bun run --cwd packages/db db:migration:check",
     "lint": "turbo run lint",
@@ -22,7 +21,11 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "bun run lint && bun run test && bun run typecheck && bun run check:migrations && bun run format:check"
+    "check": "bun run lint && bun run test && bun run typecheck && bun run check:migrations && bun run format:check",
+    "sync": "bun run --cwd apps/tui sync",
+    "sync:json": "bun run --cwd apps/tui sync:json",
+    "sync:compiled": "bun run build:tui && bun run --cwd apps/tui sync:compiled",
+    "sync:compiled:json": "bun run build:tui && bun run --cwd apps/tui sync:compiled:json"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

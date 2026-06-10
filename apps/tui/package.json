@@ -24,7 +24,11 @@
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
     "start": "bun src/index.tsx",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "sync": "bun src/index.tsx sync",
+    "sync:json": "bun src/index.tsx sync --json",
+    "sync:compiled": "./dist/harbour sync",
+    "sync:compiled:json": "./dist/harbour sync --json"
   },
   "devDependencies": {
     "@types/react": "^19.2.17"

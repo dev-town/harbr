@@ -88,7 +88,7 @@ A module is a configured subpath inside a workspace.
 Examples:
 
 ```txt
-apps/cli
+apps/tui
 apps/web
 packages/git
 packages/scanner
@@ -883,7 +883,7 @@ Example:
 Project: harbour
 Workspaces: default only
 Modules:
-  apps/cli
+  apps/tui
   packages/git
   packages/scanner
 ```
@@ -928,7 +928,7 @@ Example:
 Project: harbour
 Selected workspace: feature/auth-flow
 Modules:
-  apps/cli
+  apps/tui
   packages/git
   packages/scanner
 ```
@@ -974,7 +974,7 @@ Workspaces:
   feature/auth-flow
   fix/db-sync
 Modules:
-  apps/cli
+  apps/tui
   packages/git
   packages/scanner
 ```
