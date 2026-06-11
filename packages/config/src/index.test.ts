@@ -121,6 +121,72 @@ describe('loadConfigAtPath', () => {
     })
   })
 
+  it('allows projects with omitted modules', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+        },
+      ],
+    })
+
+    await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+      configPath,
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [],
+          windows: [],
+        },
+      ],
+    })
+  })
+
+  it('rejects projects with empty modules', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+          modules: [],
+        },
+      ],
+    })
+
+    const result = await runEither(loadConfigAtPath(configPath))
+
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
+      return
+    }
+
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
+      return
+    }
+
+    expect(result.left.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'schema',
+          message: 'project needs at least one module when modules is defined',
+        }),
+      ]),
+    )
+  })
+
   it('returns repo_not_found when repo path does not exist', async () => {
     const tempRoot = await createTempRoot()
     const configPath = path.join(tempRoot, 'config.json')
@@ -288,7 +354,8 @@ describe('loadConfigAtPath', () => {
       expect.arrayContaining([
         expect.objectContaining({
           code: 'module_path_not_relative',
-          message: 'module selector `/` is not supported; use `.` for repo root',
+          message:
+            'module selector `/` is not supported; use `.` for repo root',
         }),
       ]),
     )

@@ -10,10 +10,7 @@ export const moduleSelectorSchema = z
 export const windowPaneSchema = z.object({
   name: z.string().trim().min(1, 'pane name required'),
   command: z
-    .union([
-      z.string().trim().min(1),
-      z.array(z.string().trim().min(1)).min(1),
-    ])
+    .union([z.string().trim().min(1), z.array(z.string().trim().min(1)).min(1)])
     .optional(),
   cwd: z.string().trim().min(1).optional(),
 })
@@ -47,8 +44,11 @@ export const projectSchema = z.object({
   repo: z.string().trim().min(1, 'project repo required'),
   modules: z
     .array(moduleSelectorSchema)
-    .min(1, 'project needs at least one module'),
-  windows: z.array(z.union([z.string().trim().min(1), windowSchema])).optional(),
+    .min(1, 'project needs at least one module when modules is defined')
+    .optional(),
+  windows: z
+    .array(z.union([z.string().trim().min(1), windowSchema]))
+    .optional(),
 })
 
 export const configSchema = z
@@ -90,12 +90,15 @@ export const configSchema = z
 
       seenProjects.add(project.name)
 
-      for (const [moduleIndex, moduleSelector] of project.modules.entries()) {
+      for (const [moduleIndex, moduleSelector] of (
+        project.modules ?? []
+      ).entries()) {
         if (moduleSelector === '/') {
           ctx.addIssue({
             code: 'custom',
             path: ['projects', projectIndex, 'modules', moduleIndex],
-            message: 'module selector `/` is not supported; use `.` for repo root',
+            message:
+              'module selector `/` is not supported; use `.` for repo root',
             params: {
               issueCode: 'module_path_not_relative',
             },

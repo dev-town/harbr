@@ -1,113 +1,101 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "./packages/config/harbour.schema.json",
   "title": "Harbour Config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "additionalProperties": false,
   "properties": {
-    "$schema": {
-      "type": "string"
+    "$schema": { "type": "string", "minLength": 1 },
+    "windows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "panes": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "command": {
+                  "anyOf": [
+                    { "type": "string", "minLength": 1 },
+                    {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 }
+                    }
+                  ]
+                },
+                "cwd": { "type": "string", "minLength": 1 }
+              },
+              "required": ["name"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["name", "panes"],
+        "additionalProperties": false
+      }
     },
     "projects": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/project"
-      }
-    },
-    "windows": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/window"
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "repo": { "type": "string", "minLength": 1 },
+          "modules": {
+            "minItems": 1,
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "windows": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 },
+                    "panes": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string", "minLength": 1 },
+                          "command": {
+                            "anyOf": [
+                              { "type": "string", "minLength": 1 },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": { "type": "string", "minLength": 1 }
+                              }
+                            ]
+                          },
+                          "cwd": { "type": "string", "minLength": 1 }
+                        },
+                        "required": ["name"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["name", "panes"],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          }
+        },
+        "required": ["name", "repo"],
+        "additionalProperties": false
       }
     }
   },
   "required": ["projects"],
-  "$defs": {
-    "project": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "repo": {
-          "type": "string",
-          "minLength": 1
-        },
-        "modules": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "windows": {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "$ref": "#/$defs/window"
-              }
-            ]
-          }
-        }
-      },
-      "required": ["name", "repo", "modules"]
-    },
-    "window": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "panes": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/pane"
-          }
-        }
-      },
-      "required": ["name", "panes"]
-    },
-    "pane": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "command": {
-          "oneOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          ]
-        },
-        "cwd": {
-          "type": "string",
-          "minLength": 1
-        }
-      },
-      "required": ["name"]
-    }
-  }
+  "additionalProperties": false
 }

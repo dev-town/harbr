@@ -32,7 +32,9 @@ export function loadConfigAtPath(configPath: string) {
   ).pipe(Effect.provide(makeConfigServiceLayer()))
 }
 
-export function makeConfigServiceLayer(defaultConfigPath = getDefaultConfigPath()) {
+export function makeConfigServiceLayer(
+  defaultConfigPath = getDefaultConfigPath(),
+) {
   return Layer.succeed(ConfigService, {
     load: loadConfigFile(defaultConfigPath),
     loadAtPath: loadConfigFile,
@@ -88,7 +90,10 @@ function loadConfigFile(configPath: string) {
     const projects: HarbourProject[] = []
     const issues: HarbourConfigIssue[] = []
 
-    for (const [projectIndex, project] of parsedConfig.data.projects.entries()) {
+    for (const [
+      projectIndex,
+      project,
+    ] of parsedConfig.data.projects.entries()) {
       const repoPath = resolveTopLevelPath(project.repo)
 
       if (!(yield* Effect.promise(() => isDirectory(repoPath)))) {
@@ -104,9 +109,14 @@ function loadConfigFile(configPath: string) {
 
       const modules: ModuleSelector[] = []
 
-      for (const [moduleIndex, moduleSelector] of project.modules.entries()) {
+      for (const [moduleIndex, moduleSelector] of (
+        project.modules ?? []
+      ).entries()) {
         const normalizedSelector = normalizeModuleSelector(moduleSelector)
-        const absoluteModulePath = path.resolve(repoPath, normalizedSelector.path)
+        const absoluteModulePath = path.resolve(
+          repoPath,
+          normalizedSelector.path,
+        )
 
         if (!isWithinParent(repoPath, absoluteModulePath)) {
           issues.push({

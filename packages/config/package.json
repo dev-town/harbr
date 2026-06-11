@@ -8,6 +8,8 @@
   "scripts": {
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
+    "schema:check": "bun scripts/generate-schema.ts --check",
+    "schema:generate": "bun scripts/generate-schema.ts",
     "test": "vitest run src/index.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
