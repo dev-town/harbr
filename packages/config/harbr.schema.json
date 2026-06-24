@@ -1,6 +1,6 @@
 {
-  "$id": "./packages/config/harbour.schema.json",
-  "title": "Harbour Config",
+  "$id": "https://raw.githubusercontent.com/dev-town/harbr/main/packages/config/harbr.schema.json",
+  "title": "Harbr Config",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

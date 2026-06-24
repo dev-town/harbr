@@ -368,7 +368,7 @@ describe('loadConfigAtPath', () => {
 
     await mkdir(repoPath, { recursive: true })
     await writeJson(configPath, {
-      $schema: '../../packages/config/harbour.schema.json',
+      $schema: '../../packages/config/harbr.schema.json',
       projects: [
         {
           name: 'alpha',
@@ -379,7 +379,7 @@ describe('loadConfigAtPath', () => {
     })
 
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
-      $schema: '../../packages/config/harbour.schema.json',
+      $schema: '../../packages/config/harbr.schema.json',
       configPath,
       projects: [
         {

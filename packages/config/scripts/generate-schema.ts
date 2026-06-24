@@ -9,7 +9,7 @@ import { configSchema } from '../src/schema'
 
 type JsonObject = Record<string, unknown>
 
-const schemaPath = join(import.meta.dirname, '..', 'harbour.schema.json')
+const schemaPath = join(import.meta.dirname, '..', 'harbr.schema.json')
 const checkOnly = process.argv.includes('--check')
 
 const { ['~standard']: _standard, ...generatedSchema } = z.toJSONSchema(
@@ -21,8 +21,8 @@ const { ['~standard']: _standard, ...generatedSchema } = z.toJSONSchema(
 )
 
 const schema = withClosedObjects({
-  $id: './packages/config/harbour.schema.json',
-  title: 'Harbour Config',
+  $id: 'https://raw.githubusercontent.com/dev-town/harbr/main/packages/config/harbr.schema.json',
+  title: 'Harbr Config',
   ...generatedSchema,
 })
 const serialized = await format(JSON.stringify(schema), { parser: 'json' })
@@ -31,7 +31,7 @@ if (checkOnly) {
   const current = await readFile(schemaPath, 'utf8')
 
   if (current !== serialized) {
-    console.error('harbour.schema.json is out of date. Run schema:generate.')
+    console.error('harbr.schema.json is out of date. Run schema:generate.')
     process.exit(1)
   }
 } else {
