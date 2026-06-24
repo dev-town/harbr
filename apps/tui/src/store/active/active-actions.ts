@@ -1,9 +1,18 @@
 import { getRepairedSelectedId, moveSelectedId } from '../shared/list-selectors'
-import { selectSelectedActiveRow, selectVisibleActiveRows } from './active-selectors'
-import { selectActiveActionRows, selectIsActionsOpen } from '../surfaces/surfaces-selectors'
+import {
+  selectSelectedActiveRow,
+  selectVisibleActiveRows,
+} from './active-selectors'
+import {
+  selectActiveActionRows,
+  selectIsActionsOpen,
+} from '../surfaces/surfaces-selectors'
 import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '../types'
 
-export function createActiveActions(set: TuiStoreSet, get: TuiStoreGet): Pick<
+export function createActiveActions(
+  set: TuiStoreSet,
+  get: TuiStoreGet,
+): Pick<
   TuiStoreActions,
   | 'changeActiveQuery'
   | 'hoverActiveRow'
@@ -21,15 +30,25 @@ export function createActiveActions(set: TuiStoreSet, get: TuiStoreGet): Pick<
       }))
 
       const rows = selectVisibleActiveRows(get())
-      const selectedId = getRepairedSelectedId(rows, get().active.list.selectedId)
-      set((state) => ({ active: { list: { ...state.active.list, selectedId } } }))
+      const selectedId = getRepairedSelectedId(
+        rows,
+        get().active.list.selectedId,
+      )
+      set((state) => ({
+        active: { list: { ...state.active.list, selectedId } },
+      }))
     },
-    hoverActiveRow: (rowId) => set((state) => ({
-      active: { list: { ...state.active.list, hoveredId: rowId } },
-    })),
+    hoverActiveRow: (rowId) =>
+      set((state) => ({
+        active: { list: { ...state.active.list, hoveredId: rowId } },
+      })),
     moveActiveSelection: (delta) => {
       const rows = selectVisibleActiveRows(get())
-      const selectedId = moveSelectedId(rows, get().active.list.selectedId, delta)
+      const selectedId = moveSelectedId(
+        rows,
+        get().active.list.selectedId,
+        delta,
+      )
       set((state) => ({
         active: { list: { ...state.active.list, selectedId } },
         app: { ...state.app, notice: null },
@@ -40,28 +59,42 @@ export function createActiveActions(set: TuiStoreSet, get: TuiStoreGet): Pick<
         return
       }
 
-      if (selectActiveActionRows(get()).length === 0 || !selectSelectedActiveRow(get())) {
+      if (
+        selectActiveActionRows(get()).length === 0 ||
+        !selectSelectedActiveRow(get())
+      ) {
         get().setNotice('No actions for current context', 'warning')
         return
       }
 
       set((state) => ({
         app: { ...state.app, notice: null },
-        surfaces: { ...state.surfaces, surface: { kind: 'actions', route: 'active' } },
+        surfaces: {
+          ...state.surfaces,
+          surface: { kind: 'actions', route: 'active' },
+        },
       }))
     },
-    resetActiveQuery: () => set((state) => ({
-      active: { list: { ...state.active.list, query: '' } },
-    })),
+    resetActiveQuery: () =>
+      set((state) => ({
+        active: { list: { ...state.active.list, query: '' } },
+      })),
     resetActiveSelection: () => {
-      const selectedId = getRepairedSelectedId(selectVisibleActiveRows(get()), get().active.list.selectedId)
+      const selectedId = getRepairedSelectedId(
+        selectVisibleActiveRows(get()),
+        get().active.list.selectedId,
+      )
       set((state) => ({
         active: { list: { ...state.active.list, hoveredId: null, selectedId } },
       }))
     },
-    selectActiveRow: (rowId) => set((state) => ({
-      active: { list: { ...state.active.list, selectedId: rowId } },
-      surfaces: { ...state.surfaces, focusRequestKey: state.surfaces.focusRequestKey + 1 },
-    })),
+    selectActiveRow: (rowId) =>
+      set((state) => ({
+        active: { list: { ...state.active.list, selectedId: rowId } },
+        surfaces: {
+          ...state.surfaces,
+          focusRequestKey: state.surfaces.focusRequestKey + 1,
+        },
+      })),
   }
 }

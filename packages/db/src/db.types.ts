@@ -15,10 +15,7 @@ import type {
   WorkspaceSummary,
 } from '@harbr/domain'
 import type * as schema from './schema'
-import type {
-  DatabaseMigrationError,
-  ProjectServiceError,
-} from './db.errors'
+import type { DatabaseMigrationError, ProjectServiceError } from './db.errors'
 
 export type HarbourDatabase =
   | BetterSQLite3Database<typeof schema>

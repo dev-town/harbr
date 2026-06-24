@@ -35,10 +35,25 @@ export function makeActiveBindings(input: {
 }): readonly HelpBinding[] {
   if (input.interactionMode === 'input') {
     return [
-      { key: 'escape', cmd: input.onExitInputMode, group: 'Search', desc: 'Leave search' },
+      {
+        key: 'escape',
+        cmd: input.onExitInputMode,
+        group: 'Search',
+        desc: 'Leave search',
+      },
       { key: 'up', cmd: input.onMoveUp, group: 'Active', desc: 'Move up' },
-      { key: 'down', cmd: input.onMoveDown, group: 'Active', desc: 'Move down' },
-      { key: 'return', cmd: input.onSelect, group: 'Active', desc: 'Switch session' },
+      {
+        key: 'down',
+        cmd: input.onMoveDown,
+        group: 'Active',
+        desc: 'Move down',
+      },
+      {
+        key: 'return',
+        cmd: input.onSelect,
+        group: 'Active',
+        desc: 'Switch session',
+      },
       { key: 'tab', cmd: input.onNextRoute, group: 'Global', desc: 'Next tab' },
       {
         key: 'shift+tab',
@@ -47,22 +62,52 @@ export function makeActiveBindings(input: {
         desc: 'Previous tab',
       },
       { key: 'ctrl+r', cmd: input.onRefresh, group: 'Global', desc: 'Refresh' },
-      { key: 'ctrl+a', cmd: input.onActions, group: 'Active', desc: 'Open actions' },
+      {
+        key: 'ctrl+a',
+        cmd: input.onActions,
+        group: 'Active',
+        desc: 'Open actions',
+      },
     ]
   }
 
   return [
-    { key: 'i', cmd: input.onEnterInputMode, group: 'Search', desc: 'Focus search' },
-    { key: '/', cmd: input.onEnterInputMode, group: 'Search', desc: 'Focus search' },
+    {
+      key: 'i',
+      cmd: input.onEnterInputMode,
+      group: 'Search',
+      desc: 'Focus search',
+    },
+    {
+      key: '/',
+      cmd: input.onEnterInputMode,
+      group: 'Search',
+      desc: 'Focus search',
+    },
     { key: 'up', cmd: input.onMoveUp, group: 'Active', desc: 'Move up' },
     { key: 'k', cmd: input.onMoveUp, group: 'Active', desc: 'Move up' },
     { key: 'down', cmd: input.onMoveDown, group: 'Active', desc: 'Move down' },
     { key: 'j', cmd: input.onMoveDown, group: 'Active', desc: 'Move down' },
     { key: 'pageup', cmd: input.onPageUp, group: 'Active', desc: 'Page up' },
     { key: 'ctrl+u', cmd: input.onPageUp, group: 'Active', desc: 'Page up' },
-    { key: 'pagedown', cmd: input.onPageDown, group: 'Active', desc: 'Page down' },
-    { key: 'ctrl+d', cmd: input.onPageDown, group: 'Active', desc: 'Page down' },
-    { key: 'return', cmd: input.onSelect, group: 'Active', desc: 'Switch session' },
+    {
+      key: 'pagedown',
+      cmd: input.onPageDown,
+      group: 'Active',
+      desc: 'Page down',
+    },
+    {
+      key: 'ctrl+d',
+      cmd: input.onPageDown,
+      group: 'Active',
+      desc: 'Page down',
+    },
+    {
+      key: 'return',
+      cmd: input.onSelect,
+      group: 'Active',
+      desc: 'Switch session',
+    },
     { key: 'escape', cmd: input.onBack, group: 'Active', desc: 'Back' },
     { key: 'tab', cmd: input.onNextRoute, group: 'Global', desc: 'Next tab' },
     {
@@ -72,7 +117,12 @@ export function makeActiveBindings(input: {
       desc: 'Previous tab',
     },
     { key: 'ctrl+r', cmd: input.onRefresh, group: 'Global', desc: 'Refresh' },
-    { key: 'ctrl+a', cmd: input.onActions, group: 'Active', desc: 'Open actions' },
+    {
+      key: 'ctrl+a',
+      cmd: input.onActions,
+      group: 'Active',
+      desc: 'Open actions',
+    },
   ]
 }
 
@@ -94,9 +144,19 @@ export function makeBrowseBindings(input: {
 }): readonly HelpBinding[] {
   if (input.interactionMode === 'input') {
     return [
-      { key: 'escape', cmd: input.onExitInputMode, group: 'Search', desc: 'Leave search' },
+      {
+        key: 'escape',
+        cmd: input.onExitInputMode,
+        group: 'Search',
+        desc: 'Leave search',
+      },
       { key: 'up', cmd: input.onMoveUp, group: 'Browse', desc: 'Move up' },
-      { key: 'down', cmd: input.onMoveDown, group: 'Browse', desc: 'Move down' },
+      {
+        key: 'down',
+        cmd: input.onMoveDown,
+        group: 'Browse',
+        desc: 'Move down',
+      },
       { key: 'return', cmd: input.onSelect, group: 'Browse', desc: 'Select' },
       { key: 'tab', cmd: input.onNextRoute, group: 'Global', desc: 'Next tab' },
       {
@@ -112,21 +172,46 @@ export function makeBrowseBindings(input: {
         group: 'Browse',
         desc: 'Toggle active/all',
       },
-      { key: 'ctrl+a', cmd: input.onActions, group: 'Browse', desc: 'Open actions' },
+      {
+        key: 'ctrl+a',
+        cmd: input.onActions,
+        group: 'Browse',
+        desc: 'Open actions',
+      },
     ]
   }
 
   return [
-    { key: 'i', cmd: input.onEnterInputMode, group: 'Search', desc: 'Focus search' },
-    { key: '/', cmd: input.onEnterInputMode, group: 'Search', desc: 'Focus search' },
+    {
+      key: 'i',
+      cmd: input.onEnterInputMode,
+      group: 'Search',
+      desc: 'Focus search',
+    },
+    {
+      key: '/',
+      cmd: input.onEnterInputMode,
+      group: 'Search',
+      desc: 'Focus search',
+    },
     { key: 'up', cmd: input.onMoveUp, group: 'Browse', desc: 'Move up' },
     { key: 'k', cmd: input.onMoveUp, group: 'Browse', desc: 'Move up' },
     { key: 'down', cmd: input.onMoveDown, group: 'Browse', desc: 'Move down' },
     { key: 'j', cmd: input.onMoveDown, group: 'Browse', desc: 'Move down' },
     { key: 'pageup', cmd: input.onPageUp, group: 'Browse', desc: 'Page up' },
     { key: 'ctrl+u', cmd: input.onPageUp, group: 'Browse', desc: 'Page up' },
-    { key: 'pagedown', cmd: input.onPageDown, group: 'Browse', desc: 'Page down' },
-    { key: 'ctrl+d', cmd: input.onPageDown, group: 'Browse', desc: 'Page down' },
+    {
+      key: 'pagedown',
+      cmd: input.onPageDown,
+      group: 'Browse',
+      desc: 'Page down',
+    },
+    {
+      key: 'ctrl+d',
+      cmd: input.onPageDown,
+      group: 'Browse',
+      desc: 'Page down',
+    },
     { key: 'return', cmd: input.onSelect, group: 'Browse', desc: 'Select' },
     { key: 'escape', cmd: input.onBack, group: 'Browse', desc: 'Back' },
     { key: 'tab', cmd: input.onNextRoute, group: 'Global', desc: 'Next tab' },
@@ -143,7 +228,12 @@ export function makeBrowseBindings(input: {
       group: 'Browse',
       desc: 'Toggle active/all',
     },
-    { key: 'ctrl+a', cmd: input.onActions, group: 'Browse', desc: 'Open actions' },
+    {
+      key: 'ctrl+a',
+      cmd: input.onActions,
+      group: 'Browse',
+      desc: 'Open actions',
+    },
   ]
 }
 
@@ -155,8 +245,18 @@ export function makeActionsModalBindings(input: {
 }): readonly HelpBinding[] {
   return [
     { key: 'up', cmd: input.onMoveUp, group: 'Action modal', desc: 'Move up' },
-    { key: 'down', cmd: input.onMoveDown, group: 'Action modal', desc: 'Move down' },
-    { key: 'return', cmd: input.onSelect, group: 'Action modal', desc: 'Select' },
+    {
+      key: 'down',
+      cmd: input.onMoveDown,
+      group: 'Action modal',
+      desc: 'Move down',
+    },
+    {
+      key: 'return',
+      cmd: input.onSelect,
+      group: 'Action modal',
+      desc: 'Select',
+    },
     { key: 'escape', cmd: input.onClose, group: 'Action modal', desc: 'Close' },
   ]
 }
@@ -166,8 +266,18 @@ export function makeCreateWorkspaceBindings(input: {
   onSubmit: () => void
 }): readonly HelpBinding[] {
   return [
-    { key: 'escape', cmd: input.onBack, group: 'Create workspace', desc: 'Back' },
-    { key: 'return', cmd: input.onSubmit, group: 'Create workspace', desc: 'Submit' },
+    {
+      key: 'escape',
+      cmd: input.onBack,
+      group: 'Create workspace',
+      desc: 'Back',
+    },
+    {
+      key: 'return',
+      cmd: input.onSubmit,
+      group: 'Create workspace',
+      desc: 'Submit',
+    },
   ]
 }
 
@@ -180,10 +290,30 @@ export function makeWindowPickerBindings(input: {
 }): readonly HelpBinding[] {
   return [
     { key: 'up', cmd: input.onMoveUp, group: 'Window picker', desc: 'Move up' },
-    { key: 'down', cmd: input.onMoveDown, group: 'Window picker', desc: 'Move down' },
-    { key: 'space', cmd: input.onToggle, group: 'Window picker', desc: 'Toggle window' },
-    { key: 'return', cmd: input.onConfirm, group: 'Window picker', desc: 'Confirm' },
-    { key: 'escape', cmd: input.onClose, group: 'Window picker', desc: 'Close' },
+    {
+      key: 'down',
+      cmd: input.onMoveDown,
+      group: 'Window picker',
+      desc: 'Move down',
+    },
+    {
+      key: 'space',
+      cmd: input.onToggle,
+      group: 'Window picker',
+      desc: 'Toggle window',
+    },
+    {
+      key: 'return',
+      cmd: input.onConfirm,
+      group: 'Window picker',
+      desc: 'Confirm',
+    },
+    {
+      key: 'escape',
+      cmd: input.onClose,
+      group: 'Window picker',
+      desc: 'Close',
+    },
   ]
 }
 
@@ -197,7 +327,12 @@ export function makeHelpBindings(input: {
   return [
     { key: 'escape', cmd: input.onClose, group: 'Help', desc: 'Close help' },
     { key: '?', cmd: input.onClose, group: 'Help', desc: 'Close help' },
-    { key: 'down', cmd: input.onScrollDown, group: 'Help', desc: 'Scroll down' },
+    {
+      key: 'down',
+      cmd: input.onScrollDown,
+      group: 'Help',
+      desc: 'Scroll down',
+    },
     { key: 'j', cmd: input.onScrollDown, group: 'Help', desc: 'Scroll down' },
     { key: 'up', cmd: input.onScrollUp, group: 'Help', desc: 'Scroll up' },
     { key: 'k', cmd: input.onScrollUp, group: 'Help', desc: 'Scroll up' },

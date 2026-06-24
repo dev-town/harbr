@@ -178,9 +178,13 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
   return Effect.tryPromise({
     try: async () => {
       const discovery = await listRuntimeDiscoverySafe()
-      const existingRuntime = findMatchingRuntime(discovery.runtimes, input.target)
+      const existingRuntime = findMatchingRuntime(
+        discovery.runtimes,
+        input.target,
+      )
       const firstWindow = input.windows[0]
-      const sessionName = existingRuntime?.sessionName ?? formatSessionName(input.target)
+      const sessionName =
+        existingRuntime?.sessionName ?? formatSessionName(input.target)
       let existingWindowNames = new Set<string>()
       let windowsToCreate = input.windows
       const createdWindowNames: string[] = []
@@ -189,12 +193,23 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
       if (existingRuntime) {
         existingWindowNames = await listWindowNames(sessionName)
       } else if (firstWindow) {
-        await createSessionWindowLayout(sessionName, input.target.cwd, firstWindow)
+        await createSessionWindowLayout(
+          sessionName,
+          input.target.cwd,
+          firstWindow,
+        )
         existingWindowNames.add(firstWindow.name)
         createdWindowNames.push(firstWindow.name)
         windowsToCreate = input.windows.slice(1)
       } else {
-        await execTmux(['new-session', '-d', '-s', sessionName, '-c', input.target.cwd])
+        await execTmux([
+          'new-session',
+          '-d',
+          '-s',
+          sessionName,
+          '-c',
+          input.target.cwd,
+        ])
       }
 
       for (const window of windowsToCreate) {

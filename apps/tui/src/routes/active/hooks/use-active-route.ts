@@ -70,7 +70,8 @@ export function useActiveRoute() {
     query,
     rows,
     searchRef,
-    searchFocused: interactionMode === 'input' && !isActionsOpen && !isWindowPickerOpen,
+    searchFocused:
+      interactionMode === 'input' && !isActionsOpen && !isWindowPickerOpen,
     selectedId,
     selectedRow,
   }

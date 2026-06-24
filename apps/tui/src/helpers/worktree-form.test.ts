@@ -14,7 +14,11 @@ describe('worktree form helpers', () => {
   })
 
   it('still rejects spaces and slashes in workspace names', () => {
-    expect(validateWorkspaceName('auth work')).toBe('Use letters, numbers, - or _ only')
-    expect(validateWorkspaceName('auth/work')).toBe('Use letters, numbers, - or _ only')
+    expect(validateWorkspaceName('auth work')).toBe(
+      'Use letters, numbers, - or _ only',
+    )
+    expect(validateWorkspaceName('auth/work')).toBe(
+      'Use letters, numbers, - or _ only',
+    )
   })
 })

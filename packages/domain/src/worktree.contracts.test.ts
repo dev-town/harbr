@@ -19,8 +19,12 @@ describe('worktree contracts', () => {
     expect(slashed.success).toBe(false)
 
     if (!spaced.success && !slashed.success) {
-      expect(spaced.error.issues[0]?.message).toBe('Use letters, numbers, - or _ only')
-      expect(slashed.error.issues[0]?.message).toBe('Use letters, numbers, - or _ only')
+      expect(spaced.error.issues[0]?.message).toBe(
+        'Use letters, numbers, - or _ only',
+      )
+      expect(slashed.error.issues[0]?.message).toBe(
+        'Use letters, numbers, - or _ only',
+      )
     }
   })
 
@@ -36,7 +40,9 @@ describe('worktree contracts', () => {
     expect(result.success).toBe(false)
 
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe('Branch name cannot contain spaces')
+      expect(result.error.issues[0]?.message).toBe(
+        'Branch name cannot contain spaces',
+      )
     }
   })
 

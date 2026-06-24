@@ -1,5 +1,10 @@
 import { relations } from 'drizzle-orm'
-import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import {
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core'
 import { createSelectSchema } from 'drizzle-zod'
 
 export const projects = sqliteTable('projects', {
@@ -69,7 +74,12 @@ export const runtimes = sqliteTable(
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
   },
-  (table) => [uniqueIndex('runtimes_project_session_idx').on(table.projectId, table.sessionName)],
+  (table) => [
+    uniqueIndex('runtimes_project_session_idx').on(
+      table.projectId,
+      table.sessionName,
+    ),
+  ],
 )
 
 export const uiContext = sqliteTable('ui_context', {

@@ -5,7 +5,10 @@ import { Effect, Layer } from 'effect'
 
 import { refreshNamedProject, syncProjects } from '../reconciler.operations'
 import { refreshProjectProgram, syncProgram } from '../reconciler.programs'
-import { ReconcilerService, type ReconcilerServiceApi } from './reconciler.service'
+import {
+  ReconcilerService,
+  type ReconcilerServiceApi,
+} from './reconciler.service'
 
 export type ReconcilerOptions = {
   configPath?: string

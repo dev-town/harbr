@@ -1,4 +1,8 @@
-import type { ProjectConfig, SyncProjectResult, SyncResult } from '@harbr/domain'
+import type {
+  ProjectConfig,
+  SyncProjectResult,
+  SyncResult,
+} from '@harbr/domain'
 import { Effect } from 'effect'
 
 import { ProjectNotFoundError } from './reconciler.errors'
@@ -15,16 +19,16 @@ export function syncProjects(
     const loadedConfig = yield* config.load
     const projects = yield* Effect.forEach(loadedConfig.projects, (project) =>
       refreshConfiguredProject(scanner, projectService, project).pipe(
-          Effect.catchAll((error) =>
-            Effect.succeed<SyncProjectResult>({
-              projectName: project.name,
-              repoPath: project.repo,
-              repoKind: null,
-              workspaceCount: 0,
-              moduleCount: 0,
-              runtimeCount: 0,
-              status: 'error',
-              errorTag: getErrorTag(error),
+        Effect.catchAll((error) =>
+          Effect.succeed<SyncProjectResult>({
+            projectName: project.name,
+            repoPath: project.repo,
+            repoKind: null,
+            workspaceCount: 0,
+            moduleCount: 0,
+            runtimeCount: 0,
+            status: 'error',
+            errorTag: getErrorTag(error),
             runtimeIssue: null,
           }),
         ),
@@ -43,7 +47,9 @@ export function refreshNamedProject(
 ) {
   return Effect.gen(function* () {
     const loadedConfig = yield* config.load
-    const project = loadedConfig.projects.find((entry) => entry.name === projectName)
+    const project = loadedConfig.projects.find(
+      (entry) => entry.name === projectName,
+    )
 
     if (!project) {
       return yield* Effect.fail(new ProjectNotFoundError({ projectName }))

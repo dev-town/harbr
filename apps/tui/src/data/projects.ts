@@ -13,41 +13,51 @@ export async function loadUiContext(dbPath?: string) {
 
 export async function listProjectSummaries(dbPath?: string) {
   return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) => service.listProjectSummaries).pipe(
-      Effect.provide(makeProjectServiceLayer(dbPath)),
-    ),
+    Effect.flatMap(
+      ProjectService,
+      (service) => service.listProjectSummaries,
+    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
   )
 }
 
-export async function listActiveRuntimeSummaries(dbPath?: string): Promise<readonly ActiveRuntimeSummary[]> {
+export async function listActiveRuntimeSummaries(
+  dbPath?: string,
+): Promise<readonly ActiveRuntimeSummary[]> {
   return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) => service.listActiveRuntimeSummaries).pipe(
-      Effect.provide(makeProjectServiceLayer(dbPath)),
-    ),
+    Effect.flatMap(
+      ProjectService,
+      (service) => service.listActiveRuntimeSummaries,
+    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
   )
 }
 
-export async function listWorkspaceSummaries(projectId: string, dbPath?: string) {
+export async function listWorkspaceSummaries(
+  projectId: string,
+  dbPath?: string,
+) {
   return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) => service.listWorkspaceSummaries(projectId)).pipe(
-      Effect.provide(makeProjectServiceLayer(dbPath)),
-    ),
+    Effect.flatMap(ProjectService, (service) =>
+      service.listWorkspaceSummaries(projectId),
+    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
   )
 }
 
-export async function listModuleSummaries(workspaceId: string, dbPath?: string) {
+export async function listModuleSummaries(
+  workspaceId: string,
+  dbPath?: string,
+) {
   return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) => service.listModuleSummaries(workspaceId)).pipe(
-      Effect.provide(makeProjectServiceLayer(dbPath)),
-    ),
+    Effect.flatMap(ProjectService, (service) =>
+      service.listModuleSummaries(workspaceId),
+    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
   )
 }
 
 export async function saveUiContext(context: HarbourContext, dbPath?: string) {
   return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) => service.saveUiContext(context)).pipe(
-      Effect.provide(makeProjectServiceLayer(dbPath)),
-    ),
+    Effect.flatMap(ProjectService, (service) =>
+      service.saveUiContext(context),
+    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
   )
 }
 

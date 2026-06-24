@@ -1,5 +1,8 @@
 import { ListRow } from '../../../../components/list-row'
-import type { ListRowMeta, RowVariant } from '../../../../components/list-row/types'
+import type {
+  ListRowMeta,
+  RowVariant,
+} from '../../../../components/list-row/types'
 import { theme } from '../../../../config/theme'
 import type { HarbourRow } from '../../../../types/rows'
 
@@ -24,7 +27,11 @@ export function BrowseRouteRow({
 }: BrowseRouteRowProps) {
   const meta = getBrowseRowMeta(row, scopeBreadcrumb)
   const marker = row.isCurrent ? '◉' : row.isActive ? '●' : '○'
-  const markerColor = row.isCurrent ? theme.active : row.isActive ? theme.accent : theme.idle
+  const markerColor = row.isCurrent
+    ? theme.active
+    : row.isActive
+      ? theme.accent
+      : theme.idle
 
   return (
     <ListRow
@@ -42,7 +49,10 @@ export function BrowseRouteRow({
   )
 }
 
-function getBrowseRowMeta(row: HarbourRow, scopeBreadcrumb: string): ListRowMeta {
+function getBrowseRowMeta(
+  row: HarbourRow,
+  scopeBreadcrumb: string,
+): ListRowMeta {
   if (row.kind === 'project') {
     return {
       sessions: row.activeSessionCount,

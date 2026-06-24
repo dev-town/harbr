@@ -27,7 +27,9 @@ export class InvalidBranchNameError extends Data.TaggedError(
   branchName: string
 }> {}
 
-export class WorktreeCreateError extends Data.TaggedError('WorktreeCreateError')<{
+export class WorktreeCreateError extends Data.TaggedError(
+  'WorktreeCreateError',
+)<{
   message: string
   repoPath: string
 }> {}

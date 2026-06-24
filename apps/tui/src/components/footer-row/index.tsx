@@ -42,9 +42,13 @@ export function FooterRow() {
         )}
       </text>
       <text>
-        <span fg={theme.active}>{interactionMode === 'input' ? 'Esc' : 'i'}</span>
-        <span fg={theme.muted}>{interactionMode === 'input' ? ' Normal' : ' Search'}</span>
-        <span fg={theme.muted}>  </span>
+        <span fg={theme.active}>
+          {interactionMode === 'input' ? 'Esc' : 'i'}
+        </span>
+        <span fg={theme.muted}>
+          {interactionMode === 'input' ? ' Normal' : ' Search'}
+        </span>
+        <span fg={theme.muted}> </span>
         <span fg={theme.active}>?</span>
         <span fg={theme.muted}> Help</span>
       </text>

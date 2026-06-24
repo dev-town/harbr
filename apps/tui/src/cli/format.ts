@@ -41,9 +41,10 @@ export function formatCliError(error: CliError) {
 
 function formatProjectResult(result: SyncProjectResult) {
   if (result.status === 'error') {
-    return [result.projectName, `  error: ${result.errorTag ?? 'unknown'}`].join(
-      '\n',
-    )
+    return [
+      result.projectName,
+      `  error: ${result.errorTag ?? 'unknown'}`,
+    ].join('\n')
   }
 
   const lines = [

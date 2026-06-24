@@ -32,17 +32,24 @@ export function observeProjectWithGit(
                   ),
                 ),
               ).pipe(
-                Effect.map((observedWorkspaces) => ({
-                  projectIssue,
-                  projectName: project.name,
-                  repoPath: repo.repoPath,
-                  repoKind: repo.kind,
-                  workspaces: observedWorkspaces,
-                  runtimes: runtimes.filter((runtime) =>
-                    matchesProjectObservation(runtime, project.name, observedWorkspaces),
-                  ),
-                  runtimeIssue,
-                }) satisfies ProjectObservation),
+                Effect.map(
+                  (observedWorkspaces) =>
+                    ({
+                      projectIssue,
+                      projectName: project.name,
+                      repoPath: repo.repoPath,
+                      repoKind: repo.kind,
+                      workspaces: observedWorkspaces,
+                      runtimes: runtimes.filter((runtime) =>
+                        matchesProjectObservation(
+                          runtime,
+                          project.name,
+                          observedWorkspaces,
+                        ),
+                      ),
+                      runtimeIssue,
+                    }) satisfies ProjectObservation,
+                ),
               ),
             ),
           ),

@@ -1,6 +1,10 @@
 import type { TuiStore } from '../../../app-context'
 
-import { selectCurrentBrowseSection, selectIsBrowseActionsOpen, selectIsWorktreeFormOpen } from '../../../store'
+import {
+  selectCurrentBrowseSection,
+  selectIsBrowseActionsOpen,
+  selectIsWorktreeFormOpen,
+} from '../../../store'
 
 export function handleBrowseRouteBack(store: TuiStore) {
   if (selectIsWorktreeFormOpen(store.getState())) {

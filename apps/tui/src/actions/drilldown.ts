@@ -18,14 +18,21 @@ export async function openWorkspaces(
   store.getState().clearNotice()
 
   try {
-    const summaries = await listWorkspaceSummaries(projectId, services.options.dbPath)
+    const summaries = await listWorkspaceSummaries(
+      projectId,
+      services.options.dbPath,
+    )
     store.setState((state) => ({
       browse: {
         ...state.browse,
         scope: workspacesScope(projectId),
         visibility: openOptions?.visibility ?? state.browse.visibility,
       },
-      data: { ...state.data, moduleRows: [], workspaceRows: summaries.map(mapWorkspaceSummaryToRow) },
+      data: {
+        ...state.data,
+        moduleRows: [],
+        workspaceRows: summaries.map(mapWorkspaceSummaryToRow),
+      },
     }))
     store.getState().resetBrowseSelection()
 
@@ -36,7 +43,10 @@ export async function openWorkspaces(
 
       if (selectedWorkspace) {
         store.setState((state) => ({
-          browse: { ...state.browse, list: { ...state.browse.list, selectedId: selectedWorkspace.id } },
+          browse: {
+            ...state.browse,
+            list: { ...state.browse.list, selectedId: selectedWorkspace.id },
+          },
         }))
       }
     }
@@ -76,7 +86,9 @@ export async function openModules(
         scope: modulesScope(
           projectId,
           workspaceId,
-          openOptions?.implicitWorkspace === true ? 'implicit-default' : 'explicit',
+          openOptions?.implicitWorkspace === true
+            ? 'implicit-default'
+            : 'explicit',
         ),
       },
       data: {
@@ -94,12 +106,19 @@ export async function openModules(
   }
 }
 
-export async function openDefaultWorkspaceModules(services: TuiServices, store: TuiStore, projectId: string) {
+export async function openDefaultWorkspaceModules(
+  services: TuiServices,
+  store: TuiStore,
+  projectId: string,
+) {
   store.getState().setLoading(true)
   store.getState().clearNotice()
 
   try {
-    const summaries = await listWorkspaceSummaries(projectId, services.options.dbPath)
+    const summaries = await listWorkspaceSummaries(
+      projectId,
+      services.options.dbPath,
+    )
     const defaultWorkspace = summaries.find((workspace) => workspace.isDefault)
 
     if (!defaultWorkspace) {

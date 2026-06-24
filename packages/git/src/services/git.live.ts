@@ -34,9 +34,9 @@ export function makeGitServiceLayer() {
 }
 
 export function inspectRepo(repoPath: string) {
-  return Effect.flatMap(GitService, (service) => service.inspectRepo(repoPath)).pipe(
-    Effect.provide(makeGitServiceLayer()),
-  )
+  return Effect.flatMap(GitService, (service) =>
+    service.inspectRepo(repoPath),
+  ).pipe(Effect.provide(makeGitServiceLayer()))
 }
 
 export function resolveWorkspacePath(repo: RepoInspection) {
@@ -46,34 +46,39 @@ export function resolveWorkspacePath(repo: RepoInspection) {
 }
 
 export function getDefaultBranch(repo: RepoInspection) {
-  return Effect.flatMap(GitService, (service) => service.getDefaultBranch(repo)).pipe(
-    Effect.provide(makeGitServiceLayer()),
-  )
+  return Effect.flatMap(GitService, (service) =>
+    service.getDefaultBranch(repo),
+  ).pipe(Effect.provide(makeGitServiceLayer()))
 }
 
 export function getDefaultBranchIssue(repo: RepoInspection) {
-  return Effect.flatMap(GitService, (service) => service.getDefaultBranchIssue(repo)).pipe(
-    Effect.provide(makeGitServiceLayer()),
-  )
+  return Effect.flatMap(GitService, (service) =>
+    service.getDefaultBranchIssue(repo),
+  ).pipe(Effect.provide(makeGitServiceLayer()))
 }
 
 export function listWorkspaces(repo: RepoInspection) {
-  return Effect.flatMap(GitService, (service) => service.listWorkspaces(repo)).pipe(
-    Effect.provide(makeGitServiceLayer()),
-  )
+  return Effect.flatMap(GitService, (service) =>
+    service.listWorkspaces(repo),
+  ).pipe(Effect.provide(makeGitServiceLayer()))
 }
 
-export function createWorktree(repo: RepoInspection, input: CreateWorktreeInput) {
-  return Effect.flatMap(GitService, (service) => service.createWorktree(repo, input)).pipe(
-    Effect.provide(makeGitServiceLayer()),
-  )
+export function createWorktree(
+  repo: RepoInspection,
+  input: CreateWorktreeInput,
+) {
+  return Effect.flatMap(GitService, (service) =>
+    service.createWorktree(repo, input),
+  ).pipe(Effect.provide(makeGitServiceLayer()))
 }
 
 function inspectRepoLive(repoPath: string) {
   const resolvedRepoPath = path.resolve(repoPath)
 
   return Effect.gen(function* () {
-    const repoExists = yield* Effect.promise(() => isDirectory(resolvedRepoPath))
+    const repoExists = yield* Effect.promise(() =>
+      isDirectory(resolvedRepoPath),
+    )
 
     if (!repoExists) {
       return yield* Effect.fail(
@@ -83,7 +88,10 @@ function inspectRepoLive(repoPath: string) {
       )
     }
 
-    const isBare = yield* runGitRevParse(resolvedRepoPath, '--is-bare-repository')
+    const isBare = yield* runGitRevParse(
+      resolvedRepoPath,
+      '--is-bare-repository',
+    )
 
     if (isBare === 'true') {
       return {
@@ -96,7 +104,9 @@ function inspectRepoLive(repoPath: string) {
 
     if (
       gitDir !== '.git' ||
-      !(yield* Effect.promise(() => isDirectory(path.join(resolvedRepoPath, '.git'))))
+      !(yield* Effect.promise(() =>
+        isDirectory(path.join(resolvedRepoPath, '.git')),
+      ))
     ) {
       return yield* Effect.fail(
         new RepoNotSupportedError({
@@ -113,7 +123,10 @@ function inspectRepoLive(repoPath: string) {
 }
 
 function resolveWorkspacePathLive(repo: RepoInspection) {
-  return Effect.map(listWorkspacesLive(repo), (workspaces) => workspaces[0]?.path ?? null)
+  return Effect.map(
+    listWorkspacesLive(repo),
+    (workspaces) => workspaces[0]?.path ?? null,
+  )
 }
 
 function getDefaultBranchLive(repo: RepoInspection) {
@@ -152,7 +165,9 @@ function listWorkspacesLive(repo: RepoInspection) {
     try: async () => {
       const [worktrees, canonicalRepoPath] = await Promise.all([
         listWorktrees(repo),
-        repo.kind === 'standard' ? realpath(repo.repoPath) : Promise.resolve(repo.repoPath),
+        repo.kind === 'standard'
+          ? realpath(repo.repoPath)
+          : Promise.resolve(repo.repoPath),
       ])
 
       return mapWorkspaces(repo, canonicalRepoPath, worktrees)
@@ -169,18 +184,24 @@ function createWorktreeLive(repo: RepoInspection, input: CreateWorktreeInput) {
     yield* validateBranchName(repo, input.branchName)
 
     const defaultBranch = yield* getDefaultBranchLive(repo)
-    const workspacePath = path.join(path.dirname(repo.repoPath), input.workspaceName)
+    const workspacePath = path.join(
+      path.dirname(repo.repoPath),
+      input.workspaceName,
+    )
 
     yield* Effect.tryPromise({
       try: () =>
-        execFileAsync('git', getGitArgs(repo, [
-          'worktree',
-          'add',
-          '-b',
-          input.branchName,
-          workspacePath,
-          defaultBranch,
-        ])),
+        execFileAsync(
+          'git',
+          getGitArgs(repo, [
+            'worktree',
+            'add',
+            '-b',
+            input.branchName,
+            workspacePath,
+            defaultBranch,
+          ]),
+        ),
       catch: (error) =>
         new WorktreeCreateError({
           message: error instanceof Error ? error.message : String(error),
@@ -236,7 +257,10 @@ async function runGitSymbolicRef(repo: RepoInspection, ref: string) {
 function validateBranchName(repo: RepoInspection, branchName: string) {
   return Effect.tryPromise({
     try: async () => {
-      await execFileAsync('git', getGitArgs(repo, ['check-ref-format', '--branch', branchName]))
+      await execFileAsync(
+        'git',
+        getGitArgs(repo, ['check-ref-format', '--branch', branchName]),
+      )
       return branchName
     },
     catch: () => new InvalidBranchNameError({ branchName }),
@@ -266,7 +290,10 @@ async function resolveDefaultBranchStartPoint(repo: RepoInspection) {
     return headRef
   }
 
-  const remoteHead = await runGitSymbolicRef(repo, 'refs/remotes/origin/HEAD').catch(() => null)
+  const remoteHead = await runGitSymbolicRef(
+    repo,
+    'refs/remotes/origin/HEAD',
+  ).catch(() => null)
 
   if (remoteHead) {
     const remoteHeadRef = `refs/remotes/${remoteHead}`
@@ -289,14 +316,20 @@ async function resolveDefaultBranchStartPoint(repo: RepoInspection) {
 }
 
 async function runGitSymbolicRefFull(repo: RepoInspection, ref: string) {
-  const { stdout } = await execFileAsync('git', getGitArgs(repo, ['symbolic-ref', '--quiet', ref]))
+  const { stdout } = await execFileAsync(
+    'git',
+    getGitArgs(repo, ['symbolic-ref', '--quiet', ref]),
+  )
 
   return stdout.trim()
 }
 
 async function hasGitRef(repo: RepoInspection, ref: string) {
   try {
-    await execFileAsync('git', getGitArgs(repo, ['show-ref', '--verify', '--quiet', ref]))
+    await execFileAsync(
+      'git',
+      getGitArgs(repo, ['show-ref', '--verify', '--quiet', ref]),
+    )
     return true
   } catch {
     return false
@@ -304,13 +337,18 @@ async function hasGitRef(repo: RepoInspection, ref: string) {
 }
 
 async function listWorktrees(repo: RepoInspection) {
-  const { stdout } = await execFileAsync('git', getGitArgs(repo, ['worktree', 'list', '--porcelain']))
+  const { stdout } = await execFileAsync(
+    'git',
+    getGitArgs(repo, ['worktree', 'list', '--porcelain']),
+  )
 
   return parseWorktreeList(stdout)
 }
 
 function getGitArgs(repo: RepoInspection, args: string[]) {
-  return repo.kind === 'bare' ? ['--git-dir', repo.repoPath, ...args] : ['-C', repo.repoPath, ...args]
+  return repo.kind === 'bare'
+    ? ['--git-dir', repo.repoPath, ...args]
+    : ['-C', repo.repoPath, ...args]
 }
 
 function mapWorkspaces(
@@ -320,21 +358,24 @@ function mapWorkspaces(
 ): WorkspaceTarget[] {
   return worktrees
     .filter((worktree) => !worktree.isBare)
-    .map((worktree) => ({
-      branchName: worktree.branchName,
-      path:
-        repo.kind === 'standard' && worktree.path === canonicalRepoPath
-          ? repo.repoPath
-          : worktree.path,
-      kind:
-        repo.kind === 'standard' && worktree.path === canonicalRepoPath
-          ? 'default'
-          : 'worktree',
-      name:
-        repo.kind === 'standard' && worktree.path === canonicalRepoPath
-          ? 'main'
-          : path.basename(worktree.path),
-    }) satisfies WorkspaceTarget)
+    .map(
+      (worktree) =>
+        ({
+          branchName: worktree.branchName,
+          path:
+            repo.kind === 'standard' && worktree.path === canonicalRepoPath
+              ? repo.repoPath
+              : worktree.path,
+          kind:
+            repo.kind === 'standard' && worktree.path === canonicalRepoPath
+              ? 'default'
+              : 'worktree',
+          name:
+            repo.kind === 'standard' && worktree.path === canonicalRepoPath
+              ? 'main'
+              : path.basename(worktree.path),
+        }) satisfies WorkspaceTarget,
+    )
     .sort((left, right) => {
       if (left.kind !== right.kind) {
         return left.kind === 'default' ? -1 : 1

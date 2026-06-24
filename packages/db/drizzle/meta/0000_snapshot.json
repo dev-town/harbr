@@ -74,10 +74,7 @@
       "indexes": {
         "modules_workspace_path_idx": {
           "name": "modules_workspace_path_idx",
-          "columns": [
-            "workspace_id",
-            "module_path"
-          ],
+          "columns": ["workspace_id", "module_path"],
           "isUnique": true
         }
       },
@@ -86,12 +83,8 @@
           "name": "modules_workspace_id_workspaces_id_fk",
           "tableFrom": "modules",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -149,9 +142,7 @@
       "indexes": {
         "projects_name_unique": {
           "name": "projects_name_unique",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": true
         }
       },
@@ -202,9 +193,7 @@
       "indexes": {
         "workspaces_workspace_path_unique": {
           "name": "workspaces_workspace_path_unique",
-          "columns": [
-            "workspace_path"
-          ],
+          "columns": ["workspace_path"],
           "isUnique": true
         }
       },
@@ -213,12 +202,8 @@
           "name": "workspaces_project_id_projects_id_fk",
           "tableFrom": "workspaces",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

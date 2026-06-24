@@ -8,7 +8,10 @@ export type WorktreeEntry = {
 
 export async function parseWorktreeList(output: string) {
   const entries: WorktreeEntry[] = []
-  const blocks = output.trim().split(/\n\s*\n/).filter(Boolean)
+  const blocks = output
+    .trim()
+    .split(/\n\s*\n/)
+    .filter(Boolean)
 
   for (const block of blocks) {
     const lines = block.split('\n')
@@ -19,10 +22,14 @@ export async function parseWorktreeList(output: string) {
     }
 
     const worktreePath = worktreeLine.slice('worktree '.length)
-    const branchLine = lines.find((line) => line.startsWith('branch refs/heads/'))
+    const branchLine = lines.find((line) =>
+      line.startsWith('branch refs/heads/'),
+    )
 
     entries.push({
-      branchName: branchLine ? branchLine.slice('branch refs/heads/'.length) : null,
+      branchName: branchLine
+        ? branchLine.slice('branch refs/heads/'.length)
+        : null,
       path: await realpath(worktreePath),
       isBare: lines.includes('bare'),
     })

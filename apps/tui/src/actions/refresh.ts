@@ -2,10 +2,19 @@ import { sync } from '@harbr/reconciler'
 import { Effect, Either } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'
-import { listActiveRuntimeSummaries, listConfiguredProjectWindows, listProjectSummaries, loadCurrentRuntime, loadUiContext } from '../data'
+import {
+  listActiveRuntimeSummaries,
+  listConfiguredProjectWindows,
+  listProjectSummaries,
+  loadCurrentRuntime,
+  loadUiContext,
+} from '../data'
 import { formatError } from '../helpers/errors'
 import { projectsScope } from '../store'
-import { mapActiveRuntimeSummaryToRow, mapProjectSummaryToRow } from '../transforms'
+import {
+  mapActiveRuntimeSummaryToRow,
+  mapProjectSummaryToRow,
+} from '../transforms'
 import { restoreCurrentRuntime, restoreUiContext } from './restore'
 
 export async function loadProjects(services: TuiServices, store: TuiStore) {
@@ -13,18 +22,29 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
   store.getState().clearNotice()
 
   try {
-    const syncResult = await Effect.runPromise(Effect.either(sync(services.options)))
+    const syncResult = await Effect.runPromise(
+      Effect.either(sync(services.options)),
+    )
 
     if (Either.isLeft(syncResult)) {
       store.setState((state) => ({
-        browse: { ...state.browse, list: { ...state.browse.list, selectedId: null } },
+        browse: {
+          ...state.browse,
+          list: { ...state.browse.list, selectedId: null },
+        },
         data: { ...state.data, projectRows: [] },
       }))
       store.getState().setNotice(formatError(syncResult.left), 'error')
       return
     }
 
-    const [summaries, activeRuntimeSummaries, currentRuntime, savedContext, configuredWindows] = await Promise.all([
+    const [
+      summaries,
+      activeRuntimeSummaries,
+      currentRuntime,
+      savedContext,
+      configuredWindows,
+    ] = await Promise.all([
       listProjectSummaries(services.options.dbPath),
       listActiveRuntimeSummaries(services.options.dbPath),
       loadCurrentRuntime(),
@@ -45,7 +65,9 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
         list: {
           ...state.active.list,
           selectedId:
-            getActiveRuntimeRowId(activeRuntimeSummaries, currentRuntime) ?? activeRuntimeSummaries[0]?.id ?? null,
+            getActiveRuntimeRowId(activeRuntimeSummaries, currentRuntime) ??
+            activeRuntimeSummaries[0]?.id ??
+            null,
         },
       },
       app: { ...state.app, currentRuntime },
@@ -56,7 +78,9 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       },
       data: {
         ...state.data,
-        activeRuntimeRows: activeRuntimeSummaries.map(mapActiveRuntimeSummaryToRow),
+        activeRuntimeRows: activeRuntimeSummaries.map(
+          mapActiveRuntimeSummaryToRow,
+        ),
         moduleRows: [],
         projectWindows,
         projectRows: summaries.map(mapProjectSummaryToRow),
@@ -64,19 +88,42 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       },
     }))
 
-    const restoredFromTmux = await restoreCurrentRuntime(services, store, currentRuntime, summaries)
+    const restoredFromTmux = await restoreCurrentRuntime(
+      services,
+      store,
+      currentRuntime,
+      summaries,
+    )
 
     if (!restoredFromTmux) {
       await restoreUiContext(services, store, savedContext, summaries)
     }
 
-    store.getState().setNotice(summaries.length === 0 ? 'No projects yet. Check config or run sync.' : null, 'info')
+    store
+      .getState()
+      .setNotice(
+        summaries.length === 0
+          ? 'No projects yet. Check config or run sync.'
+          : null,
+        'info',
+      )
   } catch (error) {
     store.setState((state) => ({
-      active: { ...state.active, list: { ...state.active.list, selectedId: null } },
+      active: {
+        ...state.active,
+        list: { ...state.active.list, selectedId: null },
+      },
       app: { ...state.app, currentRuntime: null },
-      browse: { ...state.browse, list: { ...state.browse.list, selectedId: null } },
-        data: { ...state.data, activeRuntimeRows: [], projectRows: [], projectWindows: [] },
+      browse: {
+        ...state.browse,
+        list: { ...state.browse.list, selectedId: null },
+      },
+      data: {
+        ...state.data,
+        activeRuntimeRows: [],
+        projectRows: [],
+        projectWindows: [],
+      },
     }))
     store.getState().setNotice(formatError(error), 'error')
   } finally {
@@ -94,11 +141,12 @@ function getActiveRuntimeRowId(
 
   return (
     rows.find((row) => row.sessionName === currentRuntime.sessionName)?.id ??
-    rows.find((row) =>
-      row.scope === currentRuntime.scope &&
-      row.projectName === currentRuntime.projectName &&
-      row.workspaceName === (currentRuntime.workspaceName ?? null) &&
-      row.moduleName === (currentRuntime.moduleName ?? null),
+    rows.find(
+      (row) =>
+        row.scope === currentRuntime.scope &&
+        row.projectName === currentRuntime.projectName &&
+        row.workspaceName === (currentRuntime.workspaceName ?? null) &&
+        row.moduleName === (currentRuntime.moduleName ?? null),
     )?.id ??
     null
   )

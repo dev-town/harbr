@@ -258,7 +258,9 @@ describe('createWorktree', () => {
         { workspaceName: 'auth', branchName: 'feat/auth' },
       ),
     )
-    const defaultBranch = await Effect.runPromise(getDefaultBranch({ repoPath, kind: 'standard' }))
+    const defaultBranch = await Effect.runPromise(
+      getDefaultBranch({ repoPath, kind: 'standard' }),
+    )
 
     expect(created).toMatchObject({
       branchName: 'feat/auth',

@@ -109,7 +109,10 @@ export function HelpModal() {
             const showGroup = !previous || previous.group !== row.group
 
             return (
-              <box key={`${row.group}:${row.key}:${row.title}`} flexDirection="column">
+              <box
+                key={`${row.group}:${row.key}:${row.title}`}
+                flexDirection="column"
+              >
                 {showGroup ? (
                   <box marginTop={index === 0 ? 0 : 1} width="100%">
                     <text fg={theme.accent}>{row.group}</text>
@@ -130,7 +133,9 @@ export function HelpModal() {
   )
 }
 
-function makeHelpRows(keymap: ReturnType<typeof useKeymap>): readonly HelpRow[] {
+function makeHelpRows(
+  keymap: ReturnType<typeof useKeymap>,
+): readonly HelpRow[] {
   const seen = new Set<string>()
   const rows: HelpRow[] = []
 
@@ -155,7 +160,8 @@ function makeHelpRows(keymap: ReturnType<typeof useKeymap>): readonly HelpRow[] 
   return rows.sort((a, b) =>
     a.group === b.group
       ? a.title.localeCompare(b.title)
-      : groupOrder(a.group) - groupOrder(b.group) || a.group.localeCompare(b.group),
+      : groupOrder(a.group) - groupOrder(b.group) ||
+        a.group.localeCompare(b.group),
   )
 }
 
@@ -168,13 +174,13 @@ function groupOrder(group: string) {
         ? 2
         : group === 'Browse'
           ? 3
-        : group === 'Action modal'
-          ? 4
-          : group === 'Window picker'
-            ? 5
-            : group === 'Create workspace'
-              ? 6
-              : group === 'Help'
-                ? 7
-                : 8
+          : group === 'Action modal'
+            ? 4
+            : group === 'Window picker'
+              ? 5
+              : group === 'Create workspace'
+                ? 6
+                : group === 'Help'
+                  ? 7
+                  : 8
 }

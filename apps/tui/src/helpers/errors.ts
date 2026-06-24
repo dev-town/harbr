@@ -11,5 +11,10 @@ export function formatError(error: unknown) {
 }
 
 function isTaggedError(error: unknown, tag: string): error is { _tag: string } {
-  return typeof error === 'object' && error !== null && '_tag' in error && error._tag === tag
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    '_tag' in error &&
+    error._tag === tag
+  )
 }

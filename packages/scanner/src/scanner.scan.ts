@@ -1,11 +1,7 @@
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
-import type {
-  ProjectConfig,
-  ProjectScan,
-  ResolvedModule,
-} from '@harbr/domain'
+import type { ProjectConfig, ProjectScan, ResolvedModule } from '@harbr/domain'
 import { Effect } from 'effect'
 
 export function scanProject(project: ProjectConfig, workspacePath: string) {

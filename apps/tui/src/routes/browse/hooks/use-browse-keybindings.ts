@@ -29,8 +29,10 @@ export function useBrowseKeybindings() {
               onMoveDown: () => tuiStore.getState().moveBrowseSelection(1),
               onMoveUp: () => tuiStore.getState().moveBrowseSelection(-1),
               onNextRoute: () => tuiStore.getState().nextRoute(),
-              onPageDown: () => tuiStore.getState().moveBrowseSelection(pageDelta),
-              onPageUp: () => tuiStore.getState().moveBrowseSelection(-pageDelta),
+              onPageDown: () =>
+                tuiStore.getState().moveBrowseSelection(pageDelta),
+              onPageUp: () =>
+                tuiStore.getState().moveBrowseSelection(-pageDelta),
               onPreviousRoute: () => tuiStore.getState().previousRoute(),
               onRefresh: () => void loadProjects(services, tuiStore),
               onSelect: () =>
@@ -39,7 +41,8 @@ export function useBrowseKeybindings() {
                   tuiStore,
                   selectSelectedBrowseRow(tuiStore.getState()),
                 ),
-              onToggleVisibility: () => tuiStore.getState().toggleBrowseVisibility(),
+              onToggleVisibility: () =>
+                tuiStore.getState().toggleBrowseVisibility(),
             }),
           }
         : { bindings: [] },

@@ -2,5 +2,27 @@ node_modules/
 .turbo/
 dist/
 coverage/
-bun.lock
 .DS_Store
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Local data and logs
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+logs/
+tmp/
+temp/
+
+# Local secrets and certificates
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer

@@ -1,7 +1,10 @@
 import { createWorktreeFormState } from './worktree-form-state'
 import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '../types'
 
-export function createWorktreeFormActions(set: TuiStoreSet, get: TuiStoreGet): Pick<
+export function createWorktreeFormActions(
+  set: TuiStoreSet,
+  get: TuiStoreGet,
+): Pick<
   TuiStoreActions,
   'backWorktreeForm' | 'closeWorktreeForm' | 'openCreateWorkspaceForm'
 > {
@@ -11,22 +14,29 @@ export function createWorktreeFormActions(set: TuiStoreSet, get: TuiStoreGet): P
 
       if (worktreeForm.step === 'branch') {
         set((state) => ({
-          worktreeForm: { ...state.worktreeForm, branchName: '', showErrors: false, step: 'workspace' },
+          worktreeForm: {
+            ...state.worktreeForm,
+            branchName: '',
+            showErrors: false,
+            step: 'workspace',
+          },
         }))
         return
       }
 
       get().closeWorktreeForm()
     },
-    closeWorktreeForm: () => set((state) => ({
-      app: { ...state.app, notice: null },
-      surfaces: { ...state.surfaces, surface: { kind: 'browser' } },
-      worktreeForm: createWorktreeFormState(),
-    })),
-    openCreateWorkspaceForm: (projectId) => set((state) => ({
-      app: { ...state.app, notice: null },
-      surfaces: { ...state.surfaces, surface: { kind: 'worktree-form' } },
-      worktreeForm: { ...createWorktreeFormState(), projectId },
-    })),
+    closeWorktreeForm: () =>
+      set((state) => ({
+        app: { ...state.app, notice: null },
+        surfaces: { ...state.surfaces, surface: { kind: 'browser' } },
+        worktreeForm: createWorktreeFormState(),
+      })),
+    openCreateWorkspaceForm: (projectId) =>
+      set((state) => ({
+        app: { ...state.app, notice: null },
+        surfaces: { ...state.surfaces, surface: { kind: 'worktree-form' } },
+        worktreeForm: { ...createWorktreeFormState(), projectId },
+      })),
   }
 }

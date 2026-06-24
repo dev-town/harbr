@@ -29,8 +29,10 @@ export function useActiveKeybindings() {
               onMoveDown: () => tuiStore.getState().moveActiveSelection(1),
               onMoveUp: () => tuiStore.getState().moveActiveSelection(-1),
               onNextRoute: () => tuiStore.getState().nextRoute(),
-              onPageDown: () => tuiStore.getState().moveActiveSelection(pageDelta),
-              onPageUp: () => tuiStore.getState().moveActiveSelection(-pageDelta),
+              onPageDown: () =>
+                tuiStore.getState().moveActiveSelection(pageDelta),
+              onPageUp: () =>
+                tuiStore.getState().moveActiveSelection(-pageDelta),
               onPreviousRoute: () => tuiStore.getState().previousRoute(),
               onRefresh: () => void loadProjects(services, tuiStore),
               onSelect: () => handleActiveRouteSelect(services, tuiStore),

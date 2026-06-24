@@ -1,6 +1,14 @@
 import { useMemo } from 'react'
 
-import { selectBrowseBreadcrumb, selectIsBrowseActionsOpen, selectIsWindowPickerOpen, selectIsWorktreeFormOpen, selectVisibleBrowseRows, tuiStore, useTuiStore } from '../../../store'
+import {
+  selectBrowseBreadcrumb,
+  selectIsBrowseActionsOpen,
+  selectIsWindowPickerOpen,
+  selectIsWorktreeFormOpen,
+  selectVisibleBrowseRows,
+  tuiStore,
+  useTuiStore,
+} from '../../../store'
 import { useBrowseSearch } from './use-browse-search'
 import { useBrowseSection } from './use-browse-section'
 
@@ -17,9 +25,20 @@ export function useBrowseRoute() {
   const visibility = useTuiStore((state) => state.browse.visibility)
   const rows = useMemo(
     () => selectVisibleBrowseRows(tuiStore.getState()),
-    [currentRuntime, moduleRows, projectRows, query, scope, visibility, workspaceRows],
+    [
+      currentRuntime,
+      moduleRows,
+      projectRows,
+      query,
+      scope,
+      visibility,
+      workspaceRows,
+    ],
   )
-  const selectedRow = useMemo(() => rows.find((row) => row.id === selectedId) ?? null, [rows, selectedId])
+  const selectedRow = useMemo(
+    () => rows.find((row) => row.id === selectedId) ?? null,
+    [rows, selectedId],
+  )
   const breadcrumb = useMemo(
     () => selectBrowseBreadcrumb(tuiStore.getState()),
     [projectRows, scope, workspaceRows],

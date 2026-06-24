@@ -27,7 +27,9 @@ export function moveSelectedId<TRow extends { id: string }>(
     return null
   }
 
-  const currentIndex = selectedId ? rows.findIndex((row) => row.id === selectedId) : -1
+  const currentIndex = selectedId
+    ? rows.findIndex((row) => row.id === selectedId)
+    : -1
   const safeIndex = currentIndex >= 0 ? currentIndex : 0
   const nextIndex = clampIndex(safeIndex + delta, rows.length)
 

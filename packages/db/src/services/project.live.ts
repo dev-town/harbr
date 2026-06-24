@@ -1,9 +1,7 @@
 import { Effect, Layer } from 'effect'
 
 import { ProjectServiceError } from '../db.errors'
-import {
-  DatabaseClient,
-} from '../infra/database-client.service'
+import { DatabaseClient } from '../infra/database-client.service'
 import { makeDatabaseClientLayer } from '../infra/database-client.live'
 import {
   getProjectByName as getProjectByNameRaw,

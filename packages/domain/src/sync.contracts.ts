@@ -2,8 +2,14 @@ import { z } from 'zod'
 
 import { RepoKindSchema, RuntimeIssueSchema } from './shared.contracts'
 
-export const SyncProjectResultStatusSchema = z.enum(['error', 'no_workspace', 'synced'])
-export type SyncProjectResultStatus = z.infer<typeof SyncProjectResultStatusSchema>
+export const SyncProjectResultStatusSchema = z.enum([
+  'error',
+  'no_workspace',
+  'synced',
+])
+export type SyncProjectResultStatus = z.infer<
+  typeof SyncProjectResultStatusSchema
+>
 
 export const SyncProjectResultSchema = z.object({
   errorTag: z.string().nullable(),

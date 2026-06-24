@@ -22,7 +22,10 @@ export function BrowseRoute() {
           focused={browseRoute.searchFocused}
           inputRef={browseRoute.searchRef}
           onChange={browseRoute.onSearchChange}
-          onSubmit={() => browseRoute.selectedRow && browseRoute.onOpenRow(browseRoute.selectedRow)}
+          onSubmit={() =>
+            browseRoute.selectedRow &&
+            browseRoute.onOpenRow(browseRoute.selectedRow)
+          }
           placeholder={browseRoute.placeholder}
           value={browseRoute.query}
         />

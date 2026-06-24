@@ -42,7 +42,8 @@ export function useBrowseSearch() {
   )
   const isActionsOpen = useTuiStore(selectIsBrowseActionsOpen)
   const isWorktreeFormOpen = useTuiStore(selectIsWorktreeFormOpen)
-  const isSearchFocused = interactionMode === 'input' && !isActionsOpen && !isWorktreeFormOpen
+  const isSearchFocused =
+    interactionMode === 'input' && !isActionsOpen && !isWorktreeFormOpen
 
   useRegisterFocusTarget('browser', searchRef)
   useBrowseKeybindings()

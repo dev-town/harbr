@@ -196,10 +196,10 @@ Harbr remembers the last selected context.
 
 ```ts
 type HarbrContext = {
-  projectId?: ProjectId;
-  workspaceId?: WorkspaceId;
-  moduleId?: ModuleId;
-};
+  projectId?: ProjectId
+  workspaceId?: WorkspaceId
+  moduleId?: ModuleId
+}
 ```
 
 This context is sticky across invocations.
@@ -228,11 +228,7 @@ The user should usually be dropped into the most useful list for the remembered 
 The UI has a current section.
 
 ```ts
-type Section =
-  | 'projects'
-  | 'workspaces'
-  | 'modules'
-  | 'actions';
+type Section = 'projects' | 'workspaces' | 'modules' | 'actions'
 ```
 
 Each section has:
@@ -264,30 +260,30 @@ When Harbr opens, choose the default section using the current context and repo 
 ```ts
 function getDefaultSection(context, shape): Section {
   if (context.projectId && shape.hasModules && context.workspaceId) {
-    return 'modules';
+    return 'modules'
   }
 
   if (context.projectId && shape.hasWorkspaces) {
-    return 'workspaces';
+    return 'workspaces'
   }
 
   if (context.projectId && shape.hasModules) {
-    return 'modules';
+    return 'modules'
   }
 
-  return 'projects';
+  return 'projects'
 }
 ```
 
 Rules:
 
-| Repo shape | Current workspace selected? | Default section |
-|---|---:|---|
-| Standard repo, no workspaces, no modules | N/A | Projects |
-| Standard repo, workspaces, no modules | No/yes | Workspaces |
-| Monorepo, no extra workspaces | Default workspace implicit | Modules |
-| Monorepo with workspaces | Yes | Modules |
-| Monorepo with workspaces | No | Workspaces |
+| Repo shape                               | Current workspace selected? | Default section |
+| ---------------------------------------- | --------------------------: | --------------- |
+| Standard repo, no workspaces, no modules |                         N/A | Projects        |
+| Standard repo, workspaces, no modules    |                      No/yes | Workspaces      |
+| Monorepo, no extra workspaces            |  Default workspace implicit | Modules         |
+| Monorepo with workspaces                 |                         Yes | Modules         |
+| Monorepo with workspaces                 |                          No | Workspaces      |
 
 Important rule:
 
@@ -300,17 +296,17 @@ Important rule:
 Every project has a default workspace.
 
 ```ts
-type WorkspaceKind = 'default' | 'worktree';
+type WorkspaceKind = 'default' | 'worktree'
 
 type Workspace = {
-  id: WorkspaceId;
-  projectId: ProjectId;
-  kind: WorkspaceKind;
-  name: string;
-  path: string;
-  branch?: string;
-  isDefault: boolean;
-};
+  id: WorkspaceId
+  projectId: ProjectId
+  kind: WorkspaceKind
+  name: string
+  path: string
+  branch?: string
+  isDefault: boolean
+}
 ```
 
 If a project has only the default workspace, skip the workspace layer visually.
@@ -378,7 +374,7 @@ The visibility filter is scoped to the current section.
 It is not a global filter.
 
 ```ts
-type VisibilityFilter = 'active' | 'all';
+type VisibilityFilter = 'active' | 'all'
 ```
 
 ### Project section
@@ -437,7 +433,7 @@ If there are no active items, automatically show `All`.
 
 ```ts
 function getDefaultVisibility(items): VisibilityFilter {
-  return items.some(item => item.isActive) ? 'active' : 'all';
+  return items.some((item) => item.isActive) ? 'active' : 'all'
 }
 ```
 
@@ -1150,28 +1146,28 @@ If a project only has the default workspace:
 ```ts
 type View =
   | {
-      type: 'projects';
-      visibility: VisibilityFilter;
-      query: string;
+      type: 'projects'
+      visibility: VisibilityFilter
+      query: string
     }
   | {
-      type: 'workspaces';
-      projectId: ProjectId;
-      visibility: VisibilityFilter;
-      query: string;
+      type: 'workspaces'
+      projectId: ProjectId
+      visibility: VisibilityFilter
+      query: string
     }
   | {
-      type: 'modules';
-      projectId: ProjectId;
-      workspaceId: WorkspaceId;
-      visibility: VisibilityFilter;
-      query: string;
+      type: 'modules'
+      projectId: ProjectId
+      workspaceId: WorkspaceId
+      visibility: VisibilityFilter
+      query: string
     }
   | {
-      type: 'actions';
-      target: EntityRef;
-      query: string;
-    };
+      type: 'actions'
+      target: EntityRef
+      query: string
+    }
 ```
 
 Entity refs:
@@ -1181,56 +1177,52 @@ type EntityRef =
   | { type: 'project'; projectId: ProjectId }
   | { type: 'workspace'; projectId: ProjectId; workspaceId: WorkspaceId }
   | {
-      type: 'module';
-      projectId: ProjectId;
-      workspaceId: WorkspaceId;
-      moduleId: ModuleId;
-    };
+      type: 'module'
+      projectId: ProjectId
+      workspaceId: WorkspaceId
+      moduleId: ModuleId
+    }
 ```
 
 Rows:
 
 ```ts
-type Row =
-  | ProjectRow
-  | WorkspaceRow
-  | ModuleRow
-  | ActionRow;
+type Row = ProjectRow | WorkspaceRow | ModuleRow | ActionRow
 
 type BaseRow = {
-  id: string;
-  label: string;
-  kind: 'project' | 'workspace' | 'module' | 'action';
-  isActive: boolean;
-  metadata?: string;
-};
+  id: string
+  label: string
+  kind: 'project' | 'workspace' | 'module' | 'action'
+  isActive: boolean
+  metadata?: string
+}
 
 type ProjectRow = BaseRow & {
-  kind: 'project';
-  projectId: ProjectId;
-  activeSessionCount: number;
-};
+  kind: 'project'
+  projectId: ProjectId
+  activeSessionCount: number
+}
 
 type WorkspaceRow = BaseRow & {
-  kind: 'workspace';
-  projectId: ProjectId;
-  workspaceId: WorkspaceId;
-  activeSessionCount: number;
-};
+  kind: 'workspace'
+  projectId: ProjectId
+  workspaceId: WorkspaceId
+  activeSessionCount: number
+}
 
 type ModuleRow = BaseRow & {
-  kind: 'module';
-  projectId: ProjectId;
-  workspaceId: WorkspaceId;
-  moduleId: ModuleId;
-  hasSession: boolean;
-};
+  kind: 'module'
+  projectId: ProjectId
+  workspaceId: WorkspaceId
+  moduleId: ModuleId
+  hasSession: boolean
+}
 
 type ActionRow = BaseRow & {
-  kind: 'action';
-  actionId: string;
-  target: EntityRef;
-};
+  kind: 'action'
+  actionId: string
+  target: EntityRef
+}
 ```
 
 ---
@@ -1240,18 +1232,18 @@ type ActionRow = BaseRow & {
 The UI should compute rows in this order:
 
 ```ts
-const baseItems = getItemsForSection(view, sourceOfTruth);
-const visibleItems = applyVisibilityFilter(baseItems, view.visibility);
-const filteredItems = fuzzyFilter(visibleItems, view.query);
-const rankedItems = rankItems(filteredItems, view.query);
+const baseItems = getItemsForSection(view, sourceOfTruth)
+const visibleItems = applyVisibilityFilter(baseItems, view.visibility)
+const filteredItems = fuzzyFilter(visibleItems, view.query)
+const rankedItems = rankItems(filteredItems, view.query)
 ```
 
 Where:
 
 ```ts
 function applyVisibilityFilter(items, visibility) {
-  if (visibility === 'all') return items;
-  return items.filter(item => item.isActive);
+  if (visibility === 'all') return items
+  return items.filter((item) => item.isActive)
 }
 ```
 
@@ -1259,7 +1251,7 @@ If Active produces zero items:
 
 ```ts
 if (visibility === 'active' && activeItems.length === 0) {
-  visibility = 'all';
+  visibility = 'all'
 }
 ```
 
@@ -1280,30 +1272,30 @@ Example normalized shape:
 
 ```ts
 type ProjectSummary = {
-  id: ProjectId;
-  name: string;
-  rootPath: string;
-  activeSessionCount: number;
-};
+  id: ProjectId
+  name: string
+  rootPath: string
+  activeSessionCount: number
+}
 
 type WorkspaceSummary = {
-  id: WorkspaceId;
-  projectId: ProjectId;
-  name: string;
-  path: string;
-  kind: 'default' | 'worktree';
-  activeSessionCount: number;
-};
+  id: WorkspaceId
+  projectId: ProjectId
+  name: string
+  path: string
+  kind: 'default' | 'worktree'
+  activeSessionCount: number
+}
 
 type ModuleSummary = {
-  id: ModuleId;
-  projectId: ProjectId;
-  workspaceId: WorkspaceId;
-  name: string;
-  relativePath: string;
-  absolutePath: string;
-  hasActiveSession: boolean;
-};
+  id: ModuleId
+  projectId: ProjectId
+  workspaceId: WorkspaceId
+  name: string
+  relativePath: string
+  absolutePath: string
+  hasActiveSession: boolean
+}
 ```
 
 ---
