@@ -3,7 +3,7 @@ import type {
   ModuleSummary,
   ProjectSummary,
   WorkspaceSummary,
-} from '@harbour/domain'
+} from '@harbr/domain'
 import { join } from 'node:path'
 
 import type {

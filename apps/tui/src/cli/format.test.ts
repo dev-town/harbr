@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { SyncResult } from '@harbour/domain'
+import type { SyncResult } from '@harbr/domain'
 import { formatCliError, formatCliOutput } from './format'
 
 describe('formatCliOutput', () => {
@@ -90,7 +90,7 @@ describe('formatCliError', () => {
     expect(
       formatCliError({
         _tag: 'InvalidConfigError',
-        configPath: '/tmp/harbour.json',
+        configPath: '/tmp/harbr.json',
         issues: [
           {
             code: 'repo_not_found',
@@ -102,7 +102,7 @@ describe('formatCliError', () => {
     ).toBe(
       [
         'config error: InvalidConfigError',
-        '  config: /tmp/harbour.json',
+        '  config: /tmp/harbr.json',
         '  issues:',
         '    projects.0.repo: repo path not found: /tmp/missing',
       ].join('\n'),
@@ -113,8 +113,8 @@ describe('formatCliError', () => {
     expect(
       formatCliError({
         _tag: 'ConfigNotFoundError',
-        configPath: '/tmp/harbour.json',
+        configPath: '/tmp/harbr.json',
       }),
-    ).toBe(['error: ConfigNotFoundError', '  path: /tmp/harbour.json'].join('\n'))
+    ).toBe(['error: ConfigNotFoundError', '  path: /tmp/harbr.json'].join('\n'))
   })
 })

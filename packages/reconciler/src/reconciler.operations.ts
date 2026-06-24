@@ -1,10 +1,10 @@
-import type { ProjectConfig, SyncProjectResult, SyncResult } from '@harbour/domain'
+import type { ProjectConfig, SyncProjectResult, SyncResult } from '@harbr/domain'
 import { Effect } from 'effect'
 
 import { ProjectNotFoundError } from './reconciler.errors'
-import type { ProjectServiceApi } from '@harbour/db'
-import type { ConfigServiceApi } from '@harbour/config'
-import type { ScannerServiceApi } from '@harbour/scanner'
+import type { ProjectServiceApi } from '@harbr/db'
+import type { ConfigServiceApi } from '@harbr/config'
+import type { ScannerServiceApi } from '@harbr/scanner'
 
 export function syncProjects(
   config: ConfigServiceApi,

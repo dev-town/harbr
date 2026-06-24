@@ -1,5 +1,5 @@
-import { createWorktree, inspectRepo } from '@harbour/git'
-import { refreshProject } from '@harbour/reconciler'
+import { createWorktree, inspectRepo } from '@harbr/git'
+import { refreshProject } from '@harbr/reconciler'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'

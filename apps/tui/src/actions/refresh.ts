@@ -1,4 +1,4 @@
-import { sync } from '@harbour/reconciler'
+import { sync } from '@harbr/reconciler'
 import { Effect, Either } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'

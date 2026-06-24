@@ -3,7 +3,7 @@
 import { access, rm } from 'node:fs/promises'
 
 const target = `bun-${process.platform}-${process.arch}`
-const outfile = './dist/harbour'
+const outfile = './dist/harbr'
 
 await rm(outfile, { force: true })
 

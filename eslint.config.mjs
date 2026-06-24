@@ -1,3 +1,3 @@
-import { baseConfig, boundaryConfig } from '@harbour/config-eslint/base'
+import { baseConfig, boundaryConfig } from '@harbr/config-eslint/base'
 
 export default [...baseConfig, boundaryConfig]

@@ -4,7 +4,7 @@
 
 Implement the next read-model slice after config + git inspection.
 
-Given a `ProjectConfig` and a real workspace path, Harbour should resolve configured module selectors into concrete modules.
+Given a `ProjectConfig` and a real workspace path, Harbr should resolve configured module selectors into concrete modules.
 
 ## Why Next
 

@@ -1,3 +1,3 @@
-import config from '@harbour/config-prettier/base'
+import config from '@harbr/config-prettier/base'
 
 export default config

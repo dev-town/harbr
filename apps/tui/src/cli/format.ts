@@ -1,5 +1,5 @@
-import type { HarbourConfigIssue } from '@harbour/config'
-import type { SyncProjectResult, SyncResult } from '@harbour/domain'
+import type { HarbourConfigIssue } from '@harbr/config'
+import type { SyncProjectResult, SyncResult } from '@harbr/domain'
 
 type CliError = {
   _tag?: string

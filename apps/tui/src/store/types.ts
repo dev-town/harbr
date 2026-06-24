@@ -1,4 +1,4 @@
-import type { ResolvedContextTarget } from '@harbour/domain'
+import type { ResolvedContextTarget } from '@harbr/domain'
 import type { StoreApi } from 'zustand/vanilla'
 
 import type { AppState } from './app/app-state'

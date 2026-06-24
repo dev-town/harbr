@@ -1,8 +1,8 @@
 import { Context, type Effect } from 'effect'
 
-import type { ProjectConfig, ProjectObservation } from '@harbour/domain'
-import type { RepoInspectionError, RepoNotGitError } from '@harbour/git'
-import type { TmuxError } from '@harbour/runtime-tmux'
+import type { ProjectConfig, ProjectObservation } from '@harbr/domain'
+import type { RepoInspectionError, RepoNotGitError } from '@harbr/git'
+import type { TmuxError } from '@harbr/runtime-tmux'
 
 export type ScannerError = RepoInspectionError | RepoNotGitError | TmuxError
 
@@ -13,5 +13,5 @@ export type ScannerServiceApi = {
 }
 
 export class ScannerService extends Context.Tag(
-  '@harbour/scanner/ScannerService',
+  '@harbr/scanner/ScannerService',
 )<ScannerService, ScannerServiceApi>() {}

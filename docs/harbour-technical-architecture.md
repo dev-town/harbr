@@ -1,8 +1,8 @@
-# Harbour Technical Architecture
+# Harbr Technical Architecture
 
-Harbour is a terminal-native workspace orchestrator for developers working with Git repositories, monorepos, worktrees, tmux sessions, local agents, and future remote sandbox agents.
+Harbr is a terminal-native workspace orchestrator for developers working with Git repositories, monorepos, worktrees, tmux sessions, local agents, and future remote sandbox agents.
 
-Harbour is not an IDE, terminal multiplexer, Git client, or AI coding assistant. It is the control layer that understands development contexts and helps users create, navigate, restore, and jump into the right runtime.
+Harbr is not an IDE, terminal multiplexer, Git client, or AI coding assistant. It is the control layer that understands development contexts and helps users create, navigate, restore, and jump into the right runtime.
 
 Core model:
 
@@ -17,13 +17,13 @@ Project / Workspace / Module = persistent domain model
 Runtime / tmux session     = optional execution state
 ```
 
-Git and tmux remain external sources of truth. Harbour observes, reconciles, and coordinates them.
+Git and tmux remain external sources of truth. Harbr observes, reconciles, and coordinates them.
 
 ---
 
 ## Architecture Style
 
-Harbour uses a lightweight DDD-inspired, controller/reconciler-oriented architecture.
+Harbr uses a lightweight DDD-inspired, controller/reconciler-oriented architecture.
 
 That means:
 
@@ -48,7 +48,7 @@ key press
 → scanners observe again
 ```
 
-The database is not the ultimate source of truth for Git or tmux. It stores Harbour’s durable metadata, cache, and history.
+The database is not the ultimate source of truth for Git or tmux. It stores Harbr’s durable metadata, cache, and history.
 
 ---
 
@@ -81,7 +81,7 @@ The database is not the ultimate source of truth for Git or tmux. It stores Harb
 
 - Use Effect logs and spans directly when needed.
 - Keep OpenTelemetry export deferred until slow-debugging needs justify it.
-- Add append-only history only if Harbour needs product-visible or auditable change records.
+- Add append-only history only if Harbr needs product-visible or auditable change records.
 
 ### Config
 
@@ -116,7 +116,7 @@ The database is not the ultimate source of truth for Git or tmux. It stores Harb
 ## Monorepo Structure
 
 ```text
-harbour/
+harbr/
   apps/
     tui/
     cli/
@@ -184,19 +184,19 @@ Owns:
 - keyboard input routing
 - command palette
 - screen layout
-- subscriptions to Harbour state
+- subscriptions to Harbr state
 - execution of command handlers
 - starting/stopping Effect runtime fibers
 
 Depends on:
 
 ```text
-@harbour/domain
-@harbour/db
-@harbour/config
-@harbour/scanner
-@harbour/reconciler
-@harbour/runtime-tmux
+@harbr/domain
+@harbr/db
+@harbr/config
+@harbr/scanner
+@harbr/reconciler
+@harbr/runtime-tmux
 apps/tui keymap
 ```
 
@@ -274,19 +274,19 @@ git → db
 ## Final Mental Model
 
 ```text
-domain        = Harbour language
+domain        = Harbr language
 config        = user/project intent
 git/tmux      = external reality adapters
 scanner       = what exists?
-reconciler    = what changed and what should Harbour believe?
-db            = what Harbour remembers
+reconciler    = what changed and what should Harbr believe?
+db            = what Harbr remembers
 keymap        = key → command
 ui            = what the user sees
-apps          = how the user enters Harbour
+apps          = how the user enters Harbr
 agent skills  = how agents stay inside the architecture
 ```
 
-Harbour should feel instant, calm, sparse, and reliable.
+Harbr should feel instant, calm, sparse, and reliable.
 
 The goal is not to show everything.
 

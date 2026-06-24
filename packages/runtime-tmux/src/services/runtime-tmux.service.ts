@@ -1,5 +1,5 @@
 import { Context, type Effect } from 'effect'
-import type { RuntimeTarget } from '@harbour/domain'
+import type { RuntimeTarget } from '@harbr/domain'
 
 import type {
   CreateRuntimeWindowsResult,
@@ -22,5 +22,5 @@ export type RuntimeTmuxServiceApi = {
 }
 
 export class RuntimeTmuxService extends Context.Tag(
-  '@harbour/runtime-tmux/RuntimeTmuxService',
+  '@harbr/runtime-tmux/RuntimeTmuxService',
 )<RuntimeTmuxService, RuntimeTmuxServiceApi>() {}

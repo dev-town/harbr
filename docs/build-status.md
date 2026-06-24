@@ -1,4 +1,4 @@
-# Harbour Build Status
+# Harbr Build Status
 
 ## Current Status
 
@@ -10,8 +10,8 @@
 - [x] `scanner`: workspace-aware module expansion and project observation
 - [x] `db`: SQLite schema, migrations, project snapshot persistence
 - [x] `reconciler`: config -> scanner -> db sync flow
-- [x] `runtime-tmux`: read-only tmux session discovery and Harbour context parsing
-- [x] `keymap`: Harbour browse keymap over `@opentui/keymap`
+- [x] `runtime-tmux`: read-only tmux session discovery and Harbr context parsing
+- [x] `keymap`: Harbr browse keymap over `@opentui/keymap`
 - [x] `ui`: minimal popover renderer for project/workspace/module lists
 - [x] `apps/tui`: popover plus headless sync command with project -> workspace -> module drilldown and leaf open/attach behavior
 - [x] config-defined reusable named window/pane recipes
@@ -33,7 +33,7 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 ### Scope
 
 - [x] discover tmux sessions
-- [x] map session names to Harbour contexts
+- [x] map session names to Harbr contexts
 - [x] expose read-only runtime facts via service/program API
 - [x] integrate runtime facts into scanner/reconciler/db after adapter exists
 - [x] render projects/workspaces/modules in `apps/tui`

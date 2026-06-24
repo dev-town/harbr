@@ -3,7 +3,7 @@ import { isAbsolute, join } from 'node:path'
 import { promisify } from 'node:util'
 
 import { Effect, Layer } from 'effect'
-import type { RuntimeTarget } from '@harbour/domain'
+import type { RuntimeTarget } from '@harbr/domain'
 
 import {
   findMatchingRuntime,

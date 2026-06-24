@@ -1,5 +1,5 @@
 {
-  "name": "@harbour/config",
+  "name": "@harbr/config",
   "private": true,
   "type": "module",
   "exports": {
@@ -14,7 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@harbour/domain": "workspace:*",
+    "@harbr/domain": "workspace:*",
     "effect": "catalog:",
     "zod": "^4.4.3"
   }

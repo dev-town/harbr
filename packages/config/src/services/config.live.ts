@@ -1,7 +1,7 @@
 import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { ModuleSelector, WindowConfig } from '@harbour/domain'
+import type { ModuleSelector, WindowConfig } from '@harbr/domain'
 import { Effect, Layer } from 'effect'
 import {
   ConfigNotFoundError,

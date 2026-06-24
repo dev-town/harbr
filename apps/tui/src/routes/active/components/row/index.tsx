@@ -1,4 +1,4 @@
-import type { RuntimeAttachment } from '@harbour/domain'
+import type { RuntimeAttachment } from '@harbr/domain'
 
 import { ListRow } from '../../../../components/list-row'
 import type { RowVariant } from '../../../../components/list-row/types'

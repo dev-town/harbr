@@ -1,5 +1,5 @@
 {
-  "name": "@harbour/config-eslint",
+  "name": "@harbr/config-eslint",
   "private": true,
   "type": "module",
   "exports": {

@@ -1,6 +1,6 @@
-import { ProjectService, makeProjectServiceLayer } from '@harbour/db'
-import { loadConfig, loadConfigAtPath } from '@harbour/config'
-import type { ActiveRuntimeSummary, HarbourContext } from '@harbour/domain'
+import { ProjectService, makeProjectServiceLayer } from '@harbr/db'
+import { loadConfig, loadConfigAtPath } from '@harbr/config'
+import type { ActiveRuntimeSummary, HarbourContext } from '@harbr/domain'
 import { Effect } from 'effect'
 
 export async function loadUiContext(dbPath?: string) {

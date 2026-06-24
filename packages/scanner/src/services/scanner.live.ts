@@ -1,11 +1,11 @@
 import { Effect, Layer } from 'effect'
 
-import { GitService, makeGitServiceLayer } from '@harbour/git'
+import { GitService, makeGitServiceLayer } from '@harbr/git'
 import {
   makeRuntimeTmuxServiceLayer,
   RuntimeTmuxService,
-} from '@harbour/runtime-tmux'
-import type { ProjectConfig } from '@harbour/domain'
+} from '@harbr/runtime-tmux'
+import type { ProjectConfig } from '@harbr/domain'
 import { observeProjectWithGit } from '../scanner.observe'
 import { ScannerService, type ScannerServiceApi } from './scanner.service'
 

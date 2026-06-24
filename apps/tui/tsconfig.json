@@ -1,5 +1,5 @@
 {
-  "extends": "@harbour/config-typescript/app.json",
+  "extends": "@harbr/config-typescript/app.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "@opentui/react"

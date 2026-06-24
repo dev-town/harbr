@@ -1,16 +1,16 @@
-# Harbour Tmux Popover UX Specification
+# Harbr Tmux Popover UX Specification
 
 ## Purpose
 
-Harbour should provide a fast, terminal-native way to resume, switch, and create project workspaces from inside `tmux`.
+Harbr should provide a fast, terminal-native way to resume, switch, and create project workspaces from inside `tmux`.
 
 The interface is a **drillable fuzzy list** shown inside a `tmux` popup.
 
 The main goal:
 
-> Open Harbour, type a few characters, press Enter, and land in the right working context.
+> Open Harbr, type a few characters, press Enter, and land in the right working context.
 
-Harbour should optimise for:
+Harbr should optimise for:
 
 - Resuming active work
 - Switching between projects, workspaces, and modules
@@ -23,7 +23,7 @@ Harbour should optimise for:
 
 ## 1. Core Hierarchy
 
-Harbour models work as:
+Harbr models work as:
 
 ```txt
 Project
@@ -39,7 +39,7 @@ A configured repository.
 Examples:
 
 ```txt
-harbour
+harbr
 notes-api
 website
 ```
@@ -75,7 +75,7 @@ docs/planning
 Internally, even a project with no extra worktrees has a workspace:
 
 ```txt
-Project: harbour
+Project: harbr
 Workspace: default/root/main
 ```
 
@@ -102,7 +102,7 @@ Module definition:
   packages/git
 
 Module instance:
-  harbour / feature/auth-flow / packages/git
+  harbr / feature/auth-flow / packages/git
 ```
 
 Standard repos may have no modules. In that case, the openable unit is the project root or workspace root.
@@ -125,12 +125,12 @@ Rows should indicate whether a session already exists.
 
 ## 2. Interface Shape
 
-Harbour runs as a tmux popup.
+Harbr runs as a tmux popup.
 
 Example launcher:
 
 ```sh
-tmux display-popup -E harbour
+tmux display-popup -E harbr
 ```
 
 The popup has four main areas:
@@ -144,7 +144,7 @@ Example:
 
 ```txt
 ┌────────────────────────────────────────────────────────┐
-│ harbour › feature/auth-flow        Modules · Active    │
+│ harbr › feature/auth-flow        Modules · Active    │
 │ > db                                                   │
 │                                                        │
 │ ● packages/db        module      session               │
@@ -159,7 +159,7 @@ Example:
 
 ## 3. Mental Model
 
-Harbour is a **drillable fuzzy list**, not a pure command palette.
+Harbr is a **drillable fuzzy list**, not a pure command palette.
 
 Typing filters the current list.
 
@@ -169,7 +169,7 @@ Navigation drills through the hierarchy:
 Project → Workspace → Module
 ```
 
-But Harbour skips unnecessary layers.
+But Harbr skips unnecessary layers.
 
 Examples:
 
@@ -192,10 +192,10 @@ Project with workspaces and modules:
 
 ## 4. Sticky Context
 
-Harbour remembers the last selected context.
+Harbr remembers the last selected context.
 
 ```ts
-type HarbourContext = {
+type HarbrContext = {
   projectId?: ProjectId;
   workspaceId?: WorkspaceId;
   moduleId?: ModuleId;
@@ -207,13 +207,13 @@ This context is sticky across invocations.
 If the user last worked in:
 
 ```txt
-harbour / feature/auth-flow / packages/db
+harbr / feature/auth-flow / packages/db
 ```
 
-Then opening Harbour again should prefer:
+Then opening Harbr again should prefer:
 
 ```txt
-Project: harbour
+Project: harbr
 Workspace: feature/auth-flow
 Section: Modules
 Filter: Active or All
@@ -249,17 +249,17 @@ Section: Projects
 Scope: global
 
 Section: Workspaces
-Scope: project harbour
+Scope: project harbr
 
 Section: Modules
-Scope: project harbour, workspace feature/auth-flow
+Scope: project harbr, workspace feature/auth-flow
 ```
 
 ---
 
 ## 6. Default Section Resolution
 
-When Harbour opens, choose the default section using the current context and repo shape.
+When Harbr opens, choose the default section using the current context and repo shape.
 
 ```ts
 function getDefaultSection(context, shape): Section {
@@ -318,20 +318,20 @@ If a project has only the default workspace, skip the workspace layer visually.
 Instead of:
 
 ```txt
-harbour › default › packages/git
+harbr › default › packages/git
 ```
 
 Show:
 
 ```txt
-harbour › packages/git
+harbr › packages/git
 ```
 
 If a project has multiple workspaces, show workspace names where needed:
 
 ```txt
-harbour › main › packages/git
-harbour › feature/auth-flow › packages/git
+harbr › main › packages/git
+harbr › feature/auth-flow › packages/git
 ```
 
 ---
@@ -344,9 +344,9 @@ Examples:
 
 ```txt
 Projects · Active
-harbour        Workspaces · Active
-harbour › feature/auth-flow        Modules · Active
-harbour › feature/auth-flow › packages/db        Actions
+harbr        Workspaces · Active
+harbr › feature/auth-flow        Modules · Active
+harbr › feature/auth-flow › packages/db        Actions
 ```
 
 Breadcrumbs should answer:
@@ -360,13 +360,13 @@ Breadcrumbs should answer:
 Suggested compact format:
 
 ```txt
-[harbour] [feature/auth-flow] [packages/db]    Modules · Active
+[harbr] [feature/auth-flow] [packages/db]    Modules · Active
 ```
 
 or:
 
 ```txt
-harbour › feature/auth-flow › packages/db      Modules · Active
+harbr › feature/auth-flow › packages/db      Modules · Active
 ```
 
 ---
@@ -405,7 +405,7 @@ All    = all modules in the selected workspace
 Example:
 
 ```txt
-Breadcrumb: harbour › feature/auth-flow
+Breadcrumb: harbr › feature/auth-flow
 Section: Modules
 Filter: Active
 ```
@@ -462,7 +462,7 @@ Examples:
 ○ packages/git       module      no session
 ● feature/auth-flow  workspace   2 sessions
 ○ fix/db-sync        workspace   no sessions
-● harbour            project     5 sessions
+● harbr            project     5 sessions
 ```
 
 ### Status Indicators
@@ -506,13 +506,13 @@ Project section:
 Projects · All
 > har
 
-harbour      project
+harbr      project
 ```
 
 Workspace section:
 
 ```txt
-harbour        Workspaces · All
+harbr        Workspaces · All
 > auth
 
 feature/auth-flow    workspace
@@ -522,7 +522,7 @@ fix/auth-redirect    workspace
 Module section:
 
 ```txt
-harbour › feature/auth-flow        Modules · All
+harbr › feature/auth-flow        Modules · All
 > db
 
 packages/db          module
@@ -702,9 +702,9 @@ Important:
 For example, all of these should support `Create worktree`:
 
 ```txt
-harbour
-harbour › feature/auth-flow
-harbour › feature/auth-flow › packages/db
+harbr
+harbr › feature/auth-flow
+harbr › feature/auth-flow › packages/db
 ```
 
 The action resolves upward to the current project.
@@ -750,7 +750,7 @@ Then show a small form/prompt:
 ```txt
 Create worktree
 
-Project: harbour
+Project: harbr
 Base: main
 Branch: feature/auth-flow
 Name/path: feature-auth-flow
@@ -766,7 +766,7 @@ Branch name:
 After creation:
 
 1. Create git worktree
-2. Persist workspace in Harbour state/db if needed
+2. Persist workspace in Harbr state/db if needed
 3. Select the new workspace as sticky context
 4. Move to the next useful section
 
@@ -805,7 +805,7 @@ Projects
 User flow:
 
 ```txt
-Open Harbour
+Open Harbr
 Type "notes"
 Enter
 ```
@@ -847,7 +847,7 @@ Workspaces
 User flow:
 
 ```txt
-Open Harbour
+Open Harbr
 Type "auth"
 Enter
 ```
@@ -880,7 +880,7 @@ Then select workspace
 Example:
 
 ```txt
-Project: harbour
+Project: harbr
 Workspaces: default only
 Modules:
   apps/tui
@@ -897,7 +897,7 @@ Modules
 Display:
 
 ```txt
-harbour        Modules · Active/All
+harbr        Modules · Active/All
 > git
 
 ○ packages/git      module
@@ -906,7 +906,7 @@ harbour        Modules · Active/All
 User flow:
 
 ```txt
-Open Harbour
+Open Harbr
 Type "git"
 Enter
 ```
@@ -915,7 +915,7 @@ Result:
 
 ```txt
 Open/attach session at:
-harbour/packages/git
+harbr/packages/git
 ```
 
 The default workspace is implicit and skipped visually.
@@ -925,7 +925,7 @@ The default workspace is implicit and skipped visually.
 Example:
 
 ```txt
-Project: harbour
+Project: harbr
 Selected workspace: feature/auth-flow
 Modules:
   apps/tui
@@ -942,7 +942,7 @@ Modules
 Display:
 
 ```txt
-harbour › feature/auth-flow        Modules · Active/All
+harbr › feature/auth-flow        Modules · Active/All
 > scanner
 
 ○ packages/scanner      module
@@ -951,7 +951,7 @@ harbour › feature/auth-flow        Modules · Active/All
 User flow:
 
 ```txt
-Open Harbour
+Open Harbr
 Type "scanner"
 Enter
 ```
@@ -960,7 +960,7 @@ Result:
 
 ```txt
 Open/attach session at:
-harbour-worktrees/feature-auth-flow/packages/scanner
+harbr-worktrees/feature-auth-flow/packages/scanner
 ```
 
 ### E. Monorepo with workspaces, no workspace selected
@@ -968,7 +968,7 @@ harbour-worktrees/feature-auth-flow/packages/scanner
 Example:
 
 ```txt
-Project: harbour
+Project: harbr
 Workspaces:
   main
   feature/auth-flow
@@ -988,7 +988,7 @@ Workspaces
 Display:
 
 ```txt
-harbour        Workspaces · Active/All
+harbr        Workspaces · Active/All
 > auth
 
 ○ feature/auth-flow      workspace
@@ -997,7 +997,7 @@ harbour        Workspaces · Active/All
 User flow:
 
 ```txt
-Open Harbour
+Open Harbr
 Type "auth"
 Enter
 ```
@@ -1035,7 +1035,7 @@ Projects · Active
 Rows:
 
 ```txt
-● harbour       project      4 sessions
+● harbr       project      4 sessions
 ● notes-api     project      1 session
 ```
 
@@ -1048,7 +1048,7 @@ Projects · All
 Rows:
 
 ```txt
-● harbour       project      4 sessions
+● harbr       project      4 sessions
 ● notes-api     project      1 session
 ○ website       project      no sessions
 ○ cli-tools     project      no sessions
@@ -1057,7 +1057,7 @@ Rows:
 ### Workspace List
 
 ```txt
-harbour        Workspaces · Active
+harbr        Workspaces · Active
 ```
 
 Rows:
@@ -1070,7 +1070,7 @@ Rows:
 Toggle All:
 
 ```txt
-harbour        Workspaces · All
+harbr        Workspaces · All
 ```
 
 Rows:
@@ -1085,7 +1085,7 @@ Rows:
 ### Module List
 
 ```txt
-harbour › feature/auth-flow        Modules · Active
+harbr › feature/auth-flow        Modules · Active
 ```
 
 Rows:
@@ -1098,7 +1098,7 @@ Rows:
 Toggle All:
 
 ```txt
-harbour › feature/auth-flow        Modules · All
+harbr › feature/auth-flow        Modules · All
 ```
 
 Rows:
@@ -1403,7 +1403,7 @@ The current model does not require a global omnibox. The drillable list and stic
    - Do not show modules for projects without modules.
 
 8. **Sticky context makes repeated use fast**
-   - Opening Harbour should usually show the list the user is most likely to need next.
+   - Opening Harbr should usually show the list the user is most likely to need next.
 
 ---
 
@@ -1412,9 +1412,9 @@ The current model does not require a global omnibox. The drillable list and stic
 ### Resume active module
 
 ```txt
-Open Harbour
+Open Harbr
 
-harbour › feature/auth-flow        Modules · Active
+harbr › feature/auth-flow        Modules · Active
 > db
 
 ● packages/db      module      session
@@ -1431,9 +1431,9 @@ Attach to packages/db session
 ### Open inactive module
 
 ```txt
-Open Harbour
+Open Harbr
 
-harbour › feature/auth-flow        Modules · Active
+harbr › feature/auth-flow        Modules · Active
 > git
 
 No active matches
@@ -1442,7 +1442,7 @@ No active matches
 Press Tab:
 
 ```txt
-harbour › feature/auth-flow        Modules · All
+harbr › feature/auth-flow        Modules · All
 > git
 
 ○ packages/git     module      no session
@@ -1459,10 +1459,10 @@ Create/attach session for packages/git
 ### Change workspace then open module
 
 ```txt
-Open Harbour
+Open Harbr
 Back or shortcut to Workspaces
 
-harbour        Workspaces · Active
+harbr        Workspaces · Active
 > auth
 
 ● feature/auth-flow      workspace      2 sessions
@@ -1473,7 +1473,7 @@ Enter
 Now:
 
 ```txt
-harbour › feature/auth-flow        Modules · Active
+harbr › feature/auth-flow        Modules · Active
 > web
 
 ● apps/web      module      session
@@ -1490,7 +1490,7 @@ Attach to apps/web session in feature/auth-flow workspace
 ### Create worktree from module context
 
 ```txt
-harbour › feature/auth-flow › packages/db
+harbr › feature/auth-flow › packages/db
 ? / Ctrl+A
 ```
 
@@ -1513,7 +1513,7 @@ Create worktree
 Prompt:
 
 ```txt
-Create worktree for harbour
+Create worktree for harbr
 
 Branch:
 > feature/new-sync
@@ -1522,7 +1522,7 @@ Branch:
 After creation:
 
 ```txt
-harbour › feature/new-sync        Modules · All
+harbr › feature/new-sync        Modules · All
 ```
 
 ---
@@ -1553,4 +1553,4 @@ Actions menu handles non-default operations
 Persist context
 ```
 
-This should be enough for an agent to implement the first Harbour popover UI.
+This should be enough for an agent to implement the first Harbr popover UI.

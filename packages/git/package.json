@@ -1,5 +1,5 @@
 {
-  "name": "@harbour/git",
+  "name": "@harbr/git",
   "private": true,
   "type": "module",
   "exports": {

@@ -1,9 +1,9 @@
 import { Context, type Effect } from 'effect'
 
-import type { HarbourConfigError } from '@harbour/config'
-import type { ProjectServiceError } from '@harbour/db'
-import type { SyncProjectResult, SyncResult } from '@harbour/domain'
-import type { ScannerError } from '@harbour/scanner'
+import type { HarbourConfigError } from '@harbr/config'
+import type { ProjectServiceError } from '@harbr/db'
+import type { SyncProjectResult, SyncResult } from '@harbr/domain'
+import type { ScannerError } from '@harbr/scanner'
 import type { ProjectNotFoundError } from '../reconciler.errors'
 
 export type ReconcilerError =
@@ -20,5 +20,5 @@ export type ReconcilerServiceApi = {
 }
 
 export class ReconcilerService extends Context.Tag(
-  '@harbour/reconciler/ReconcilerService',
+  '@harbr/reconciler/ReconcilerService',
 )<ReconcilerService, ReconcilerServiceApi>() {}

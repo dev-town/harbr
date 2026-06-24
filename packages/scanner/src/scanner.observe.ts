@@ -1,6 +1,6 @@
-import type { ProjectConfig, ProjectObservation } from '@harbour/domain'
-import type { GitServiceApi } from '@harbour/git'
-import type { RuntimeTmuxServiceApi } from '@harbour/runtime-tmux'
+import type { ProjectConfig, ProjectObservation } from '@harbr/domain'
+import type { GitServiceApi } from '@harbr/git'
+import type { RuntimeTmuxServiceApi } from '@harbr/runtime-tmux'
 import { Effect } from 'effect'
 
 import { scanProject } from './scanner.scan'

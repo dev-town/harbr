@@ -3,7 +3,7 @@ import { realpath, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import type { CreateWorktreeInput } from '@harbour/domain'
+import type { CreateWorktreeInput } from '@harbr/domain'
 import { Effect, Layer } from 'effect'
 import type { RepoInspectionError, WorktreeMutationError } from '../git.errors'
 import {

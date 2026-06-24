@@ -4,12 +4,12 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import { ConfigService, type HarbourConfig } from '@harbour/config'
-import { openDatabase, ProjectService } from '@harbour/db'
-import { type ProjectConfig, type ProjectObservation } from '@harbour/domain'
-import { RepoNotGitError } from '@harbour/git'
+import { ConfigService, type HarbourConfig } from '@harbr/config'
+import { openDatabase, ProjectService } from '@harbr/db'
+import { type ProjectConfig, type ProjectObservation } from '@harbr/domain'
+import { RepoNotGitError } from '@harbr/git'
 import { Either, Effect, Layer } from 'effect'
-import { ScannerService } from '@harbour/scanner'
+import { ScannerService } from '@harbr/scanner'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {

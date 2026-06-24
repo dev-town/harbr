@@ -1,13 +1,14 @@
 {
-  "name": "@harbour/tui",
+  "name": "@harbr/tui",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@harbour/config": "workspace:*",
-    "@harbour/db": "workspace:*",
-    "@harbour/domain": "workspace:*",
-    "@harbour/reconciler": "workspace:*",
-    "@harbour/runtime-tmux": "workspace:*",
+    "@harbr/config": "workspace:*",
+    "@harbr/db": "workspace:*",
+    "@harbr/domain": "workspace:*",
+    "@harbr/git": "workspace:*",
+    "@harbr/reconciler": "workspace:*",
+    "@harbr/runtime-tmux": "workspace:*",
     "@opentui/core": "^0.2.16",
     "@opentui/keymap": "^0.2.16",
     "@opentui/react": "^0.2.16",
@@ -27,8 +28,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "sync": "bun src/index.tsx sync",
     "sync:json": "bun src/index.tsx sync --json",
-    "sync:compiled": "./dist/harbour sync",
-    "sync:compiled:json": "./dist/harbour sync --json"
+    "sync:compiled": "./dist/harbr sync",
+    "sync:compiled:json": "./dist/harbr sync --json"
   },
   "devDependencies": {
     "@types/react": "^19.2.17"

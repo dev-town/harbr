@@ -1,5 +1,5 @@
-import type { ResolvedContextTarget, WindowConfig } from '@harbour/domain'
-import { createRuntimeWindows } from '@harbour/runtime-tmux'
+import type { ResolvedContextTarget, WindowConfig } from '@harbr/domain'
+import { createRuntimeWindows } from '@harbr/runtime-tmux'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'

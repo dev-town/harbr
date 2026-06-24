@@ -1,4 +1,4 @@
-import type { ResolvedContextTarget } from '@harbour/domain'
+import type { ResolvedContextTarget } from '@harbr/domain'
 
 export type SurfaceId =
   | 'actions'

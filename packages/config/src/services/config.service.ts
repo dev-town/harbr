@@ -9,7 +9,7 @@ export type ConfigServiceApi = {
   ) => Effect.Effect<HarbourConfig, HarbourConfigError>
 }
 
-export class ConfigService extends Context.Tag('@harbour/config/ConfigService')<
+export class ConfigService extends Context.Tag('@harbr/config/ConfigService')<
   ConfigService,
   ConfigServiceApi
 >() {}

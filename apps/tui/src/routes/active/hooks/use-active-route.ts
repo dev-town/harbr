@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { openActiveRuntime } from '../../../actions/runtime'
 import { useRegisterFocusTarget } from '../../../hooks/useRegisterFocusTarget'
 import { useTuiServices } from '../../../hooks/useTuiServices'
-import type { RuntimeAttachment } from '@harbour/domain'
+import type { RuntimeAttachment } from '@harbr/domain'
 import type { HarbourRow } from '../../../types/rows'
 import {
   selectIsActiveActionsOpen,

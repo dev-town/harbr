@@ -13,7 +13,7 @@ import type {
   RuntimeIssue,
   WorkspaceKind,
   WorkspaceSummary,
-} from '@harbour/domain'
+} from '@harbr/domain'
 import type * as schema from './schema'
 import type {
   DatabaseMigrationError,

@@ -5,7 +5,7 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "@harbour/tui#build": {
+    "@harbr/tui#build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "../../packages/*/src/**"],
       "outputs": ["dist/**"]

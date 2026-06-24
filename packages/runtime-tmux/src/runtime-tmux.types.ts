@@ -3,7 +3,7 @@ import type {
   RuntimeIssue,
   RuntimeTarget,
   WindowConfig,
-} from '@harbour/domain'
+} from '@harbr/domain'
 
 export type RuntimeDiscovery = {
   runtimes: RuntimeFact[]

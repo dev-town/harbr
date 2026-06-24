@@ -7,7 +7,7 @@ import type {
   ProjectSummary,
   RuntimeFact,
   WorkspaceSummary,
-} from '@harbour/domain'
+} from '@harbr/domain'
 import { eq } from 'drizzle-orm'
 import type {
   HarbourDatabase,

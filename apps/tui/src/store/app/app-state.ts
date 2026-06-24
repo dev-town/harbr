@@ -1,4 +1,4 @@
-import type { RuntimeFact } from '@harbour/domain'
+import type { RuntimeFact } from '@harbr/domain'
 
 import type { AppRoute } from '../../types/navigation'
 import type { NoticeLevel } from '../../types/notice'

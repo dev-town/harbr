@@ -1,4 +1,4 @@
-import type { ModuleSelector, ProjectConfig } from '@harbour/domain'
+import type { ModuleSelector, ProjectConfig } from '@harbr/domain'
 
 export type HarbourModuleSelector = ModuleSelector
 export type HarbourProject = ProjectConfig

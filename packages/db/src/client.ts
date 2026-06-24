@@ -42,7 +42,7 @@ export async function openDatabase(dbPath: string) {
 }
 
 export function getDefaultDatabasePath() {
-  return path.join(homedir(), '.local', 'share', 'harbour', 'harbour.db')
+  return path.join(homedir(), '.local', 'share', 'harbr', 'harbr.db')
 }
 
 function importBunSqlite() {

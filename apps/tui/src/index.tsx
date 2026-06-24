@@ -18,8 +18,8 @@ function formatHelp(command: string) {
     `unknown command: ${command}`,
     '',
     'usage:',
-    '  harbour [--path <config>] [--db-path <db>]',
-    '  harbour tui [--path <config>] [--db-path <db>]',
-    '  harbour sync [--json] [--path <config>] [--db-path <db>]',
+    '  harbr [--path <config>] [--db-path <db>]',
+    '  harbr tui [--path <config>] [--db-path <db>]',
+    '  harbr sync [--json] [--path <config>] [--db-path <db>]',
   ].join('\n')
 }

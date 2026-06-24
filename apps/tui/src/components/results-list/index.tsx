@@ -63,7 +63,7 @@ export function ResultsList<TRow extends { id: string }>({
         <StatusLine
           color={theme.accent}
           icon=""
-          text="Refreshing Harbour view..."
+          text="Refreshing Harbr view..."
         />
       ) : null}
       {!showLoading && rows.length === 0 ? (

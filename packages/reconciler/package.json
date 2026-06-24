@@ -1,15 +1,15 @@
 {
-  "name": "@harbour/reconciler",
+  "name": "@harbr/reconciler",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@harbour/config": "workspace:*",
-    "@harbour/db": "workspace:*",
-    "@harbour/domain": "workspace:*",
-    "@harbour/scanner": "workspace:*",
+    "@harbr/config": "workspace:*",
+    "@harbr/db": "workspace:*",
+    "@harbr/domain": "workspace:*",
+    "@harbr/scanner": "workspace:*",
     "effect": "catalog:"
   },
   "scripts": {

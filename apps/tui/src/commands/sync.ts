@@ -1,4 +1,4 @@
-import { sync } from '@harbour/reconciler'
+import { sync } from '@harbr/reconciler'
 import { Effect } from 'effect'
 
 import { formatCliError, formatCliOutput } from '../cli/format'

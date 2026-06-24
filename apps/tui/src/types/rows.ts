@@ -1,4 +1,4 @@
-import type { ResolvedContextTarget, RuntimeAttachment } from '@harbour/domain'
+import type { ResolvedContextTarget, RuntimeAttachment } from '@harbr/domain'
 
 export type RowKind =
   | 'action'

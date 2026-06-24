@@ -5,7 +5,7 @@ import type {
   ProjectConfig,
   ProjectScan,
   ResolvedModule,
-} from '@harbour/domain'
+} from '@harbr/domain'
 import { Effect } from 'effect'
 
 export function scanProject(project: ProjectConfig, workspacePath: string) {

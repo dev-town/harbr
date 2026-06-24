@@ -1,4 +1,4 @@
-import type { WindowConfig } from '@harbour/domain'
+import type { WindowConfig } from '@harbr/domain'
 
 import type {
   HarbourRow,

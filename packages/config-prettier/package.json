@@ -1,5 +1,5 @@
 {
-  "name": "@harbour/config-prettier",
+  "name": "@harbr/config-prettier",
   "private": true,
   "type": "module",
   "exports": {

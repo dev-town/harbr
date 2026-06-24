@@ -1,4 +1,4 @@
-import type { RuntimeFact, RuntimeTarget } from '@harbour/domain'
+import type { RuntimeFact, RuntimeTarget } from '@harbr/domain'
 
 const encodedSeparator = '~~'
 

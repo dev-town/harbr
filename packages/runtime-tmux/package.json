@@ -1,12 +1,12 @@
 {
-  "name": "@harbour/runtime-tmux",
+  "name": "@harbr/runtime-tmux",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@harbour/domain": "workspace:*",
+    "@harbr/domain": "workspace:*",
     "effect": "catalog:"
   },
   "scripts": {

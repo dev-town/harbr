@@ -1,4 +1,4 @@
-import type { RuntimeAttachment, RuntimeFact } from '@harbour/domain'
+import type { RuntimeAttachment, RuntimeFact } from '@harbr/domain'
 
 import type { TuiStoreModel } from '../types'
 import type { HarbourRow } from '../../types/rows'

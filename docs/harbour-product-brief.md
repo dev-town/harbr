@@ -1,10 +1,10 @@
-# Harbour Product Brief
+# Harbr Product Brief
 
 ## Purpose
 
-Harbour is a terminal-native workspace orchestrator for developers who work with Git repositories, monorepos, worktrees, tmux sessions, local AI agents, and future remote sandbox agents.
+Harbr is a terminal-native workspace orchestrator for developers who work with Git repositories, monorepos, worktrees, tmux sessions, local AI agents, and future remote sandbox agents.
 
-Harbour is not a terminal multiplexer, IDE, Git client, or AI coding tool. It is the control layer that understands the user's development contexts and helps them create, navigate, restore, and jump into the right runtime.
+Harbr is not a terminal multiplexer, IDE, Git client, or AI coding tool. It is the control layer that understands the user's development contexts and helps them create, navigate, restore, and jump into the right runtime.
 
 The core idea is:
 
@@ -12,7 +12,7 @@ The core idea is:
 Project → Workspace → Module → Runtime
 ```
 
-Git remains the source of truth. tmux remains the main local runtime. Harbour coordinates them.
+Git remains the source of truth. tmux remains the main local runtime. Harbr coordinates them.
 
 ---
 
@@ -46,7 +46,7 @@ A runtime can be created from a project, workspace, or module. Sessions are crea
 
 ## Important Design Principle
 
-Harbour should separate domain identity from runtime state.
+Harbr should separate domain identity from runtime state.
 
 ```text
 Project / Workspace / Module = persistent domain model
@@ -59,7 +59,7 @@ The user must be able to browse projects, workspaces, and modules even when no t
 
 ## Interface Direction
 
-Harbour should feel like a calm, fast, keyboard-first TUI inspired by yazi, lazygit, television, and k9s.
+Harbr should feel like a calm, fast, keyboard-first TUI inspired by yazi, lazygit, television, and k9s.
 
 The primary interface is a nested selector, not a dashboard.
 
@@ -168,7 +168,7 @@ Runtime actions:
 
 ## tmux Integration
 
-tmux is the main local runtime. Harbour should create sessions lazily and jump to existing ones when available.
+tmux is the main local runtime. Harbr should create sessions lazily and jump to existing ones when available.
 
 Recommended session names should be predictable and parseable:
 
@@ -186,12 +186,12 @@ advice/fix-auth/capture
 advice/fix-auth/api
 ```
 
-Harbour should support both runtime styles:
+Harbr should support both runtime styles:
 
 1. Module-session mode: one tmux session per module context.
 2. Workspace-session mode: one tmux session per workspace, with windows per module.
 
-This should be configurable per project. Harbour must not hard-code one model.
+This should be configurable per project. Harbr must not hard-code one model.
 
 ---
 
@@ -243,7 +243,7 @@ Remote agents should produce reviewable Git changes, ideally through a branch. G
 
 ## SQLite State
 
-Harbour should maintain local SQLite state for configuration, cached runtime metadata, and history.
+Harbr should maintain local SQLite state for configuration, cached runtime metadata, and history.
 
 Core entities:
 
@@ -256,13 +256,13 @@ Core entities:
 - Events
 - Layout templates
 
-The database is not the ultimate source of truth for Git or tmux. Harbour should reconcile stored state with actual Git worktrees and tmux sessions.
+The database is not the ultimate source of truth for Git or tmux. Harbr should reconcile stored state with actual Git worktrees and tmux sessions.
 
 ---
 
 ## Configuration
 
-A global Harbour config should define things like:
+A global Harbr config should define things like:
 
 ```json
 {
@@ -286,11 +286,11 @@ Module-specific runtime templates may define panes, commands, and whether comman
 
 ### Opening existing work
 
-The user opens Harbour from tmux, selects a project, then a workspace, then a module. If a runtime exists, Harbour jumps to it. If not, Harbour offers to create one.
+The user opens Harbr from tmux, selects a project, then a workspace, then a module. If a runtime exists, Harbr jumps to it. If not, Harbr offers to create one.
 
 ### Creating a task
 
-The user selects a project and creates a new workspace. Harbour creates the Git worktree and records it. No tmux session is created until the user opens a runtime.
+The user selects a project and creates a new workspace. Harbr creates the Git worktree and records it. No tmux session is created until the user opens a runtime.
 
 ### Working in a monorepo
 
@@ -298,15 +298,15 @@ The user selects a workspace and then chooses a module/package inside it. Each m
 
 ### Working in a single-package repo
 
-The project has one implicit module named `root`. The hierarchy still works, but Harbour can omit `root` from display or session names when appropriate.
+The project has one implicit module named `root`. The hierarchy still works, but Harbr can omit `root` from display or session names when appropriate.
 
 ### Starting an agent
 
-The user selects a module and starts an agent. Harbour records the agent, launches it in the configured runtime, and shows only minimal inline status until the user chooses to inspect it.
+The user selects a module and starts an agent. Harbr records the agent, launches it in the configured runtime, and shows only minimal inline status until the user chooses to inspect it.
 
 ### Syncing remote work
 
-A remote agent works on a branch, reports status, and finishes. Harbour lets the user view the diff and sync the branch into the local workspace for review and merge.
+A remote agent works on a branch, reports status, and finishes. Harbr lets the user view the diff and sync the branch into the local workspace for review and merge.
 
 ---
 
@@ -325,22 +325,22 @@ a          actions
 q          quit
 ```
 
-Suggested tmux bindings outside Harbour:
+Suggested tmux bindings outside Harbr:
 
 ```text
-prefix + w    open Harbour
+prefix + w    open Harbr
 prefix + z    tmux zoom
 prefix + g    lazygit popup
 prefix + y    yazi popup
 ```
 
-Most project/workspace/module management should happen inside Harbour rather than through many tmux leader bindings.
+Most project/workspace/module management should happen inside Harbr rather than through many tmux leader bindings.
 
 ---
 
 ## End Goal
 
-Harbour should become a beautiful, minimal TUI control plane for development workspaces.
+Harbr should become a beautiful, minimal TUI control plane for development workspaces.
 
 The user should be able to understand and act on:
 
@@ -356,6 +356,6 @@ where to jump next
 
 without being overwhelmed.
 
-The best version of Harbour feels like a nested selector for development contexts, not a monitoring dashboard.
+The best version of Harbr feels like a nested selector for development contexts, not a monitoring dashboard.
 
-Harbour is the missing orchestration layer between Git, worktrees, tmux, monorepos, local agents, and remote coding sandboxes.
+Harbr is the missing orchestration layer between Git, worktrees, tmux, monorepos, local agents, and remote coding sandboxes.

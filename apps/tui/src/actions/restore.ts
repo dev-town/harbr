@@ -1,4 +1,4 @@
-import type { HarbourContext, ProjectSummary } from '@harbour/domain'
+import type { HarbourContext, ProjectSummary } from '@harbr/domain'
 
 import type { TuiServices, TuiStore } from '../app-context'
 import { listWorkspaceSummaries, loadCurrentRuntime } from '../data'

@@ -2,7 +2,7 @@ import { homedir } from 'node:os'
 import path from 'node:path'
 
 export function getDefaultConfigPath() {
-  return path.join(homedir(), '.config', 'harbour', 'config.json')
+  return path.join(homedir(), '.config', 'harbr', 'config.json')
 }
 
 export function resolveTopLevelPath(inputPath: string) {

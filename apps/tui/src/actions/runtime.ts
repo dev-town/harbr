@@ -2,8 +2,8 @@ import type {
   HarbourContext,
   RuntimeAttachment,
   RuntimeTarget,
-} from '@harbour/domain'
-import { closeRuntime, openOrCreateRuntime } from '@harbour/runtime-tmux'
+} from '@harbr/domain'
+import { closeRuntime, openOrCreateRuntime } from '@harbr/runtime-tmux'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'

@@ -1,6 +1,6 @@
-import { ConfigService, makeConfigServiceLayer } from '@harbour/config'
-import { ProjectService, makeProjectServiceLayer } from '@harbour/db'
-import { ScannerService, makeScannerServiceLayer } from '@harbour/scanner'
+import { ConfigService, makeConfigServiceLayer } from '@harbr/config'
+import { ProjectService, makeProjectServiceLayer } from '@harbr/db'
+import { ScannerService, makeScannerServiceLayer } from '@harbr/scanner'
 import { Effect, Layer } from 'effect'
 
 import { refreshNamedProject, syncProjects } from '../reconciler.operations'

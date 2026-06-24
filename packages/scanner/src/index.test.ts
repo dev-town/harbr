@@ -4,12 +4,12 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import type { ProjectConfig } from '@harbour/domain'
-import { GitService, type GitServiceApi } from '@harbour/git'
+import type { ProjectConfig } from '@harbr/domain'
+import { GitService, type GitServiceApi } from '@harbr/git'
 import {
   RuntimeTmuxService,
   type RuntimeTmuxServiceApi,
-} from '@harbour/runtime-tmux'
+} from '@harbr/runtime-tmux'
 import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 

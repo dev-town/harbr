@@ -85,12 +85,12 @@ Owns:
 Depends on:
 
 ```text
-@harbour/domain
-@harbour/db
-@harbour/config
-@harbour/scanner
-@harbour/reconciler
-@harbour/runtime-tmux
+@harbr/domain
+@harbr/db
+@harbr/config
+@harbr/scanner
+@harbr/reconciler
+@harbr/runtime-tmux
 ```
 
 Must not contain:

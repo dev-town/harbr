@@ -1,5 +1,5 @@
 {
-  "name": "@harbour/config-typescript",
+  "name": "@harbr/config-typescript",
   "private": true,
   "type": "module",
   "exports": {

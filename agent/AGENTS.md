@@ -1,6 +1,6 @@
-# Harbour Agents
+# Harbr Agents
 
-Repo-local guidance for Harbour changes.
+Repo-local guidance for Harbr changes.
 
 ## Vendored references
 
@@ -8,7 +8,7 @@ Repo-local guidance for Harbour changes.
 - Treat `vendor/` as read-only reference material.
 - Do not edit files under `vendor/` unless explicitly asked.
 - Do not import from `vendor/`; import installed package dependencies.
-- For Effect work, inspect `vendor/effect` for idiomatic usage matching Harbour's pinned Effect version.
+- For Effect work, inspect `vendor/effect` for idiomatic usage matching Harbr's pinned Effect version.
 
 ## Boundaries
 

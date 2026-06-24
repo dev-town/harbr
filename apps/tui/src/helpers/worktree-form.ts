@@ -1,4 +1,4 @@
-import { BranchNameSchema, WorkspaceNameSchema } from '@harbour/domain'
+import { BranchNameSchema, WorkspaceNameSchema } from '@harbr/domain'
 
 export function validateWorkspaceName(value: string) {
   const result = WorkspaceNameSchema.safeParse(value)

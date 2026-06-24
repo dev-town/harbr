@@ -4,7 +4,7 @@
 
 The TUI currently has separate row models for Browse and Active.
 
-- Browse renders Harbour context rows: project, workspace, module.
+- Browse renders Harbr context rows: project, workspace, module.
 - Active renders `ActiveRuntimeRow`, a separate flattened runtime projection.
 - Actions then need route-specific resolution to turn rows back into project/workspace/module runtime targets.
 
@@ -14,18 +14,18 @@ Recent window creation work exposed this: Browse actions could resolve runtime t
 
 ## Goal
 
-Use one Harbour context row model across Browse and Active.
+Use one Harbr context row model across Browse and Active.
 
-Active should render all active Harbour sessions globally. These can be project, workspace, or module contexts. Active should not render tmux sessions that are not recognized as Harbour contexts.
+Active should render all active Harbr sessions globally. These can be project, workspace, or module contexts. Active should not render tmux sessions that are not recognized as Harbr contexts.
 
-Browse should render scoped Harbour context rows. Active should render the same row shape filtered to rows with runtime attached.
+Browse should render scoped Harbr context rows. Active should render the same row shape filtered to rows with runtime attached.
 
 ## Target Model
 
-All actionable TUI rows are Harbour context rows:
+All actionable TUI rows are Harbr context rows:
 
 ```ts
-type HarbourRow = ProjectRow | WorkspaceRow | ModuleRow
+type HarbrRow = ProjectRow | WorkspaceRow | ModuleRow
 ```
 
 Each row has a resolved context target and a required nullable runtime attachment:
@@ -70,7 +70,7 @@ Add resolved context and runtime attachment contracts to `domain`:
 ```ts
 type ResolvedContextTarget = {
   breadcrumb: string
-  context: HarbourContext
+  context: HarbrContext
   label: string
   runtimeTarget: RuntimeTarget
   scope: 'project' | 'workspace' | 'module'
@@ -82,17 +82,17 @@ type RuntimeAttachment = {
 }
 ```
 
-`sessionName` is runtime metadata only. It is not Harbour row identity and should not be predicted for inactive rows.
+`sessionName` is runtime metadata only. It is not Harbr row identity and should not be predicted for inactive rows.
 
 ## Runtime Overlay
 
-Rows without active Harbour runtime state use:
+Rows without active Harbr runtime state use:
 
 ```ts
 runtime: null
 ```
 
-Rows with active Harbour runtime state use:
+Rows with active Harbr runtime state use:
 
 ```ts
 runtime: {
@@ -107,11 +107,11 @@ Current focused runtime is derived in TUI selectors:
 const isCurrent = row.runtime?.sessionName === currentRuntime?.sessionName
 ```
 
-This keeps the row as a Harbour context and treats runtime state as an attachment.
+This keeps the row as a Harbr context and treats runtime state as an attachment.
 
 ## Browse Tab
 
-Browse renders scoped Harbour rows:
+Browse renders scoped Harbr rows:
 
 - Projects scope renders `ProjectRow[]`.
 - Workspaces scope renders `WorkspaceRow[]`.
@@ -123,10 +123,10 @@ Browse labels, active markers, current markers, and actions should derive from t
 
 ## Active Tab
 
-Active renders all active Harbour rows globally:
+Active renders all active Harbr rows globally:
 
 ```ts
-const activeRows = allHarbourRows.filter((row) => row.runtime !== null)
+const activeRows = allHarbrRows.filter((row) => row.runtime !== null)
 ```
 
 Active should not have a separate `ActiveRuntimeRow` context model.
@@ -135,15 +135,15 @@ If TypeScript needs to prove runtime is present, use a local type guard instead 
 
 ```ts
 function hasRuntime(
-  row: HarbourRow,
-): row is HarbourRow & { runtime: RuntimeAttachment } {
+  row: HarbrRow,
+): row is HarbrRow & { runtime: RuntimeAttachment } {
   return row.runtime !== null
 }
 ```
 
 ## Actions
 
-Actions should consume Harbour rows or resolved context targets, not route-specific row projections.
+Actions should consume Harbr rows or resolved context targets, not route-specific row projections.
 
 Context actions use:
 
@@ -180,7 +180,7 @@ type ContextActionRow = {
 
 ## DB Responsibility
 
-DB owns persisted Harbour context state and persisted/observed Harbour runtime state. DB does not own tmux behavior.
+DB owns persisted Harbr context state and persisted/observed Harbr runtime state. DB does not own tmux behavior.
 
 DB summary reads should expose enough data to build `ResolvedContextTarget` for each row without relying on currently loaded parent rows in the TUI.
 
@@ -200,12 +200,12 @@ workspaceName
 workspacePath
 ```
 
-Summary outputs should also include nullable `RuntimeAttachment` for matching active Harbour runtimes.
+Summary outputs should also include nullable `RuntimeAttachment` for matching active Harbr runtimes.
 
 DB can also expose a resolver for command paths that only have IDs:
 
 ```ts
-resolveContextTarget(context: HarbourContext): Effect<ResolvedContextTarget | null, DbError>
+resolveContextTarget(context: HarbrContext): Effect<ResolvedContextTarget | null, DbError>
 ```
 
 This resolver is useful for command execution and safety, but TUI row actions should usually already have `row.target` available.
@@ -232,7 +232,7 @@ It remains responsible for tmux behavior:
 3. Update DB summary contracts and repos to return self-sufficient context target fields and nullable runtime attachment.
 4. Update TUI row types so `ProjectRow`, `WorkspaceRow`, and `ModuleRow` all include `target` and `runtime`.
 5. Update TUI row mappers to build `ResolvedContextTarget` and runtime attachment.
-6. Replace `ActiveRuntimeRow` usage with `HarbourRow` filtered to `runtime !== null`.
+6. Replace `ActiveRuntimeRow` usage with `HarbrRow` filtered to `runtime !== null`.
 7. Unify Browse and Active action row payloads around `ResolvedContextTarget` and nullable `RuntimeAttachment`.
 8. Remove temporary window-picker `runtimeTarget` surface workaround.
 9. Update action handlers to use `row.target.runtimeTarget` and `row.runtime`.
@@ -240,9 +240,9 @@ It remains responsible for tmux behavior:
 
 ## Non-Goals
 
-- Do not render non-Harbour tmux sessions in Active.
+- Do not render non-Harbr tmux sessions in Active.
 - Do not put TUI row types in `domain`.
-- Do not make tmux session naming Harbour row identity.
+- Do not make tmux session naming Harbr row identity.
 - Do not predict `sessionName` for rows without actual runtime attachment.
 - Do not make DB responsible for tmux orchestration.
 
@@ -250,7 +250,7 @@ It remains responsible for tmux behavior:
 
 - Browse can open/start project, workspace, and module runtimes.
 - Browse can create configured windows for project, workspace, and module rows.
-- Active shows all active Harbour project/workspace/module sessions globally.
+- Active shows all active Harbr project/workspace/module sessions globally.
 - Active can open, close, and create configured windows for non-focused sessions.
 - Current markers are accurate in both Browse and Active.
 - Existing configured windows are skipped, not duplicated.

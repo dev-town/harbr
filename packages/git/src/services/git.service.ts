@@ -1,5 +1,5 @@
 import { Context, type Effect } from 'effect'
-import type { CreateWorktreeInput } from '@harbour/domain'
+import type { CreateWorktreeInput } from '@harbr/domain'
 import type {
   RepoNotGitError,
   RepoInspectionError,
@@ -29,7 +29,7 @@ export type GitServiceApi = {
   ) => Effect.Effect<string | null, RepoNotGitError>
 }
 
-export class GitService extends Context.Tag('@harbour/git/GitService')<
+export class GitService extends Context.Tag('@harbr/git/GitService')<
   GitService,
   GitServiceApi
 >() {}

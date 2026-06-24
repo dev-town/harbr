@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Effect, Layer } from 'effect'
-import type { RuntimeTarget } from '@harbour/domain'
+import type { RuntimeTarget } from '@harbr/domain'
 
 import type {
   CreateRuntimeWindowsResult,
