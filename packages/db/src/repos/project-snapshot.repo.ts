@@ -9,15 +9,15 @@ import type {
   WorkspaceSummary,
 } from '@harbr/domain'
 import { eq } from 'drizzle-orm'
+import type { HarbourDatabase } from '../db.types'
 import type {
-  HarbourDatabase,
   ModuleRecord,
   ProjectRecord,
   ReplaceProjectSnapshotInput,
   RuntimeRecord,
   WorkspaceRecord,
   WorkspaceSnapshotInput,
-} from '../db.types'
+} from '../services/project.types'
 import {
   moduleRowSchema,
   modules,

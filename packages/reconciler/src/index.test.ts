@@ -5,7 +5,7 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 
 import { ConfigService, type HarbourConfig } from '@harbr/config'
-import { openDatabase, ProjectService } from '@harbr/db'
+import { makeProjectServiceLayer, ProjectService } from '@harbr/db'
 import { type ProjectConfig, type ProjectObservation } from '@harbr/domain'
 import { RepoNotGitError } from '@harbr/git'
 import { Either, Effect, Layer } from 'effect'
@@ -71,15 +71,13 @@ describe('reconciler', () => {
       result.projects[0]?.runtimeIssue ?? null,
     )
 
-    const database = await openDatabase(dbPath)
-    try {
-      const project = await database.db.query.projects.findFirst({
-        where: (projectRow, { eq }) => eq(projectRow.name, 'alpha'),
-      })
-      expect(project?.repoPath).toBe(repoPath)
-    } finally {
-      database.sqlite.close()
-    }
+    const project = await Effect.runPromise(
+      Effect.flatMap(ProjectService, (service) =>
+        service.findByName('alpha'),
+      ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
+    )
+
+    expect(project?.repoPath).toBe(repoPath)
   })
 
   it('persists project only when bare repo has no linked workspace', async () => {

@@ -13,8 +13,8 @@ import {
   replaceProjectSnapshot as replaceProjectSnapshotRaw,
   saveUiContext as saveUiContextRaw,
 } from '../repos/project-snapshot.repo'
-import type { ProjectServiceApi } from '../db.types'
 import { ProjectService } from './project.service'
+import type { ProjectServiceApi } from './project.types'
 
 export function makeProjectServiceLayer(dbPath?: string) {
   // Bun compiled binaries can lose DB module-scope layer/object bindings here.
