@@ -1,6 +1,6 @@
 # Harbr
 
-Harbr is a terminal-native workspace orchestrator for developers working with Git repositories, monorepos, worktrees, tmux sessions, local agents, and future remote sandbox agents.
+Harbr is a terminal-native workspace orchestrator for developers working with Git repositories, monorepos, worktrees, tmux sessions, and configured command layouts.
 
 Harbr is not an IDE, terminal multiplexer, Git client, or AI coding tool. It is the control layer that understands development contexts and helps you create, navigate, restore, and jump into the right runtime.
 
@@ -23,32 +23,40 @@ Built today:
 - SQLite state and migrations.
 - Reconciler flow from config/scanner/runtime facts into the database.
 - tmux session discovery, open/create, close, and configured window/pane creation.
+- Workspace creation that creates Git worktrees.
+- Configured window/pane layout loading into project, workspace, and module sessions.
 - CLI sync entrypoint.
 
-Known gaps:
+## Roadmap
 
-- Full worktree creation wiring is still incomplete.
-- Durable events and OpenTelemetry export are deferred until product/debugging needs justify them.
-- Some docs describe the target product, not only current behavior.
+- Durable events and OpenTelemetry export when product/debugging needs justify them.
+- Richer local agent workflows built on configured tmux layouts.
+- Remote sandbox or agent runtimes if the local runtime model proves out.
+
+## Requirements
+
+To run Harbr locally:
+
+- macOS. Other Unix-like systems may work, but are not the current release target.
+- Git with worktree support.
+- tmux for local sessions and popup usage. If `display-popup -B` fails, remove `-B` from the binding.
+
+To build from source or work on this repo:
+
+- Bun `1.3.14`.
 
 ## Install
 
-Harbr uses Bun workspaces and Turborepo.
+### Homebrew
+
+No Homebrew formula is available yet. Build from source for now.
+
+### From Source
+
+Harbr uses Bun workspaces and Turborepo. From a checkout of this repo:
 
 ```sh
 bun install
-```
-
-Build everything:
-
-```sh
-bun run build
-```
-
-Build only the TUI:
-
-```sh
-bun run build:tui
 ```
 
 Build the single Harbr binary:
@@ -57,10 +65,42 @@ Build the single Harbr binary:
 bun run build:tui
 ```
 
-Build outputs:
+Build output:
 
-- App: `apps/tui/dist/harbr`
+- Binary: `apps/tui/dist/harbr`
 - Headless sync: `apps/tui/dist/harbr sync`
+
+## Run
+
+Run the installed binary:
+
+```sh
+harbr
+```
+
+Run the source-built binary:
+
+```sh
+./apps/tui/dist/harbr
+```
+
+Run headless sync:
+
+```sh
+harbr sync
+```
+
+Run headless sync with JSON output:
+
+```sh
+harbr sync --json
+```
+
+Run with explicit config and database paths:
+
+```sh
+harbr --path ~/.config/harbr/config.json --db-path ~/.local/share/harbr/harbr.db
+```
 
 ## Config
 
@@ -76,45 +116,55 @@ Default database path:
 ~/.local/share/harbr/harbr.db
 ```
 
-Minimal config:
+Example config:
 
 ```json
 {
-  "$schema": "./packages/config/harbour.schema.json",
+  "$schema": "https://raw.githubusercontent.com/dev-town/harbr/main/packages/config/harbr.schema.json",
   "projects": [
     {
       "name": "harbr",
-      "repo": "/path/to/repo",
+      "repo": "~/Sites/harbr/harbr.git",
       "modules": [".", "apps/", "packages/"]
-    }
-  ]
-}
-```
-
-Config with reusable tmux windows:
-
-```json
-{
-  "$schema": "./packages/config/harbour.schema.json",
-  "windows": [
-    {
-      "name": "Shell",
-      "panes": [{ "name": "Shell" }]
     },
     {
-      "name": "Dev",
-      "panes": [
-        { "name": "Server", "command": "bun run dev" },
-        { "name": "Tests", "command": ["bun run test", "bun run lint"] }
-      ]
+      "name": "myweddin",
+      "repo": "~/Sites/myweddin/",
+      "modules": [".", "apps/", "packages/"]
+    },
+    {
+      "name": "DevTown 2026",
+      "repo": "~/Sites/devtown-2026/devtown.git"
+    },
+    {
+      "name": "Dotfiles",
+      "repo": "~/.dotfiles/"
     }
   ],
-  "projects": [
+  "windows": [
     {
-      "name": "harbr",
-      "repo": "/path/to/repo",
-      "modules": [".", "apps/", "packages/"],
-      "windows": ["Shell", "Dev"]
+      "name": "Agent",
+      "panes": [
+        {
+          "name": "Opencode",
+          "command": "opencode"
+        },
+        {
+          "name": "CLI"
+        }
+      ]
+    },
+    {
+      "name": "Editor",
+      "panes": [
+        {
+          "name": "Neovim",
+          "command": "nvim"
+        },
+        {
+          "name": "CLI"
+        }
+      ]
     }
   ]
 }
@@ -123,52 +173,19 @@ Config with reusable tmux windows:
 Config notes:
 
 - `repo` may use `~` and is resolved to an absolute path.
+- `repo` can point at a normal checkout or a bare Git directory.
+- For bare repositories, Harbr discovers and creates worktrees from the Git directory.
 - `modules` are repo-relative selectors.
 - Use `.` for the repo root module.
 - Use a trailing slash like `apps/` or `packages/` to expand child directories.
 - Absolute module paths and `/` are rejected.
+- `windows` define reusable tmux window/pane layouts.
+- Loading a layout creates missing configured windows and panes in the target session.
+- Existing configured windows are skipped, not duplicated.
 - Project-level `windows` can reference global window names or define inline windows.
 - A project can set `"windows": []` to disable global windows for that project.
 - Pane `cwd` is optional and is resolved relative to the runtime cwd.
 - Pane `command` may be a string or an array of strings.
-
-## Run
-
-Start the TUI from source:
-
-```sh
-bun run --cwd apps/tui start
-```
-
-Start the TUI with explicit config and database paths:
-
-```sh
-bun run --cwd apps/tui start -- --path ~/.config/harbr/config.json --db-path ~/.local/share/harbr/harbr.db
-```
-
-Run the compiled TUI:
-
-```sh
-./apps/tui/dist/harbr
-```
-
-Run headless sync from source:
-
-```sh
-bun run --cwd apps/tui start -- sync
-```
-
-Run headless sync with JSON output:
-
-```sh
-bun run --cwd apps/tui start -- sync --json
-```
-
-Run headless sync with an explicit config path:
-
-```sh
-bun run --cwd apps/tui start -- sync --path ~/.config/harbr/config.json
-```
 
 ## TUI Usage
 
@@ -196,8 +213,9 @@ Common flows:
 - Browse projects, workspaces, and modules from the Browse tab.
 - Press `Enter` on a leaf context to open an existing tmux session or create one.
 - Use the Active tab to switch between currently open Harbr tmux runtimes.
-- Use `Ctrl+A` to open context actions such as open/start or configured window creation.
-- Use configured windows to create tmux windows and panes with optional startup commands.
+- Use `Ctrl+A` to open context actions such as open/start, workspace creation, or configured layout loading.
+- Create a workspace to create a Git worktree, then open/start that workspace as a tmux session.
+- Load configured layouts to create tmux windows and panes with optional startup commands.
 
 ## tmux Popup Setup
 
@@ -206,7 +224,15 @@ Harbr is designed to be launched inside a tmux popup.
 Example tmux binding:
 
 ```tmux
-bind-key -r p display-popup -B -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "$HOME/bin/tmux-open-harbr-tui"
+bind-key -r H display-popup -B -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "$HOME/bin/harbr"
+```
+
+Use any key you prefer. `prefix + p` is widely used by tmux users, so `prefix + H` or `prefix + S` is usually safer.
+
+During local development, point the binding at the built binary:
+
+```tmux
+bind-key -r H display-popup -B -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "<repo>/apps/tui/dist/harbr"
 ```
 
 Option notes:
@@ -220,47 +246,7 @@ Option notes:
 If your tmux does not support `-B`, remove it:
 
 ```tmux
-bind-key -r p display-popup -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "$HOME/bin/tmux-open-harbr-tui"
-```
-
-If you want the popup near the status line and your tmux supports it, use `-y S`:
-
-```tmux
-bind-key -r p display-popup -B -E -d "#{pane_current_path}" -w 80% -h 60% -y S "$HOME/bin/tmux-open-harbr-tui"
-```
-
-tmux does not expose a general popup padding option. `-B` removes the tmux border, but Harbr currently renders with one cell of app padding around the shell.
-
-## Launcher Script
-
-Example `tmux-open-harbr-tui` script:
-
-```bash
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-export PATH="$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
-
-exec "$HOME/bin/harbr"
-```
-
-Make it executable:
-
-```sh
-chmod +x "$HOME/bin/tmux-open-harbr-tui"
-```
-
-Development launcher variant:
-
-```bash
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-export PATH="$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
-
-exec bun run --cwd "/path/to/harbr/apps/tui" start
+bind-key -r H display-popup -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "$HOME/bin/harbr"
 ```
 
 ## tmux Runtime Names
@@ -276,9 +262,9 @@ project~~workspace~~module
 Examples:
 
 ```text
-harbr
-harbr~~main
-harbr~~main~~apps/tui
+shop
+shop~~feature-checkout
+shop~~feature-checkout~~apps/web
 ```
 
 Session segments escape tmux-dangerous characters such as `~`, `:`, `.`, and `%`. Existing tmux sessions without `~~` are treated as project-level sessions named after the tmux session.
@@ -302,7 +288,37 @@ packages/
 docs/                  product, architecture, and UX notes
 ```
 
-## Development
+## Working On The Repo
+
+Install dependencies:
+
+```sh
+bun install
+```
+
+Start the TUI from source:
+
+```sh
+bun run --cwd apps/tui start
+```
+
+Run headless sync from source:
+
+```sh
+bun run --cwd apps/tui start -- sync
+```
+
+Build everything:
+
+```sh
+bun run build
+```
+
+Build the TUI binary:
+
+```sh
+bun run build:tui
+```
 
 Run checks:
 
@@ -344,12 +360,3 @@ Format:
 ```sh
 bun run format
 ```
-
-## Docs
-
-Useful docs:
-
-- `docs/harbour-product-brief.md`
-- `docs/harbour-technical-architecture.md`
-- `docs/harbour-tmux-popover-ux-spec.md`
-- `docs/build-status.md`

@@ -28,7 +28,7 @@
 
 ### Target
 
-Turn the browse popover into a fuller control surface by adding actions shell and workspace/worktree creation flows.
+Keep the browse popover as the control surface for project, workspace, module, runtime, and configured layout actions.
 
 ### Scope
 
@@ -49,9 +49,9 @@ Turn the browse popover into a fuller control surface by adding actions shell an
 
 ### Why
 
-- current browse/open flow now covers config, git, modules, persistence, and tmux resume/create
-- biggest remaining UX gap is contextual actions and worktree creation flows
-- next product step is moving beyond default open/attach into explicit project/workspace/module actions and configured window creation
+- current browse/open flow now covers config, git, modules, persistence, workspace/worktree creation, tmux resume/create, and configured layout loading
+- contextual project/workspace/module actions are wired through the TUI action surface
+- remaining UX polish includes hiding already-existing configured windows from the picker
 
 ## Suggested Order
 
@@ -83,7 +83,7 @@ Turn the browse popover into a fuller control surface by adding actions shell an
   - module: open/start module, create module windows, open/start workspace root, create workspace windows, open/start project root, create project windows
 - [x] runtime action labels use `Open` when the exact runtime session exists and `Start` when it must be created
 - [x] TUI command routing now uses active surface handlers over global keymap commands
-- [ ] worktree creation flow and other write-side actions still need explicit command-handler wiring in `apps/tui`
+- [x] worktree creation flow and write-side actions have explicit command-handler wiring in `apps/tui`
 - [x] configured window picker now calls `runtime-tmux` to create selected windows/panes and skips windows that already exist
 - [x] Active tab actions can launch configured window picker for the selected active project/workspace/module runtime
 - [x] `runtime-tmux` has write-side API to ensure a semantic runtime session, create configured windows, create named panes, and send optional pane commands
