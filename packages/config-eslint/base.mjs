@@ -45,7 +45,7 @@ export const baseConfig = tseslint.config(
 )
 
 export const boundaryConfig = {
-  files: ['apps/*/src/**/*.ts', 'packages/*/src/**/*.ts'],
+  files: ['apps/*/src/**/*.{ts,tsx}', 'packages/*/src/**/*.{ts,tsx}'],
   plugins: {
     boundaries,
   },
