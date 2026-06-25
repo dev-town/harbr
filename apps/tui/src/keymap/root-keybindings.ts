@@ -6,16 +6,16 @@ import { makeRootBindings } from './bindings'
 import { keymapPriority } from './priorities'
 
 export function useRootKeybindings() {
-  const { renderer } = useTuiServices()
+  const { shutdown } = useTuiServices()
 
   useBindings(
     () => ({
       priority: keymapPriority.root,
       bindings: makeRootBindings({
         onHelp: () => tuiStore.getState().openHelpModal(),
-        onQuit: () => renderer.destroy(),
+        onQuit: () => void shutdown(),
       }),
     }),
-    [renderer],
+    [shutdown],
   )
 }

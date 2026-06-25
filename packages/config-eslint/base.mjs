@@ -42,6 +42,30 @@ export const baseConfig = tseslint.config(
       ],
     },
   },
+  {
+    files: ['packages/reconciler/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@harbr/config',
+              message:
+                'Load config at the app edge; pass normalized ProjectConfig[] into reconciler.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@harbr/config/*'],
+              message:
+                'Load config at the app edge; pass normalized ProjectConfig[] into reconciler.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 )
 
 export const boundaryConfig = {

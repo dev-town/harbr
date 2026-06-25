@@ -1,5 +1,6 @@
-import { createWorktree, inspectRepo } from '@harbr/git'
-import { refreshProject } from '@harbr/reconciler'
+import { ConfigService } from '@harbr/config'
+import { GitService } from '@harbr/git'
+import { ReconcilerService } from '@harbr/reconciler'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'
@@ -72,10 +73,28 @@ export async function handleWorktreeFormSubmit(
   store.getState().clearNotice()
 
   try {
-    const repo = await Effect.runPromise(inspectRepo(project.repoPath))
+    await services.effectRuntime.runPromise(
+      Effect.gen(function* () {
+        const git = yield* GitService
+        const repo = yield* git.inspectRepo(project.repoPath)
 
-    await Effect.runPromise(createWorktree(repo, { branchName, workspaceName }))
-    await Effect.runPromise(refreshProject(project.label, services.options))
+        yield* git.createWorktree(repo, { branchName, workspaceName })
+        const configService = yield* ConfigService
+        const config = yield* configService.load
+        const reconciler = yield* ReconcilerService
+        const projectConfig = config.projects.find(
+          (entry) => entry.name === project.label,
+        )
+
+        if (!projectConfig) {
+          return yield* Effect.fail(
+            new Error(`Project config not found: ${project.label}`),
+          )
+        }
+
+        yield* reconciler.refreshProject(projectConfig)
+      }),
+    )
     await openWorkspaces(services, store, project.projectId, {
       selectedWorkspaceName: workspaceName,
       visibility: 'all',

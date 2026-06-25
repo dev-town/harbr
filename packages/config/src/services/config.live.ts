@@ -17,29 +17,28 @@ import {
 } from '../config.normalize'
 import { getDefaultConfigPath, resolveTopLevelPath } from '../config.path'
 import { configSchema, type HarbourConfigInput } from '../schema'
-import { ConfigService, type ConfigServiceApi } from './config.service'
+import {
+  ConfigService,
+  ConfigServiceOptions,
+  type ConfigServiceApi,
+} from './config.service'
 import type { HarbourConfig, HarbourProject } from '../config.types'
 
-export function loadConfig() {
-  return Effect.flatMap(ConfigService, (service) => service.load).pipe(
-    Effect.provide(makeConfigServiceLayer()),
-  )
-}
+export const ConfigServiceOptionsLive = Layer.succeed(ConfigServiceOptions, {
+  defaultConfigPath: getDefaultConfigPath(),
+})
 
-export function loadConfigAtPath(configPath: string) {
-  return Effect.flatMap(ConfigService, (service) =>
-    service.loadAtPath(configPath),
-  ).pipe(Effect.provide(makeConfigServiceLayer()))
-}
-
-export function makeConfigServiceLayer(
-  defaultConfigPath = getDefaultConfigPath(),
-) {
-  return Layer.succeed(ConfigService, {
-    load: loadConfigFile(defaultConfigPath),
-    loadAtPath: loadConfigFile,
-  } satisfies ConfigServiceApi)
-}
+export const ConfigServiceLive = Layer.effect(
+  ConfigService,
+  Effect.map(
+    ConfigServiceOptions,
+    ({ defaultConfigPath }) =>
+      ({
+        load: loadConfigFile(defaultConfigPath),
+        loadAtPath: loadConfigFile,
+      }) satisfies ConfigServiceApi,
+  ),
+)
 
 function loadConfigFile(configPath: string) {
   const resolvedConfigPath = resolveTopLevelPath(configPath)

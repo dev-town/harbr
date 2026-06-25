@@ -1,4 +1,5 @@
-import { sync } from '@harbr/reconciler'
+import { ConfigService } from '@harbr/config'
+import { ReconcilerService } from '@harbr/reconciler'
 import { Effect, Either } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'
@@ -22,8 +23,16 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
   store.getState().clearNotice()
 
   try {
-    const syncResult = await Effect.runPromise(
-      Effect.either(sync(services.options)),
+    const syncResult = await services.effectRuntime.runPromise(
+      Effect.either(
+        Effect.gen(function* () {
+          const configService = yield* ConfigService
+          const config = yield* configService.load
+          const reconciler = yield* ReconcilerService
+
+          return yield* reconciler.syncProjects(config.projects)
+        }),
+      ),
     )
 
     if (Either.isLeft(syncResult)) {
@@ -45,11 +54,11 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       savedContext,
       configuredWindows,
     ] = await Promise.all([
-      listProjectSummaries(services.options.dbPath),
-      listActiveRuntimeSummaries(services.options.dbPath),
-      loadCurrentRuntime(),
-      loadUiContext(services.options.dbPath),
-      listConfiguredProjectWindows(services.options.configPath),
+      listProjectSummaries(services),
+      listActiveRuntimeSummaries(services),
+      loadCurrentRuntime(services),
+      loadUiContext(services),
+      listConfiguredProjectWindows(services),
     ])
     const projectWindows = summaries.map((summary) => ({
       projectId: summary.id,

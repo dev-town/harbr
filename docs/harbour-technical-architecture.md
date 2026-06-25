@@ -31,7 +31,7 @@ That means:
 observed external state
 → scanners
 → facts
-→ reconciler
+→ reconciler, given validated config intent
 → SQLite/Drizzle state
 → TUI view state
 ```
@@ -63,7 +63,7 @@ The database is not the ultimate source of truth for Git or tmux. It stores Harb
 ### TUI
 
 - OpenTUI React
-- Jotai for UI/session state
+- Zustand for UI/session state
 - `@opentui/keymap` for keybinding contexts and command routing
 
 ### Persistence
@@ -76,6 +76,9 @@ The database is not the ultimate source of truth for Git or tmux. It stores Harb
 
 - Effect for scanners, reconcilers, adapters, pipelines, errors, retries, scheduling, dependency injection, logs, and spans
 - Effect should not be used inside React/OpenTUI components except at app/service boundaries
+- Packages expose service tags, API types, option tags where needed, and live layers.
+- Apps compose package live layers into an app layer and own Effect runtime lifecycle.
+- Prefer explicit `Effect.gen` service consumption in app code so dependencies remain visible.
 
 ### Observability
 
@@ -119,7 +122,6 @@ The database is not the ultimate source of truth for Git or tmux. It stores Harb
 harbr/
   apps/
     tui/
-    cli/
 
   packages/
     domain/
@@ -129,8 +131,6 @@ harbr/
     runtime-tmux/
     scanner/
     reconciler/
-    keymap/
-    ui/
     test-utils/
 
     config-typescript/
@@ -138,28 +138,10 @@ harbr/
     config-prettier/
     config-vitest/
 
-  agent/
-    AGENTS.md
-
   .agents/
     skills/
       architecture/
         SKILL.md
-      testing/
-        SKILL.md
-      boundaries/
-        SKILL.md
-      effect/
-        SKILL.md
-      drizzle/
-        SKILL.md
-      opentui/
-        SKILL.md
-
-  scripts/
-    check.ts
-    doctor.ts
-    setup.ts
 
   turbo.json
   package.json
@@ -180,13 +162,15 @@ Owns:
 
 - app bootstrap
 - OpenTUI render tree
-- Jotai store setup
+- Zustand store setup
 - keyboard input routing
 - command palette
 - screen layout
 - subscriptions to Harbr state
 - execution of command handlers
-- starting/stopping Effect runtime fibers
+- loading and validating config before invoking reconciliation
+- composing the app Effect layer from package live layers and option layers
+- creating and disposing the app Effect runtime
 
 Depends on:
 
@@ -197,7 +181,6 @@ Depends on:
 @harbr/scanner
 @harbr/reconciler
 @harbr/runtime-tmux
-apps/tui keymap
 ```
 
 Must not contain:
@@ -238,8 +221,8 @@ runtime-tmux
 
 scanner
   → domain
-  → config
   → git
+  → runtime-tmux
 
 reconciler
   → domain
@@ -264,7 +247,6 @@ ui → reconciler
 keymap → db
 db → scanner
 db → reconciler
-scanner → runtime-tmux
 runtime-tmux → db
 git → db
 ```
@@ -275,14 +257,14 @@ git → db
 
 ```text
 domain        = Harbr language
-config        = user/project intent
+config        = user/project intent and validation
 git/tmux      = external reality adapters
 scanner       = what exists?
-reconciler    = what changed and what should Harbr believe?
+apps          = load validated intent and own runtime entrypoints
+reconciler    = given validated intent and observed facts, what should Harbr believe?
 db            = what Harbr remembers
 keymap        = key → command
 ui            = what the user sees
-apps          = how the user enters Harbr
 agent skills  = how agents stay inside the architecture
 ```
 

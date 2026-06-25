@@ -33,42 +33,6 @@ export const RuntimeTmuxServiceLive = Layer.succeed(RuntimeTmuxService, {
   openOrCreateRuntime: openOrCreateRuntimeLive,
 } satisfies RuntimeTmuxServiceApi)
 
-export function makeRuntimeTmuxServiceLayer() {
-  return RuntimeTmuxServiceLive
-}
-
-export function listRuntimes() {
-  return Effect.flatMap(
-    RuntimeTmuxService,
-    (service) => service.listRuntimes,
-  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
-}
-
-export function getCurrentRuntime() {
-  return Effect.flatMap(
-    RuntimeTmuxService,
-    (service) => service.getCurrentRuntime,
-  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
-}
-
-export function openOrCreateRuntime(target: RuntimeTarget) {
-  return Effect.flatMap(RuntimeTmuxService, (service) =>
-    service.openOrCreateRuntime(target),
-  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
-}
-
-export function closeRuntime(sessionName: string) {
-  return Effect.flatMap(RuntimeTmuxService, (service) =>
-    service.closeRuntime(sessionName),
-  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
-}
-
-export function createRuntimeWindows(input: RuntimeWindowCreation) {
-  return Effect.flatMap(RuntimeTmuxService, (service) =>
-    service.createRuntimeWindows(input),
-  ).pipe(Effect.provide(makeRuntimeTmuxServiceLayer()))
-}
-
 function getCurrentRuntimeLive() {
   return Effect.tryPromise({
     try: async () => {

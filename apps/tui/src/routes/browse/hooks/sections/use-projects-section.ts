@@ -11,7 +11,7 @@ export function useProjectsSection() {
   const services = useTuiServices()
 
   return {
-    onBack: () => services.renderer.destroy(),
+    onBack: () => void services.shutdown(),
     onOpenRow: (row: ProjectRow) => {
       if (row.hasWorkspaces) {
         void openWorkspaces(services, tuiStore, row.projectId)

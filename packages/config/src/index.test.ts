@@ -2,14 +2,16 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { Either, Effect } from 'effect'
+import { Either, Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
+  ConfigService,
+  ConfigServiceLive,
+  ConfigServiceOptions,
   ConfigNotFoundError,
   InvalidConfigError,
   InvalidJsonError,
-  loadConfigAtPath,
 } from './index'
 
 const tempRoots: string[] = []
@@ -677,12 +679,28 @@ describe('loadConfigAtPath', () => {
 })
 
 async function runEither(effect: ReturnType<typeof loadConfigAtPath>) {
-  return Effect.runPromise(Effect.either(effect))
+  return Effect.runPromise(
+    Effect.either(effect).pipe(Effect.provide(configTestLayer)),
+  )
 }
 
 async function runSuccess(effect: ReturnType<typeof loadConfigAtPath>) {
-  return Effect.runPromise(effect)
+  return Effect.runPromise(effect.pipe(Effect.provide(configTestLayer)))
 }
+
+function loadConfigAtPath(configPath: string) {
+  return Effect.flatMap(ConfigService, (service) =>
+    service.loadAtPath(configPath),
+  )
+}
+
+const configTestLayer = ConfigServiceLive.pipe(
+  Layer.provide(
+    Layer.succeed(ConfigServiceOptions, {
+      defaultConfigPath: '/tmp/harbour-config-test.json',
+    }),
+  ),
+)
 
 function expectLeft(
   result: Awaited<ReturnType<typeof runEither>>,

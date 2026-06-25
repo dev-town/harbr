@@ -4,11 +4,18 @@ import { DatabaseMigrationError, DatabaseOpenError } from '../db.errors'
 import { openDatabase, getDefaultDatabasePath } from '../client'
 import { migrateDatabase } from '../migrate'
 import type { DatabaseClientApi, HarbourDatabaseConnection } from '../db.types'
-import { DatabaseClient } from './database-client.service'
+import {
+  DatabaseClient,
+  DatabaseClientOptions,
+} from './database-client.service'
 
-export function makeDatabaseClientLayer(dbPath = getDefaultDatabasePath()) {
-  return Layer.scoped(
-    DatabaseClient,
+export const DatabaseClientOptionsLive = Layer.succeed(DatabaseClientOptions, {
+  dbPath: getDefaultDatabasePath(),
+})
+
+export const DatabaseClientLive = Layer.scoped(
+  DatabaseClient,
+  Effect.flatMap(DatabaseClientOptions, ({ dbPath }) =>
     Effect.acquireRelease(
       Effect.gen(function* () {
         const database = yield* Effect.tryPromise({
@@ -34,8 +41,8 @@ export function makeDatabaseClientLayer(dbPath = getDefaultDatabasePath()) {
           }) satisfies DatabaseClientApi,
       ),
     ),
-  )
-}
+  ),
+)
 
 function migrateDatabaseEffect(database: HarbourDatabaseConnection) {
   return Effect.tryPromise({

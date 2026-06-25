@@ -27,6 +27,11 @@ Harbour vendors Effect source under `vendor/effect`.
 
 - Put service contracts in `services/*.service.ts`.
 - Put live layers and wiring in `services/*.live.ts`.
+- Public packages should export service tags, API types, option tags where needed, and live layers.
+- Do not add package-level helper functions that secretly `Effect.provide` live layers.
+- Prefer constant live layers. Use `make*` functions for app lifecycle constructors, not no-op wrappers around package layers.
+- Represent app-provided runtime options as option services when they participate in Layer composition.
+- App surfaces should compose package layers once, create one shared runtime for interactive apps, and request services with explicit `Effect.gen` / `yield* ServiceTag`.
 - Keep `index.ts` export-only.
 - Use package errors in `*.errors.ts`.
 - Test Effect programs with explicit layers and `Effect.runPromise` where appropriate.

@@ -110,10 +110,7 @@ export async function restoreCurrentRuntime(
     return true
   }
 
-  const workspaces = await listWorkspaceSummaries(
-    project.id,
-    services.options.dbPath,
-  )
+  const workspaces = await listWorkspaceSummaries(services, project.id)
   const workspace = currentRuntime.workspaceName
     ? workspaces.find(
         (candidate) => candidate.name === currentRuntime.workspaceName,

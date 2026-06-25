@@ -6,7 +6,6 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@harbr/config": "workspace:*",
     "@harbr/db": "workspace:*",
     "@harbr/domain": "workspace:*",
     "@harbr/scanner": "workspace:*",

@@ -13,15 +13,7 @@ import {
   formatSessionTarget,
   parseSessionName,
 } from './session-name.util'
-import {
-  closeRuntime,
-  createRuntimeWindows,
-  getCurrentRuntime,
-  listRuntimes,
-  openOrCreateRuntime,
-  RuntimeTmuxService,
-  RuntimeTmuxServiceLive,
-} from './index'
+import { RuntimeTmuxService, RuntimeTmuxServiceLive } from './index'
 
 describe('parseSessionName', () => {
   it('parses project-only session names', () => {
@@ -161,7 +153,6 @@ describe('listRuntimes', () => {
 
   it('exports a usable live layer symbol', () => {
     expect(RuntimeTmuxServiceLive).toBeDefined()
-    expect(listRuntimes).toBeTypeOf('function')
   })
 })
 
@@ -198,10 +189,7 @@ describe('getCurrentRuntime', () => {
     ).resolves.toEqual(currentRuntime)
   })
 
-  it('exports a usable current runtime program symbol', () => {
-    expect(closeRuntime).toBeTypeOf('function')
-    expect(createRuntimeWindows).toBeTypeOf('function')
-    expect(getCurrentRuntime).toBeTypeOf('function')
-    expect(openOrCreateRuntime).toBeTypeOf('function')
+  it('exports a usable live service tag', () => {
+    expect(RuntimeTmuxService).toBeDefined()
   })
 })

@@ -2,7 +2,6 @@ import { Effect, Layer } from 'effect'
 
 import { ProjectServiceError } from '../db.errors'
 import { DatabaseClient } from '../infra/database-client.service'
-import { makeDatabaseClientLayer } from '../infra/database-client.live'
 import {
   getProjectByName as getProjectByNameRaw,
   listActiveRuntimeSummaries as listActiveRuntimeSummariesRaw,
@@ -16,91 +15,81 @@ import {
 import { ProjectService } from './project.service'
 import type { ProjectServiceApi } from './project.types'
 
-export function makeProjectServiceLayer(dbPath?: string) {
-  // Bun compiled binaries can lose DB module-scope layer/object bindings here.
-  // Build this layer through a function call instead of ProjectServiceLive.pipe().
-  return makeProjectServiceLive().pipe(
-    Layer.provide(makeDatabaseClientLayer(dbPath)),
-  )
-}
+export const ProjectServiceLive = Layer.effect(
+  ProjectService,
+  Effect.gen(function* () {
+    const database = yield* DatabaseClient
 
-function makeProjectServiceLive() {
-  return Layer.effect(
-    ProjectService,
-    Effect.gen(function* () {
-      const database = yield* DatabaseClient
-
-      return {
-        findByName: (projectName) =>
-          Effect.try({
-            try: () => getProjectByNameRaw(database.db, projectName),
-            catch: (error) =>
-              new ProjectServiceError({
-                operation: 'findByName',
-                message: error instanceof Error ? error.message : String(error),
-              }),
-          }),
-        loadUiContext: Effect.try({
-          try: () => loadUiContextRaw(database.db),
+    return {
+      findByName: (projectName) =>
+        Effect.try({
+          try: () => getProjectByNameRaw(database.db, projectName),
           catch: (error) =>
             new ProjectServiceError({
-              operation: 'loadUiContext',
+              operation: 'findByName',
               message: error instanceof Error ? error.message : String(error),
             }),
         }),
-        listProjectSummaries: Effect.try({
-          try: () => listProjectSummariesRaw(database.db),
+      loadUiContext: Effect.try({
+        try: () => loadUiContextRaw(database.db),
+        catch: (error) =>
+          new ProjectServiceError({
+            operation: 'loadUiContext',
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      }),
+      listProjectSummaries: Effect.try({
+        try: () => listProjectSummariesRaw(database.db),
+        catch: (error) =>
+          new ProjectServiceError({
+            operation: 'listProjectSummaries',
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      }),
+      listActiveRuntimeSummaries: Effect.try({
+        try: () => listActiveRuntimeSummariesRaw(database.db),
+        catch: (error) =>
+          new ProjectServiceError({
+            operation: 'listActiveRuntimeSummaries',
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      }),
+      listWorkspaceSummaries: (projectId) =>
+        Effect.try({
+          try: () => listWorkspaceSummariesRaw(database.db, projectId),
           catch: (error) =>
             new ProjectServiceError({
-              operation: 'listProjectSummaries',
+              operation: 'listWorkspaceSummaries',
               message: error instanceof Error ? error.message : String(error),
             }),
         }),
-        listActiveRuntimeSummaries: Effect.try({
-          try: () => listActiveRuntimeSummariesRaw(database.db),
+      listModuleSummaries: (workspaceId) =>
+        Effect.try({
+          try: () => listModuleSummariesRaw(database.db, workspaceId),
           catch: (error) =>
             new ProjectServiceError({
-              operation: 'listActiveRuntimeSummaries',
+              operation: 'listModuleSummaries',
               message: error instanceof Error ? error.message : String(error),
             }),
         }),
-        listWorkspaceSummaries: (projectId) =>
-          Effect.try({
-            try: () => listWorkspaceSummariesRaw(database.db, projectId),
-            catch: (error) =>
-              new ProjectServiceError({
-                operation: 'listWorkspaceSummaries',
-                message: error instanceof Error ? error.message : String(error),
-              }),
-          }),
-        listModuleSummaries: (workspaceId) =>
-          Effect.try({
-            try: () => listModuleSummariesRaw(database.db, workspaceId),
-            catch: (error) =>
-              new ProjectServiceError({
-                operation: 'listModuleSummaries',
-                message: error instanceof Error ? error.message : String(error),
-              }),
-          }),
-        saveUiContext: (context) =>
-          Effect.try({
-            try: () => saveUiContextRaw(database.db, context),
-            catch: (error) =>
-              new ProjectServiceError({
-                operation: 'saveUiContext',
-                message: error instanceof Error ? error.message : String(error),
-              }),
-          }),
-        syncSnapshot: (input) =>
-          Effect.try({
-            try: () => replaceProjectSnapshotRaw(database.db, input),
-            catch: (error) =>
-              new ProjectServiceError({
-                operation: 'syncSnapshot',
-                message: error instanceof Error ? error.message : String(error),
-              }),
-          }),
-      } satisfies ProjectServiceApi
-    }),
-  )
-}
+      saveUiContext: (context) =>
+        Effect.try({
+          try: () => saveUiContextRaw(database.db, context),
+          catch: (error) =>
+            new ProjectServiceError({
+              operation: 'saveUiContext',
+              message: error instanceof Error ? error.message : String(error),
+            }),
+        }),
+      syncSnapshot: (input) =>
+        Effect.try({
+          try: () => replaceProjectSnapshotRaw(database.db, input),
+          catch: (error) =>
+            new ProjectServiceError({
+              operation: 'syncSnapshot',
+              message: error instanceof Error ? error.message : String(error),
+            }),
+        }),
+    } satisfies ProjectServiceApi
+  }),
+)

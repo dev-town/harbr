@@ -15,14 +15,14 @@ Use this doc to decide where new code belongs.
 - Use for user/project intent, not observed reality.
 - Raw config-file schema stays here.
 - Normalize config outputs so they match `domain` contracts where those outputs cross package boundaries.
-- Public config APIs should be service- or program-shaped. Keep low-level parsing helpers internal.
+- Public config APIs should expose service tags, API types, option tags, and live layers. Keep low-level parsing helpers internal.
 
 ### `git`
 
 - Owns raw Git integration.
 - Use for repo detection, worktree listing, branch/head state, dirty state, and Git-side mutations.
 - Do not put Harbour reconciliation or db writes here.
-- Prefer exported services/programs at the package boundary. Keep raw command details internal.
+- Prefer exported service tags, API types, and live layers at the package boundary. Keep raw command details internal.
 
 ### `runtime-tmux`
 
@@ -35,14 +35,16 @@ Use this doc to decide where new code belongs.
 - Owns read-side observation and normalization.
 - Converts config, Git, and tmux reality into facts.
 - Facts stay read-only and mutation-free.
-- Expose scanner capabilities as services/programs. Keep scanning helpers internal.
+- Expose scanner capabilities as services and live layers. Keep scanning helpers internal.
 
 ### `reconciler`
 
 - Owns core product logic.
+- Consumes validated `ProjectConfig` intent supplied by app edges.
+- Does not load config files or depend on `@harbr/config`.
 - Decides what changed, what Harbour should believe, and what to persist.
 - This is the right home for durable state transitions.
-- Export reconciler programs and layer factories for app entrypoints.
+- Export reconciler services and live layers for app entrypoints.
 
 ### `db`
 
@@ -78,8 +80,9 @@ Owns:
 - screen layout
 - subscriptions to Harbour state
 - execution of command handlers
-- starting and stopping Effect runtime fibers
-- composing public programs and layer factories from packages
+- loading and validating config before invoking reconciliation
+- starting and stopping the app Effect runtime
+- composing public package live layers and option layers into the app layer
 - TUI-only navigation unions and row/view-model projections
 
 Depends on:
@@ -106,12 +109,15 @@ Must not contain:
 
 - Owns the single `harbour` app entrypoint.
 - Good homes: TUI launch wiring plus thin headless commands such as `sync`, `doctor`, and list/read commands.
-- Prefer exported programs and layer factories from packages.
-- Keep app commands thin: parse args, choose program, provide layers, render output.
+- Prefer exported services and live layers from packages.
+- Keep app commands thin: parse args, create the app runtime, request services, render output, and dispose runtime.
 
 ## Shared organization conventions
 
-- Public package APIs should usually expose services, programs, and layer factories.
+- Public package APIs should usually expose service tags, API types, and live layers.
+- Package-level helper programs should not hide live layer provisioning.
+- Use option services for runtime configuration that participates in app composition.
+- `make*` functions are appropriate for app lifecycle constructors, not no-op wrappers around package live layers.
 - Shared cross-package inputs/outputs should usually live in `domain`.
 - Internal implementation details should stay internal to the package.
 - Split app-local types by concern; avoid catch-all files that mix bindings, navigation, and projections.

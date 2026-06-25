@@ -18,10 +18,7 @@ export async function openWorkspaces(
   store.getState().clearNotice()
 
   try {
-    const summaries = await listWorkspaceSummaries(
-      projectId,
-      services.options.dbPath,
-    )
+    const summaries = await listWorkspaceSummaries(services, projectId)
     store.setState((state) => ({
       browse: {
         ...state.browse,
@@ -76,8 +73,8 @@ export async function openModules(
     const [workspaceSummaries, moduleSummaries] = await Promise.all([
       openOptions?.workspaceSummaries
         ? Promise.resolve(openOptions.workspaceSummaries)
-        : listWorkspaceSummaries(projectId, services.options.dbPath),
-      listModuleSummaries(workspaceId, services.options.dbPath),
+        : listWorkspaceSummaries(services, projectId),
+      listModuleSummaries(services, workspaceId),
     ])
 
     store.setState((state) => ({
@@ -115,10 +112,7 @@ export async function openDefaultWorkspaceModules(
   store.getState().clearNotice()
 
   try {
-    const summaries = await listWorkspaceSummaries(
-      projectId,
-      services.options.dbPath,
-    )
+    const summaries = await listWorkspaceSummaries(services, projectId)
     const defaultWorkspace = summaries.find((workspace) => workspace.isDefault)
 
     if (!defaultWorkspace) {

@@ -1,8 +1,10 @@
-import { sync } from '@harbr/reconciler'
+import { ConfigService } from '@harbr/config'
+import { ReconcilerService } from '@harbr/reconciler'
 import { Effect } from 'effect'
 
 import { formatCliError, formatCliOutput } from '../cli/format'
 import { readArgValue } from '../helpers/args'
+import { makeTuiEffectRuntime } from '../services/effect-runtime'
 
 export async function runSyncCommand(args: string[]) {
   const jsonMode = args.includes('--json')
@@ -17,31 +19,39 @@ export async function runSyncCommand(args: string[]) {
     return
   }
 
-  const options = {
+  const runtime = makeTuiEffectRuntime({
     ...(configPath ? { configPath } : {}),
     ...(dbPath ? { dbPath } : {}),
-  }
+  })
 
-  const result = await Effect.runPromise(
-    sync(options).pipe(
-      Effect.match({
-        onFailure: (error) => ({
-          exitCode: 1,
-          output: jsonMode
-            ? JSON.stringify(error, null, 2)
-            : formatCliError(error),
-          stream: 'stderr' as const,
+  const result = await runtime
+    .runPromise(
+      Effect.gen(function* () {
+        const configService = yield* ConfigService
+        const config = yield* configService.load
+        const reconciler = yield* ReconcilerService
+
+        return yield* reconciler.syncProjects(config.projects)
+      }).pipe(
+        Effect.match({
+          onFailure: (error) => ({
+            exitCode: 1,
+            output: jsonMode
+              ? JSON.stringify(error, null, 2)
+              : formatCliError(error),
+            stream: 'stderr' as const,
+          }),
+          onSuccess: (output) => ({
+            exitCode: 0,
+            output: jsonMode
+              ? JSON.stringify(output, null, 2)
+              : formatCliOutput(output),
+            stream: 'stdout' as const,
+          }),
         }),
-        onSuccess: (output) => ({
-          exitCode: 0,
-          output: jsonMode
-            ? JSON.stringify(output, null, 2)
-            : formatCliOutput(output),
-          stream: 'stdout' as const,
-        }),
-      }),
-    ),
-  )
+      ),
+    )
+    .finally(() => runtime.dispose())
 
   if (result.stream === 'stderr') {
     console.error(result.output)

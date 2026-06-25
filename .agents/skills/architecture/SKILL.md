@@ -62,10 +62,10 @@ key press
 - `config` expresses user or project intent.
 - `git` and `runtime-tmux` adapt external systems.
 - `scanner` observes reality and emits facts only.
-- `reconciler` owns belief, state transitions, and durable updates.
+- `reconciler` owns belief, state transitions, and durable updates from validated project intent.
 - `db` stores Harbour metadata, cache, and history. It is not source of truth for Git or tmux.
 - `ui` renders state and dispatches actions. Keep shell logic out.
-- `apps/tui` wires runtime, subscriptions, command handlers, OpenTUI keybindings, and render tree.
+- `apps/tui` wires config loading, runtime, subscriptions, command handlers, OpenTUI keybindings, and render tree.
 
 ## Schema-first contracts
 
@@ -87,13 +87,15 @@ key press
 
 ## Public vs internal code
 
-- Prefer public package boundaries that expose services, programs, and layer factories.
+- Prefer public package boundaries that expose service tags, API types, and live layers.
+- Avoid package-level helper programs that secretly provide live layers or hide dependency composition.
+- Keep concrete layer composition at the app surface unless the composition is truly package-internal.
 - Treat repos, clients, low-level helpers, and implementation wiring as internal unless a package deliberately documents them as public.
 - Other packages should import from a package's public exports, not reach into its internal folders.
 - Inside a package, prefer this shape when the code needs it:
 
 ```text
-public programs/services
+public services/layers
 -> services
 -> repos
 -> clients/adapters/resources
@@ -107,6 +109,9 @@ public programs/services
 - `index.ts` should be export-only.
 - Put service contracts in `services/*.service.ts`.
 - Put live layers and implementation wiring in `services/*.live.ts`.
+- Represent runtime options as option services when they participate in app composition, for example `ConfigServiceOptions` or `DatabaseClientOptions`.
+- Prefer constant live layers such as `GitServiceLive` or `ProjectServiceLive`; use `make*` functions only for app lifecycle constructors or genuinely dynamic resources.
+- In app-level Effect programs, prefer `Effect.gen` with explicit `yield* ServiceTag` over nested `Effect.flatMap` chains.
 - Put persistence internals in `repos/*.repo.ts`.
 - Use `*.errors.ts` and `*.types.ts` for package-scoped contracts.
 - Use `*Client` for low-level resource/access boundaries when `*Service` would imply a broader capability.
@@ -114,10 +119,11 @@ public programs/services
 
 ## App boundary conventions
 
-- App entrypoints should prefer exported programs or small collections of programs for user-facing functionality.
-- App entrypoints should compose public layer factories from packages.
-- Do not couple apps to internal package wiring when a program export already exists.
-- Keep runtime boot choices flexible. The architecture cares about clean boundaries, not one required runtime helper or one required terminal pattern.
+- App entrypoints should compose public package live layers and option layers into one app layer.
+- Interactive apps should create one long-lived Effect runtime at launch and pass it by context or argument.
+- One-shot commands may create a runtime for the command and dispose it afterwards.
+- App code should load and validate config before invoking reconciler operations, then pass validated `ProjectConfig` intent into reconciler services.
+- App code should request services from the runtime instead of importing package internals or using package-level helper wrappers.
 
 ## Reference docs
 

@@ -3,8 +3,8 @@ import { realpath, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import type { CreateWorktreeInput } from '@harbr/domain'
 import { Effect, Layer } from 'effect'
+import type { CreateWorktreeInput } from '@harbr/domain'
 import type { RepoInspectionError, WorktreeMutationError } from '../git.errors'
 import {
   DefaultBranchNotFoundError,
@@ -28,49 +28,6 @@ export const GitServiceLive = Layer.succeed(GitService, {
   listWorkspaces: listWorkspacesLive,
   resolveWorkspacePath: resolveWorkspacePathLive,
 } satisfies GitServiceApi)
-
-export function makeGitServiceLayer() {
-  return GitServiceLive
-}
-
-export function inspectRepo(repoPath: string) {
-  return Effect.flatMap(GitService, (service) =>
-    service.inspectRepo(repoPath),
-  ).pipe(Effect.provide(makeGitServiceLayer()))
-}
-
-export function resolveWorkspacePath(repo: RepoInspection) {
-  return Effect.flatMap(GitService, (service) =>
-    service.resolveWorkspacePath(repo),
-  ).pipe(Effect.provide(makeGitServiceLayer()))
-}
-
-export function getDefaultBranch(repo: RepoInspection) {
-  return Effect.flatMap(GitService, (service) =>
-    service.getDefaultBranch(repo),
-  ).pipe(Effect.provide(makeGitServiceLayer()))
-}
-
-export function getDefaultBranchIssue(repo: RepoInspection) {
-  return Effect.flatMap(GitService, (service) =>
-    service.getDefaultBranchIssue(repo),
-  ).pipe(Effect.provide(makeGitServiceLayer()))
-}
-
-export function listWorkspaces(repo: RepoInspection) {
-  return Effect.flatMap(GitService, (service) =>
-    service.listWorkspaces(repo),
-  ).pipe(Effect.provide(makeGitServiceLayer()))
-}
-
-export function createWorktree(
-  repo: RepoInspection,
-  input: CreateWorktreeInput,
-) {
-  return Effect.flatMap(GitService, (service) =>
-    service.createWorktree(repo, input),
-  ).pipe(Effect.provide(makeGitServiceLayer()))
-}
 
 function inspectRepoLive(repoPath: string) {
   const resolvedRepoPath = path.resolve(repoPath)

@@ -3,7 +3,7 @@ import type {
   RuntimeAttachment,
   RuntimeTarget,
 } from '@harbr/domain'
-import { closeRuntime, openOrCreateRuntime } from '@harbr/runtime-tmux'
+import { RuntimeTmuxService } from '@harbr/runtime-tmux'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'
@@ -22,7 +22,7 @@ export async function persistContext(
   nextContext: HarbourContext,
 ) {
   try {
-    await saveUiContext(nextContext, services.options.dbPath)
+    await saveUiContext(services, nextContext)
   } catch {
     // TODO: route persistence failures through observability once that package is wired into the TUI.
   }
@@ -97,7 +97,13 @@ export async function closeActiveRuntime(
   store.getState().clearNotice()
 
   try {
-    await Effect.runPromise(closeRuntime(row.runtime.sessionName))
+    await services.effectRuntime.runPromise(
+      Effect.gen(function* () {
+        const runtimeTmux = yield* RuntimeTmuxService
+
+        yield* runtimeTmux.closeRuntime(row.runtime.sessionName)
+      }),
+    )
     store.getState().closeActionsMenu()
     await loadProjects(services, store)
   } catch (error) {
@@ -118,8 +124,14 @@ export async function openRuntimeForTarget(
 
   try {
     await persistContext(services, nextContext)
-    await Effect.runPromise(openOrCreateRuntime(target))
-    services.renderer.destroy()
+    await services.effectRuntime.runPromise(
+      Effect.gen(function* () {
+        const runtimeTmux = yield* RuntimeTmuxService
+
+        yield* runtimeTmux.openOrCreateRuntime(target)
+      }),
+    )
+    await services.shutdown()
   } catch (error) {
     store.getState().setNotice(formatError(error), 'error')
   } finally {

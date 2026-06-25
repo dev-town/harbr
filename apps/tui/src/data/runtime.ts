@@ -1,8 +1,18 @@
-import { getCurrentRuntime } from '@harbr/runtime-tmux'
 import { Effect, Either } from 'effect'
+import { RuntimeTmuxService } from '@harbr/runtime-tmux'
 
-export async function loadCurrentRuntime() {
-  return Effect.runPromise(Effect.either(getCurrentRuntime())).then((result) =>
-    Either.isRight(result) ? result.right : null,
-  )
+import type { TuiServices } from '../app-context'
+
+export async function loadCurrentRuntime(services: TuiServices) {
+  return services.effectRuntime
+    .runPromise(
+      Effect.either(
+        Effect.gen(function* () {
+          const runtimeTmux = yield* RuntimeTmuxService
+
+          return yield* runtimeTmux.getCurrentRuntime
+        }),
+      ),
+    )
+    .then((result) => (Either.isRight(result) ? result.right : null))
 }

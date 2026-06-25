@@ -1,4 +1,6 @@
 export * from './db.errors'
+export * from './infra/database-client.live'
+export * from './infra/database-client.service'
 export * from './services/project.service'
 export * from './services/project.live'
 export * from './services/project.types'

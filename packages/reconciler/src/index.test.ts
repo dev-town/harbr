@@ -1,25 +1,26 @@
 import { execFile } from 'node:child_process'
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import { ConfigService, type HarbourConfig } from '@harbr/config'
-import { makeProjectServiceLayer, ProjectService } from '@harbr/db'
+import {
+  DatabaseClientLive,
+  DatabaseClientOptions,
+  ProjectService,
+  ProjectServiceLive,
+} from '@harbr/db'
 import { type ProjectConfig, type ProjectObservation } from '@harbr/domain'
-import { RepoNotGitError } from '@harbr/git'
-import { Either, Effect, Layer } from 'effect'
-import { ScannerService } from '@harbr/scanner'
+import { GitServiceLive, RepoNotGitError } from '@harbr/git'
+import {
+  RuntimeTmuxService,
+  type RuntimeTmuxServiceApi,
+} from '@harbr/runtime-tmux'
+import { Effect, Layer } from 'effect'
+import { ScannerService, ScannerServiceLive } from '@harbr/scanner'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  ProjectNotFoundError,
-  ReconcilerServiceLive,
-  refreshProjectProgram,
-  refreshProject,
-  syncProgram,
-  sync,
-} from './index'
+import { ReconcilerService, ReconcilerServiceLive } from './index'
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
@@ -36,26 +37,17 @@ describe('reconciler', () => {
   it('syncs configured projects and persists snapshots', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
-    const configPath = path.join(tempRoot, 'harbour.json')
     const dbPath = path.join(tempRoot, 'harbour.db')
 
     await execFileAsync('git', ['init', repoPath])
     await mkdir(path.join(repoPath, 'apps', 'cli'), { recursive: true })
-    await writeFile(
-      configPath,
-      JSON.stringify({
-        projects: [
-          {
-            name: 'alpha',
-            repo: repoPath,
-            modules: ['apps/'],
-          },
-        ],
-      }),
-      'utf8',
-    )
+    const projects = [createProjectConfig('alpha', repoPath, 'apps/')]
 
-    const result = await Effect.runPromise(sync({ configPath, dbPath }))
+    const result = await Effect.runPromise(
+      Effect.flatMap(ReconcilerService, (service) =>
+        service.syncProjects(projects),
+      ).pipe(Effect.provide(makeTestReconcilerLayer(dbPath))),
+    )
 
     expect(result.projects).toHaveLength(1)
     expect(result.projects[0]).toMatchObject({
@@ -74,7 +66,7 @@ describe('reconciler', () => {
     const project = await Effect.runPromise(
       Effect.flatMap(ProjectService, (service) =>
         service.findByName('alpha'),
-      ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
+      ).pipe(Effect.provide(makeTestProjectServiceLayer(dbPath))),
     )
 
     expect(project?.repoPath).toBe(repoPath)
@@ -83,26 +75,15 @@ describe('reconciler', () => {
   it('persists project only when bare repo has no linked workspace', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo.git')
-    const configPath = path.join(tempRoot, 'harbour.json')
     const dbPath = path.join(tempRoot, 'harbour.db')
 
     await execFileAsync('git', ['init', '--bare', repoPath])
-    await writeFile(
-      configPath,
-      JSON.stringify({
-        projects: [
-          {
-            name: 'alpha',
-            repo: repoPath,
-            modules: ['docs'],
-          },
-        ],
-      }),
-      'utf8',
-    )
+    const projects = [createProjectConfig('alpha', repoPath, 'docs')]
 
     const result = await Effect.runPromise(
-      refreshProject('alpha', { configPath, dbPath }),
+      Effect.flatMap(ReconcilerService, (service) =>
+        service.refreshProject(projects[0]!),
+      ).pipe(Effect.provide(makeTestReconcilerLayer(dbPath))),
     )
 
     expect(result).toMatchObject({
@@ -121,32 +102,21 @@ describe('reconciler', () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
     const plainDirPath = path.join(tempRoot, 'plain-dir')
-    const configPath = path.join(tempRoot, 'harbour.json')
     const dbPath = path.join(tempRoot, 'harbour.db')
 
     await execFileAsync('git', ['init', repoPath])
     await mkdir(path.join(repoPath, 'docs'), { recursive: true })
     await mkdir(plainDirPath, { recursive: true })
-    await writeFile(
-      configPath,
-      JSON.stringify({
-        projects: [
-          {
-            name: 'alpha',
-            repo: repoPath,
-            modules: ['docs'],
-          },
-          {
-            name: 'beta',
-            repo: plainDirPath,
-            modules: ['docs'],
-          },
-        ],
-      }),
-      'utf8',
-    )
+    const projects = [
+      createProjectConfig('alpha', repoPath, 'docs'),
+      createProjectConfig('beta', plainDirPath, 'docs'),
+    ]
 
-    const result = await Effect.runPromise(sync({ configPath, dbPath }))
+    const result = await Effect.runPromise(
+      Effect.flatMap(ReconcilerService, (service) =>
+        service.syncProjects(projects),
+      ).pipe(Effect.provide(makeTestReconcilerLayer(dbPath))),
+    )
 
     expect(result.projects).toHaveLength(2)
     expect(result.projects[0]).toMatchObject({
@@ -179,18 +149,9 @@ describe('reconciler', () => {
     const alpha = createProjectConfig('alpha')
     const beta = createProjectConfig('beta')
 
-    const config: HarbourConfig = {
-      configPath: '/tmp/harbour.json',
-      projects: [alpha, beta],
-    }
+    const projects = [alpha, beta]
 
     const layer = ReconcilerServiceLive.pipe(
-      Layer.provide(
-        Layer.succeed(ConfigService, {
-          load: Effect.succeed(config),
-          loadAtPath: () => Effect.succeed(config),
-        }),
-      ),
       Layer.provide(
         Layer.succeed(ScannerService, {
           observeProject: (project: ProjectConfig) =>
@@ -237,7 +198,11 @@ describe('reconciler', () => {
     )
 
     await expect(
-      Effect.runPromise(syncProgram.pipe(Effect.provide(layer))),
+      Effect.runPromise(
+        Effect.flatMap(ReconcilerService, (service) =>
+          service.syncProjects(projects),
+        ).pipe(Effect.provide(layer)),
+      ),
     ).resolves.toEqual({
       projects: [
         {
@@ -267,55 +232,6 @@ describe('reconciler', () => {
 
     expect(persistedProjects).toEqual(['alpha'])
   })
-
-  it('returns tagged project_not_found from provided services', async () => {
-    const config: HarbourConfig = {
-      configPath: '/tmp/harbour.json',
-      projects: [createProjectConfig('alpha')],
-    }
-
-    const layer = ReconcilerServiceLive.pipe(
-      Layer.provide(
-        Layer.succeed(ConfigService, {
-          load: Effect.succeed(config),
-          loadAtPath: () => Effect.succeed(config),
-        }),
-      ),
-      Layer.provide(
-        Layer.succeed(ScannerService, {
-          observeProject: () => Effect.die('not used'),
-        }),
-      ),
-      Layer.provide(
-        Layer.succeed(ProjectService, {
-          findByName: () => Effect.succeed(null),
-          loadUiContext: Effect.succeed({}),
-          listActiveRuntimeSummaries: Effect.die('not used'),
-          listModuleSummaries: () => Effect.die('not used'),
-          listProjectSummaries: Effect.die('not used'),
-          listWorkspaceSummaries: () => Effect.die('not used'),
-          saveUiContext: () => Effect.die('not used'),
-          syncSnapshot: () => Effect.die('not used'),
-        }),
-      ),
-    )
-
-    const result = await Effect.runPromise(
-      Effect.either(
-        refreshProjectProgram('missing').pipe(Effect.provide(layer)),
-      ),
-    )
-
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
-      return
-    }
-
-    expect(result.left).toBeInstanceOf(ProjectNotFoundError)
-    expect(result.left).toEqual(
-      new ProjectNotFoundError({ projectName: 'missing' }),
-    )
-  })
 })
 
 async function createTempRoot() {
@@ -324,12 +240,51 @@ async function createTempRoot() {
   return tempRoot
 }
 
-function createProjectConfig(name: string): ProjectConfig {
+function createProjectConfig(
+  name: string,
+  repo = `/tmp/${name}.git`,
+  module = 'apps/',
+): ProjectConfig {
   return {
     name,
-    repo: `/tmp/${name}.git`,
-    modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
+    repo,
+    modules: [
+      {
+        raw: module,
+        path: module.endsWith('/') ? module.slice(0, -1) : module,
+        mode: module.endsWith('/') ? 'children' : 'explicit',
+      },
+    ],
+    windows: [],
   }
+}
+
+function makeTestReconcilerLayer(dbPath: string) {
+  const runtimeTmux: RuntimeTmuxServiceApi = {
+    closeRuntime: () => Effect.die('not used'),
+    createRuntimeWindows: () => Effect.die('not used'),
+    getCurrentRuntime: Effect.succeed(null),
+    listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+    openOrCreateRuntime: () => Effect.void,
+  }
+
+  const scanner = ScannerServiceLive.pipe(
+    Layer.provide(GitServiceLive),
+    Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+  )
+
+  return ReconcilerServiceLive.pipe(
+    Layer.provide(makeTestProjectServiceLayer(dbPath)),
+    Layer.provide(scanner),
+  )
+}
+
+function makeTestProjectServiceLayer(dbPath: string) {
+  const database = DatabaseClientLive.pipe(
+    Layer.provide(Layer.succeed(DatabaseClientOptions, { dbPath })),
+  )
+
+  return ProjectServiceLive.pipe(Layer.provide(database))
 }
 
 function createObservation(project: ProjectConfig): ProjectObservation {

@@ -21,7 +21,7 @@ Built today:
 - Config loading, validation, and normalization.
 - Git/worktree scanning and module expansion.
 - SQLite state and migrations.
-- Reconciler flow from config/scanner/runtime facts into the database.
+- Reconciler flow from validated config intent, scanner facts, and runtime facts into the database.
 - tmux session discovery, open/create, close, and configured window/pane creation.
 - Workspace creation that creates Git worktrees.
 - Configured window/pane layout loading into project, workspace, and module sessions.
@@ -280,7 +280,7 @@ packages/
   db/                  SQLite client, schema, migrations, project snapshots
   domain/              shared domain types
   git/                 Git repository and workspace inspection
-  reconciler/          sync/reconcile programs
+  reconciler/          sync/reconcile services
   runtime-tmux/        tmux runtime adapter
   scanner/             project/workspace/module scanning
   test-utils/          shared test helpers
@@ -354,6 +354,29 @@ packages/db/src/migrations.gen.ts
 ```
 
 `db:generate` updates Drizzle SQL and journal files. `db:migration` converts those SQL migrations into TypeScript modules embedded in the compiled TUI/CLI binaries.
+
+### Effect Runtime Shape
+
+Harbr packages expose Effect service tags, API types, and live layers. Packages should not export convenience helper functions that secretly provide live implementations.
+
+Runtime choices such as config and database paths are represented as option services:
+
+```text
+ConfigServiceOptions -> ConfigServiceLive
+DatabaseClientOptions -> DatabaseClientLive -> ProjectServiceLive
+```
+
+`apps/tui` composes package live layers and option layers into one app layer, then creates one shared Effect runtime when the interactive TUI launches. TUI actions and data helpers run programs through that shared runtime and request services explicitly:
+
+```ts
+Effect.gen(function* () {
+  const runtimeTmux = yield* RuntimeTmuxService
+
+  return yield* runtimeTmux.openOrCreateRuntime(target)
+})
+```
+
+One-shot commands such as `harbr sync` create an app runtime for the command and dispose it after rendering output.
 
 Format:
 

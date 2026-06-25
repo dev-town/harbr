@@ -1,5 +1,5 @@
 import type { ResolvedContextTarget, WindowConfig } from '@harbr/domain'
-import { createRuntimeWindows } from '@harbr/runtime-tmux'
+import { RuntimeTmuxService } from '@harbr/runtime-tmux'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '../app-context'
@@ -17,8 +17,15 @@ export async function createWindowsForContext(
 
   try {
     await persistContext(services, target.context)
-    const result = await Effect.runPromise(
-      createRuntimeWindows({ target: target.runtimeTarget, windows }),
+    const result = await services.effectRuntime.runPromise(
+      Effect.gen(function* () {
+        const runtimeTmux = yield* RuntimeTmuxService
+
+        return yield* runtimeTmux.createRuntimeWindows({
+          target: target.runtimeTarget,
+          windows,
+        })
+      }),
     )
 
     if (result.createdWindowNames.length === 0) {
@@ -27,7 +34,7 @@ export async function createWindowsForContext(
     }
 
     store.getState().closeActionsMenu()
-    services.renderer.destroy()
+    await services.shutdown()
   } catch (error) {
     store.getState().setNotice(formatError(error), 'error')
   } finally {

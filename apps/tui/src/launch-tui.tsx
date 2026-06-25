@@ -6,6 +6,7 @@ import { App } from './app'
 import { TuiServicesProvider, type TuiServices } from './app-context'
 import { readArgValue } from './helpers/args'
 import { createTuiKeymap } from './keymap/create-keymap'
+import { makeTuiEffectRuntime } from './services/effect-runtime'
 import type { TuiOptions } from './types'
 
 export async function launchTui(args: string[]) {
@@ -28,9 +29,24 @@ export async function launchTui(args: string[]) {
   // Debug console
   // renderer.console.toggle()
 
+  const effectRuntime = makeTuiEffectRuntime(options)
+  let isShuttingDown = false
+
+  async function shutdown() {
+    if (isShuttingDown) {
+      return
+    }
+
+    isShuttingDown = true
+    await effectRuntime.dispose()
+    renderer.destroy()
+  }
+
   const services: TuiServices = {
+    effectRuntime,
     options,
     renderer,
+    shutdown,
   }
 
   const keymap = createTuiKeymap(renderer)

@@ -5,19 +5,16 @@ import type {
 } from '@harbr/domain'
 import { Effect } from 'effect'
 
-import { ProjectNotFoundError } from './reconciler.errors'
 import type { ProjectServiceApi } from '@harbr/db'
-import type { ConfigServiceApi } from '@harbr/config'
 import type { ScannerServiceApi } from '@harbr/scanner'
 
 export function syncProjects(
-  config: ConfigServiceApi,
+  projects: readonly ProjectConfig[],
   scanner: ScannerServiceApi,
   projectService: ProjectServiceApi,
 ) {
   return Effect.gen(function* () {
-    const loadedConfig = yield* config.load
-    const projects = yield* Effect.forEach(loadedConfig.projects, (project) =>
+    const results = yield* Effect.forEach(projects, (project) =>
       refreshConfiguredProject(scanner, projectService, project).pipe(
         Effect.catchAll((error) =>
           Effect.succeed<SyncProjectResult>({
@@ -35,27 +32,7 @@ export function syncProjects(
       ),
     )
 
-    return { projects } satisfies SyncResult
-  })
-}
-
-export function refreshNamedProject(
-  config: ConfigServiceApi,
-  scanner: ScannerServiceApi,
-  projectService: ProjectServiceApi,
-  projectName: string,
-) {
-  return Effect.gen(function* () {
-    const loadedConfig = yield* config.load
-    const project = loadedConfig.projects.find(
-      (entry) => entry.name === projectName,
-    )
-
-    if (!project) {
-      return yield* Effect.fail(new ProjectNotFoundError({ projectName }))
-    }
-
-    return yield* refreshConfiguredProject(scanner, projectService, project)
+    return { projects: results } satisfies SyncResult
   })
 }
 

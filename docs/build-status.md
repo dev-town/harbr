@@ -9,7 +9,7 @@
 - [x] `git`: repo inspection and workspace path resolution
 - [x] `scanner`: workspace-aware module expansion and project observation
 - [x] `db`: SQLite schema, migrations, project snapshot persistence
-- [x] `reconciler`: config -> scanner -> db sync flow
+- [x] `reconciler`: validated project intent -> scanner -> db sync flow
 - [x] `runtime-tmux`: read-only tmux session discovery and Harbr context parsing
 - [x] `keymap`: Harbr browse keymap over `@opentui/keymap`
 - [x] `ui`: minimal popover renderer for project/workspace/module lists

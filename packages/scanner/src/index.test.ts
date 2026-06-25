@@ -5,7 +5,7 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 
 import type { ProjectConfig } from '@harbr/domain'
-import { GitService, type GitServiceApi } from '@harbr/git'
+import { GitService, GitServiceLive, type GitServiceApi } from '@harbr/git'
 import {
   RuntimeTmuxService,
   type RuntimeTmuxServiceApi,
@@ -16,7 +16,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   ScannerService,
   ScannerServiceLive,
-  observeProject,
   resolveProjectModules,
   scanProject,
 } from './index'
@@ -611,7 +610,30 @@ async function runScan(effect: ReturnType<typeof scanProject>) {
 }
 
 async function runObservation(effect: ReturnType<typeof observeProject>) {
-  return Effect.runPromise(effect)
+  const runtimeTmux: RuntimeTmuxServiceApi = {
+    closeRuntime: () => Effect.die('not used'),
+    createRuntimeWindows: () => Effect.die('not used'),
+    getCurrentRuntime: Effect.succeed(null),
+    listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+    openOrCreateRuntime: () => Effect.void,
+  }
+
+  return Effect.runPromise(
+    effect.pipe(
+      Effect.provide(
+        ScannerServiceLive.pipe(
+          Layer.provide(GitServiceLive),
+          Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+        ),
+      ),
+    ),
+  )
+}
+
+function observeProject(project: ProjectConfig) {
+  return Effect.flatMap(ScannerService, (service) =>
+    service.observeProject(project),
+  )
 }
 
 function createProject(modules: ProjectConfig['modules']): ProjectConfig {

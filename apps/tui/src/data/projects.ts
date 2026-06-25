@@ -1,72 +1,96 @@
-import { ProjectService, makeProjectServiceLayer } from '@harbr/db'
-import { loadConfig, loadConfigAtPath } from '@harbr/config'
+import { ConfigService } from '@harbr/config'
+import { ProjectService } from '@harbr/db'
 import type { ActiveRuntimeSummary, HarbourContext } from '@harbr/domain'
 import { Effect } from 'effect'
+import type { TuiServices } from '../app-context'
 
-export async function loadUiContext(dbPath?: string) {
-  return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) => service.loadUiContext).pipe(
-      Effect.provide(makeProjectServiceLayer(dbPath)),
-    ),
+export async function loadConfiguredProjects(services: TuiServices) {
+  const config = await services.effectRuntime.runPromise(
+    Effect.gen(function* () {
+      const configService = yield* ConfigService
+
+      return yield* configService.load
+    }),
+  )
+
+  return config.projects
+}
+
+export async function loadUiContext(services: TuiServices) {
+  return services.effectRuntime.runPromise(
+    Effect.gen(function* () {
+      const projects = yield* ProjectService
+
+      return yield* projects.loadUiContext
+    }),
   )
 }
 
-export async function listProjectSummaries(dbPath?: string) {
-  return Effect.runPromise(
-    Effect.flatMap(
-      ProjectService,
-      (service) => service.listProjectSummaries,
-    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
+export async function listProjectSummaries(services: TuiServices) {
+  return services.effectRuntime.runPromise(
+    Effect.gen(function* () {
+      const projects = yield* ProjectService
+
+      return yield* projects.listProjectSummaries
+    }),
   )
 }
 
 export async function listActiveRuntimeSummaries(
-  dbPath?: string,
+  services: TuiServices,
 ): Promise<readonly ActiveRuntimeSummary[]> {
-  return Effect.runPromise(
-    Effect.flatMap(
-      ProjectService,
-      (service) => service.listActiveRuntimeSummaries,
-    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
+  return services.effectRuntime.runPromise(
+    Effect.gen(function* () {
+      const projects = yield* ProjectService
+
+      return yield* projects.listActiveRuntimeSummaries
+    }),
   )
 }
 
 export async function listWorkspaceSummaries(
+  services: TuiServices,
   projectId: string,
-  dbPath?: string,
 ) {
-  return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) =>
-      service.listWorkspaceSummaries(projectId),
-    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
+  return services.effectRuntime.runPromise(
+    Effect.gen(function* () {
+      const projects = yield* ProjectService
+
+      return yield* projects.listWorkspaceSummaries(projectId)
+    }),
   )
 }
 
 export async function listModuleSummaries(
+  services: TuiServices,
   workspaceId: string,
-  dbPath?: string,
 ) {
-  return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) =>
-      service.listModuleSummaries(workspaceId),
-    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
+  return services.effectRuntime.runPromise(
+    Effect.gen(function* () {
+      const projects = yield* ProjectService
+
+      return yield* projects.listModuleSummaries(workspaceId)
+    }),
   )
 }
 
-export async function saveUiContext(context: HarbourContext, dbPath?: string) {
-  return Effect.runPromise(
-    Effect.flatMap(ProjectService, (service) =>
-      service.saveUiContext(context),
-    ).pipe(Effect.provide(makeProjectServiceLayer(dbPath))),
+export async function saveUiContext(
+  services: TuiServices,
+  context: HarbourContext,
+) {
+  return services.effectRuntime.runPromise(
+    Effect.gen(function* () {
+      const projects = yield* ProjectService
+
+      return yield* projects.saveUiContext(context)
+    }),
   )
 }
 
-export async function listConfiguredProjectWindows(configPath?: string) {
-  const config = await Effect.runPromise(
-    configPath ? loadConfigAtPath(configPath) : loadConfig(),
-  )
+export async function listConfiguredProjectWindows(services: TuiServices) {
+  const projects = await loadConfiguredProjects(services)
 
-  return config.projects.map((project) => ({
+  return projects.map((project) => ({
     projectName: project.name,
     windows: project.windows ?? [],
   }))
