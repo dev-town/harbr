@@ -2,8 +2,8 @@ import type { ResolvedContextTarget, WindowConfig } from '@harbr/domain'
 import { RuntimeTmuxService } from '@harbr/runtime-tmux'
 import { Effect } from 'effect'
 
-import type { TuiServices, TuiStore } from '../app-context'
-import { formatError } from '../helpers/errors'
+import type { TuiServices, TuiStore } from '~/app-context'
+import { formatError } from '~/helpers/errors'
 import { persistContext } from './runtime'
 
 export async function createWindowsForContext(

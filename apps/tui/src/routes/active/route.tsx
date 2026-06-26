@@ -1,12 +1,12 @@
 import { useTerminalDimensions } from '@opentui/react'
 
-import { getRowVariant } from '../../components/list-row/utils'
-import { ResultsList } from '../../components/results-list'
-import { SearchBar } from '../../components/search-bar'
+import { getRowVariant } from '~/components/list-row/utils'
+import { ResultsList } from '~/components/results-list'
+import { SearchBar } from '~/components/search-bar'
 import { ActiveRouteLayout } from './layout'
 import { ActiveActionsModal } from './components/actions-modal'
 import { ActiveRouteRow } from './components/row'
-import { WindowPickerModal } from '../browse/components/window-picker-modal'
+import { WindowPickerModal } from '~/routes/browse/components/window-picker-modal'
 import { useActiveRoute } from './hooks/use-active-route'
 
 export function ActiveRoute() {

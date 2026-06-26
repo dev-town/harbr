@@ -1,8 +1,8 @@
 import type { InputRenderable } from '@opentui/core'
 import { useEffect, useMemo, useRef } from 'react'
 
-import { getPlaceholder } from '../../../helpers/labels'
-import { useRegisterFocusTarget } from '../../../hooks/useRegisterFocusTarget'
+import { getPlaceholder } from '~/helpers/labels'
+import { useRegisterFocusTarget } from '~/hooks/useRegisterFocusTarget'
 import {
   selectCurrentBrowseSection,
   selectIsBrowseActionsOpen,
@@ -10,7 +10,7 @@ import {
   selectVisibleBrowseRows,
   tuiStore,
   useTuiStore,
-} from '../../../store'
+} from '~/store'
 import { useBrowseKeybindings } from './use-browse-keybindings'
 
 export function useBrowseSearch() {

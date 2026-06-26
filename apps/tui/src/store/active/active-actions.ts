@@ -1,4 +1,7 @@
-import { getRepairedSelectedId, moveSelectedId } from '../shared/list-selectors'
+import {
+  getRepairedSelectedId,
+  moveSelectedId,
+} from '~/store/shared/list-selectors'
 import {
   selectSelectedActiveRow,
   selectVisibleActiveRows,
@@ -6,8 +9,8 @@ import {
 import {
   selectActiveActionRows,
   selectIsActionsOpen,
-} from '../surfaces/surfaces-selectors'
-import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '../types'
+} from '~/store/surfaces/surfaces-selectors'
+import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '~/store/types'
 
 export function createActiveActions(
   set: TuiStoreSet,

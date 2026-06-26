@@ -1,9 +1,9 @@
-import type { TuiServices, TuiStore } from '../app-context'
-import { listModuleSummaries, listWorkspaceSummaries } from '../data'
-import type { VisibilityFilter } from '../types/navigation'
-import { formatError } from '../helpers/errors'
-import { modulesScope, workspacesScope } from '../store'
-import { mapModuleSummaryToRow, mapWorkspaceSummaryToRow } from '../transforms'
+import type { TuiServices, TuiStore } from '~/app-context'
+import { listModuleSummaries, listWorkspaceSummaries } from '~/data'
+import type { VisibilityFilter } from '~/types/navigation'
+import { formatError } from '~/helpers/errors'
+import { modulesScope, workspacesScope } from '~/store'
+import { mapModuleSummaryToRow, mapWorkspaceSummaryToRow } from '~/transforms'
 
 export async function openWorkspaces(
   services: TuiServices,

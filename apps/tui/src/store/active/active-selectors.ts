@@ -1,8 +1,8 @@
 import type { RuntimeAttachment, RuntimeFact } from '@harbr/domain'
 
-import type { TuiStoreModel } from '../types'
-import type { HarbourRow } from '../../types/rows'
-import { getSelectedRow } from '../shared/list-selectors'
+import type { TuiStoreModel } from '~/store/types'
+import type { HarbourRow } from '~/types/rows'
+import { getSelectedRow } from '~/store/shared/list-selectors'
 
 export function selectVisibleActiveRows(
   state: TuiStoreModel,

@@ -1,11 +1,11 @@
 import {
   openDefaultWorkspaceModules,
   openWorkspaces,
-} from '../../../../actions/drilldown'
-import { openProjectRoot } from '../../../../actions/runtime'
-import { useTuiServices } from '../../../../hooks/useTuiServices'
-import { tuiStore } from '../../../../store'
-import type { ProjectRow } from '../../../../types/rows'
+} from '~/actions/drilldown'
+import { openProjectRoot } from '~/actions/runtime'
+import { useTuiServices } from '~/hooks/useTuiServices'
+import { tuiStore } from '~/store'
+import type { ProjectRow } from '~/types/rows'
 
 export function useProjectsSection() {
   const services = useTuiServices()

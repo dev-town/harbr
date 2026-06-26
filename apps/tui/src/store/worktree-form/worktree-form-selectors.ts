@@ -1,8 +1,8 @@
 import {
   validateBranchName,
   validateWorkspaceName,
-} from '../../helpers/worktree-form'
-import type { TuiStoreModel } from '../types'
+} from '~/helpers/worktree-form'
+import type { TuiStoreModel } from '~/store/types'
 
 export function selectWorktreeFormView(state: TuiStoreModel) {
   const { branchName, showErrors, step, workspaceName } = state.worktreeForm

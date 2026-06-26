@@ -1,8 +1,8 @@
 import { useTerminalDimensions } from '@opentui/react'
 
-import { getRowVariant } from '../../components/list-row/utils'
-import { ResultsList } from '../../components/results-list'
-import { SearchBar } from '../../components/search-bar'
+import { getRowVariant } from '~/components/list-row/utils'
+import { ResultsList } from '~/components/results-list'
+import { SearchBar } from '~/components/search-bar'
 import { BrowseRouteLayout } from './layout'
 import { BrowseActionsModal } from './components/actions-modal'
 import { BrowseRouteRow } from './components/row'

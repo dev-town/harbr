@@ -4,11 +4,11 @@ import { useBindings, useKeymap } from '@opentui/keymap/react'
 import { useTerminalDimensions } from '@opentui/react'
 import { useMemo, useRef } from 'react'
 
-import { theme } from '../../config/theme'
-import { useRegisterFocusTarget } from '../../hooks/useRegisterFocusTarget'
-import { getHelpBindingGroups, makeHelpBindings } from '../../keymap/bindings'
-import { keymapPriority } from '../../keymap/priorities'
-import { selectIsHelpOpen, tuiStore, useTuiStore } from '../../store'
+import { theme } from '~/config/theme'
+import { useRegisterFocusTarget } from '~/hooks/useRegisterFocusTarget'
+import { getHelpBindingGroups, makeHelpBindings } from '~/keymap/bindings'
+import { keymapPriority } from '~/keymap/priorities'
+import { selectIsHelpOpen, tuiStore, useTuiStore } from '~/store'
 
 type HelpRow = {
   group: string

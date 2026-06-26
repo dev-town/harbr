@@ -2,20 +2,20 @@ import { ConfigService } from '@harbr/config'
 import { ReconcilerService } from '@harbr/reconciler'
 import { Effect, Either } from 'effect'
 
-import type { TuiServices, TuiStore } from '../app-context'
+import type { TuiServices, TuiStore } from '~/app-context'
 import {
   listActiveRuntimeSummaries,
   listConfiguredProjectWindows,
   listProjectSummaries,
   loadCurrentRuntime,
   loadUiContext,
-} from '../data'
-import { formatError } from '../helpers/errors'
-import { projectsScope } from '../store'
+} from '~/data'
+import { formatError } from '~/helpers/errors'
+import { projectsScope } from '~/store'
 import {
   mapActiveRuntimeSummaryToRow,
   mapProjectSummaryToRow,
-} from '../transforms'
+} from '~/transforms'
 import { restoreCurrentRuntime, restoreUiContext } from './restore'
 
 export async function loadProjects(services: TuiServices, store: TuiStore) {

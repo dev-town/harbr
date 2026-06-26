@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 
-import { loadProjects } from '../../actions/refresh'
-import { tuiStore, useTuiStore } from '../../store'
-import { useTuiServices } from '../useTuiServices'
+import { loadProjects } from '~/actions/refresh'
+import { tuiStore, useTuiStore } from '~/store'
+import { useTuiServices } from '~/hooks/useTuiServices'
 
 export function useAppShell() {
   const services = useTuiServices()

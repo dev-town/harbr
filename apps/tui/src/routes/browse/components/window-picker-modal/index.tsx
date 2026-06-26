@@ -4,17 +4,13 @@ import { useBindings } from '@opentui/keymap/react'
 import { useTerminalDimensions } from '@opentui/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { createWindowsForContext } from '../../../../actions/windows'
-import { theme } from '../../../../config/theme'
-import { useRegisterFocusTarget } from '../../../../hooks/useRegisterFocusTarget'
-import { useTuiServices } from '../../../../hooks/useTuiServices'
-import { makeWindowPickerBindings } from '../../../../keymap/bindings'
-import { keymapPriority } from '../../../../keymap/priorities'
-import {
-  selectIsWindowPickerOpen,
-  tuiStore,
-  useTuiStore,
-} from '../../../../store'
+import { createWindowsForContext } from '~/actions/windows'
+import { theme } from '~/config/theme'
+import { useRegisterFocusTarget } from '~/hooks/useRegisterFocusTarget'
+import { useTuiServices } from '~/hooks/useTuiServices'
+import { makeWindowPickerBindings } from '~/keymap/bindings'
+import { keymapPriority } from '~/keymap/priorities'
+import { selectIsWindowPickerOpen, tuiStore, useTuiStore } from '~/store'
 
 export function WindowPickerModal() {
   const focusRef = useRef<BoxRenderable | null>(null)

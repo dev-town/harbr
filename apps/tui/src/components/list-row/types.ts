@@ -1,4 +1,4 @@
-import type { NoticeLevel } from '../../types/notice'
+import type { NoticeLevel } from '~/types/notice'
 
 export type RowVariant = 'stacked' | 'default'
 

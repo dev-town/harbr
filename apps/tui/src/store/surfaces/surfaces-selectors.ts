@@ -1,7 +1,7 @@
-import type { ActiveActionRow } from '../../types/rows'
-import { selectSelectedActiveRow } from '../active/active-selectors'
-import { selectBrowseActionRows } from '../browse/browse-selectors'
-import type { TuiStoreModel } from '../types'
+import type { ActiveActionRow } from '~/types/rows'
+import { selectSelectedActiveRow } from '~/store/active/active-selectors'
+import { selectBrowseActionRows } from '~/store/browse/browse-selectors'
+import type { TuiStoreModel } from '~/store/types'
 
 export const activeActionIds = {
   closeRuntimeSession: 'active.close_runtime_session',

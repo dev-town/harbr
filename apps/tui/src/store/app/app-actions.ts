@@ -1,6 +1,6 @@
-import type { AppRoute } from '../../types/navigation'
-import { createWorktreeFormState } from '../worktree-form/worktree-form-state'
-import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '../types'
+import type { AppRoute } from '~/types/navigation'
+import { createWorktreeFormState } from '~/store/worktree-form/worktree-form-state'
+import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '~/store/types'
 
 const orderedRoutes: readonly AppRoute[] = ['active', 'browse']
 

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 
-import { useTuiServices } from '../hooks/useTuiServices'
-import type { FocusTargetRef } from '../store'
-import { selectActiveFocusTarget, useTuiStore } from '../store'
+import { useTuiServices } from '~/hooks/useTuiServices'
+import type { FocusTargetRef } from '~/store'
+import { selectActiveFocusTarget, useTuiStore } from '~/store'
 
 export function SurfaceFocusManager() {
   const services = useTuiServices()

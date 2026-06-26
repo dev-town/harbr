@@ -1,6 +1,6 @@
 import { ManagedRuntime } from 'effect'
 
-import type { TuiOptions } from '../types'
+import type { TuiOptions } from '~/types'
 import { makeTuiLayer } from './layer'
 
 export function makeTuiEffectRuntime(options: TuiOptions) {

@@ -18,7 +18,7 @@ import {
 import { ScannerServiceLive } from '@harbr/scanner'
 import { Layer } from 'effect'
 
-import type { TuiOptions } from '../types'
+import type { TuiOptions } from '~/types'
 
 export function makeTuiLayer(options: TuiOptions) {
   const configOptions = options.configPath

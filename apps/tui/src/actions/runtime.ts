@@ -6,15 +6,15 @@ import type {
 import { RuntimeTmuxService } from '@harbr/runtime-tmux'
 import { Effect } from 'effect'
 
-import type { TuiServices, TuiStore } from '../app-context'
+import type { TuiServices, TuiStore } from '~/app-context'
 import type {
   HarbourRow,
   ModuleRow,
   ProjectRow,
   WorkspaceRow,
-} from '../types/rows'
-import { saveUiContext } from '../data'
-import { formatError } from '../helpers/errors'
+} from '~/types/rows'
+import { saveUiContext } from '~/data'
+import { formatError } from '~/helpers/errors'
 import { loadProjects } from './refresh'
 
 export async function persistContext(

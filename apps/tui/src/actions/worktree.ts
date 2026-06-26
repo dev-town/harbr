@@ -1,10 +1,10 @@
-import type { TuiServices, TuiStore } from '../app-context'
-import { formatError } from '../helpers/errors'
+import type { TuiServices, TuiStore } from '~/app-context'
+import { formatError } from '~/helpers/errors'
 import {
   validateBranchName,
   validateWorkspaceName,
-} from '../helpers/worktree-form'
-import { createWorkspace } from '../use-cases/create-workspace'
+} from '~/helpers/worktree-form'
+import { createWorkspace } from '~/use-cases/create-workspace'
 import { openWorkspaces } from './drilldown'
 
 export async function handleWorktreeFormSubmit(

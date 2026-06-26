@@ -1,9 +1,9 @@
 import type { HarbourContext, ProjectSummary } from '@harbr/domain'
 
-import type { TuiServices, TuiStore } from '../app-context'
-import { listWorkspaceSummaries, loadCurrentRuntime } from '../data'
-import { workspacesScope } from '../store'
-import { mapWorkspaceSummaryToRow } from '../transforms'
+import type { TuiServices, TuiStore } from '~/app-context'
+import { listWorkspaceSummaries, loadCurrentRuntime } from '~/data'
+import { workspacesScope } from '~/store'
+import { mapWorkspaceSummaryToRow } from '~/transforms'
 import {
   openDefaultWorkspaceModules,
   openModules,

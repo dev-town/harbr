@@ -1,23 +1,23 @@
-import type { TuiServices, TuiStore } from '../../../app-context'
+import type { TuiServices, TuiStore } from '~/app-context'
 import {
   openDefaultWorkspaceModules,
   openModules,
   openWorkspaces,
-} from '../../../actions/drilldown'
+} from '~/actions/drilldown'
 import {
   closeActiveRuntime,
   openModuleRuntime,
   openProjectRoot,
   openWorkspaceRoot,
-} from '../../../actions/runtime'
-import { browseActionIds } from '../../../store'
+} from '~/actions/runtime'
+import { browseActionIds } from '~/store'
 import type {
   ActionRow,
   HarbourRow,
   ModuleRow,
   ProjectRow,
   WorkspaceRow,
-} from '../../../types/rows'
+} from '~/types/rows'
 
 type SupportedContextRow = ModuleRow | ProjectRow | WorkspaceRow
 

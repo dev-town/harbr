@@ -1,5 +1,5 @@
 import { createWorktreeFormState } from './worktree-form-state'
-import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '../types'
+import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '~/store/types'
 
 export function createWorktreeFormActions(
   set: TuiStoreSet,

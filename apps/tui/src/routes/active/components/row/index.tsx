@@ -1,9 +1,9 @@
 import type { RuntimeAttachment } from '@harbr/domain'
 
-import { ListRow } from '../../../../components/list-row'
-import type { RowVariant } from '../../../../components/list-row/types'
-import { theme } from '../../../../config/theme'
-import type { HarbourRow } from '../../../../types/rows'
+import { ListRow } from '~/components/list-row'
+import type { RowVariant } from '~/components/list-row/types'
+import { theme } from '~/config/theme'
+import type { HarbourRow } from '~/types/rows'
 
 type ActiveRouteRowProps = {
   isHovered: boolean

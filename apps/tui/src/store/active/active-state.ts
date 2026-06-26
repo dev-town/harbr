@@ -1,4 +1,4 @@
-import { createListState, type ListState } from '../shared/list-state'
+import { createListState, type ListState } from '~/store/shared/list-state'
 
 export type ActiveState = {
   list: ListState

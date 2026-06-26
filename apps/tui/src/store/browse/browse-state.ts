@@ -1,5 +1,5 @@
-import type { HarbourSection, VisibilityFilter } from '../../types/navigation'
-import { createListState, type ListState } from '../shared/list-state'
+import type { HarbourSection, VisibilityFilter } from '~/types/navigation'
+import { createListState, type ListState } from '~/store/shared/list-state'
 import { projectsScope, type BrowseScope } from './browse-scope'
 
 export type BrowseState = {

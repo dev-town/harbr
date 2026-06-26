@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react'
 import { Children, cloneElement, isValidElement } from 'react'
 
-import type { AppRoute } from '../../types/navigation'
+import type { AppRoute } from '~/types/navigation'
 import type { TabProps } from './tab'
 
 type TabsProps = {

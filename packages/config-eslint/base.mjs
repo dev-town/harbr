@@ -90,6 +90,23 @@ export const baseConfig = tseslint.config(
       ],
     },
   },
+  {
+    files: ['packages/*/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['~/*'],
+              message:
+                'The ~/* alias is reserved for apps/tui app-local imports. Packages should use relative imports for internals and @harbr/* for public package APIs.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 )
 
 export const boundaryConfig = {

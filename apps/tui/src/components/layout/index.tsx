@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { theme } from '../../config/theme'
+import { theme } from '~/config/theme'
 
 type LayoutProps = {
   children: ReactNode

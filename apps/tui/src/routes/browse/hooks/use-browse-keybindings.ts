@@ -1,12 +1,15 @@
 import { useBindings } from '@opentui/keymap/react'
 import { useTerminalDimensions } from '@opentui/react'
 
-import { loadProjects } from '../../../actions/refresh'
-import { makeBrowseBindings } from '../../../keymap/bindings'
-import { keymapPriority } from '../../../keymap/priorities'
-import { handleBrowseRouteBack, handleBrowseRouteSelect } from '../actions'
-import { useTuiServices } from '../../../hooks/useTuiServices'
-import { selectSelectedBrowseRow, tuiStore, useTuiStore } from '../../../store'
+import { loadProjects } from '~/actions/refresh'
+import { makeBrowseBindings } from '~/keymap/bindings'
+import { keymapPriority } from '~/keymap/priorities'
+import {
+  handleBrowseRouteBack,
+  handleBrowseRouteSelect,
+} from '~/routes/browse/actions'
+import { useTuiServices } from '~/hooks/useTuiServices'
+import { selectSelectedBrowseRow, tuiStore, useTuiStore } from '~/store'
 
 export function useBrowseKeybindings() {
   const services = useTuiServices()

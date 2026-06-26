@@ -1,5 +1,5 @@
-import { theme } from '../../config/theme'
-import type { AppRoute } from '../../types/navigation'
+import { theme } from '~/config/theme'
+import type { AppRoute } from '~/types/navigation'
 
 export type TabProps = {
   isSelected?: boolean

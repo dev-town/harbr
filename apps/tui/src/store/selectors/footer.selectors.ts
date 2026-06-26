@@ -1,10 +1,10 @@
-import type { TuiStoreModel } from '../types'
+import type { TuiStoreModel } from '~/store/types'
 import {
   selectBrowseBreadcrumb,
   selectCurrentBrowseSection,
   selectVisibleBrowseRows,
-} from '../browse/browse-selectors'
-import { selectIsActionsOpen } from '../surfaces/surfaces-selectors'
+} from '~/store/browse/browse-selectors'
+import { selectIsActionsOpen } from '~/store/surfaces/surfaces-selectors'
 
 export function selectEffectiveVisibility(state: TuiStoreModel) {
   if (selectIsActionsOpen(state) || state.app.currentRoute === 'active') {

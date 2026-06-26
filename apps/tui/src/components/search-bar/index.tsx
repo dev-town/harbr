@@ -1,7 +1,7 @@
 import type { InputRenderable } from '@opentui/core'
 import { useRef } from 'react'
 
-import { theme } from '../../config/theme'
+import { theme } from '~/config/theme'
 
 export function SearchBar({
   focused = true,

@@ -1,5 +1,5 @@
-import type { AppRoute } from '../../types/navigation'
-import { useTuiStore } from '../../store'
+import type { AppRoute } from '~/types/navigation'
+import { useTuiStore } from '~/store'
 
 export function useShell() {
   const currentRoute = useTuiStore((state) => state.app.currentRoute)

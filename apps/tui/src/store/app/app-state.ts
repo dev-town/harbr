@@ -1,7 +1,7 @@
 import type { RuntimeFact } from '@harbr/domain'
 
-import type { AppRoute } from '../../types/navigation'
-import type { NoticeLevel } from '../../types/notice'
+import type { AppRoute } from '~/types/navigation'
+import type { NoticeLevel } from '~/types/notice'
 
 export type Notice = {
   id: number

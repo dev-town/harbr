@@ -2,7 +2,7 @@ import type { BoxRenderable } from '@opentui/core'
 import { RGBA } from '@opentui/core'
 import { useRef } from 'react'
 
-import { theme } from '../../config/theme'
+import { theme } from '~/config/theme'
 import { useActionHover } from './hooks/use-action-hover'
 import { useActionKeybindings } from './hooks/use-action-keybindings'
 import { useActionModalLayout } from './hooks/use-action-modal-layout'

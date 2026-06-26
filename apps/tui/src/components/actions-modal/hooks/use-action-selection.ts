@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import type { ActionItemBase } from '../types'
+import type { ActionItemBase } from '~/components/actions-modal/types'
 
 type UseActionSelectionArgs<T extends ActionItemBase> = {
   initialSelectedId: string | null | undefined

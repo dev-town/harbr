@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 
-import { handleBrowseWorktreeSubmit } from '../actions'
-import { useTuiServices } from '../../../hooks/useTuiServices'
-import { selectWorktreeFormView, tuiStore, useTuiStore } from '../../../store'
+import { handleBrowseWorktreeSubmit } from '~/routes/browse/actions'
+import { useTuiServices } from '~/hooks/useTuiServices'
+import { selectWorktreeFormView, tuiStore, useTuiStore } from '~/store'
 
 export function useCreateWorkspace() {
   const services = useTuiServices()

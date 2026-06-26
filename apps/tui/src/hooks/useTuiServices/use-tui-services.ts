@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 
-import { TuiServicesContext } from '../../app-context'
+import { TuiServicesContext } from '~/app-context'
 
 export function useTuiServices() {
   const services = useContext(TuiServicesContext)

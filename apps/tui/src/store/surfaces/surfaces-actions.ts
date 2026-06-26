@@ -1,4 +1,4 @@
-import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '../types'
+import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '~/store/types'
 
 export function createSurfacesActions(
   set: TuiStoreSet,

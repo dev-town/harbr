@@ -2,9 +2,9 @@ import { ConfigService } from '@harbr/config'
 import { ReconcilerService } from '@harbr/reconciler'
 import { Effect } from 'effect'
 
-import { formatCliError, formatCliOutput } from '../cli/format'
-import { readArgValue } from '../helpers/args'
-import { makeTuiEffectRuntime } from '../services/effect-runtime'
+import { formatCliError, formatCliOutput } from '~/cli/format'
+import { readArgValue } from '~/helpers/args'
+import { makeTuiEffectRuntime } from '~/services/effect-runtime'
 
 export async function runSyncCommand(args: string[]) {
   const jsonMode = args.includes('--json')

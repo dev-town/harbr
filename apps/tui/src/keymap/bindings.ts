@@ -1,5 +1,5 @@
 import type { Binding } from '@opentui/keymap'
-import type { InteractionMode } from '../store'
+import type { InteractionMode } from '~/store'
 
 export type HelpBinding = Binding & {
   desc: string

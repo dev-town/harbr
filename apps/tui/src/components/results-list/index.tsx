@@ -2,8 +2,8 @@ import type { ScrollBoxRenderable } from '@opentui/core'
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 
-import { theme } from '../../config/theme'
-import { StatusLine } from '../status-line'
+import { theme } from '~/config/theme'
+import { StatusLine } from '~/components/status-line'
 
 type ResultsListProps<TRow extends { id: string }> = {
   emptyLabel?: string

@@ -11,8 +11,8 @@ import type {
   SurfacesState,
 } from './surfaces/surfaces-state'
 import type { WorktreeFormState } from './worktree-form/worktree-form-state'
-import type { AppRoute, VisibilityFilter } from '../types/navigation'
-import type { NoticeLevel } from '../types/notice'
+import type { AppRoute, VisibilityFilter } from '~/types/navigation'
+import type { NoticeLevel } from '~/types/notice'
 
 export type TuiStoreState = {
   active: ActiveState

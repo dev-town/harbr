@@ -1,9 +1,9 @@
-import { ActiveRoute, BrowseRoute } from '../../routes'
-import { useShell } from '../../hooks/useShell'
-import { Layout } from '../layout'
-import { Logo } from '../logo'
-import { Tab, Tabs } from '../tabs'
-import { FooterRow } from '../footer-row'
+import { ActiveRoute, BrowseRoute } from '~/routes'
+import { useShell } from '~/hooks/useShell'
+import { Layout } from '~/components/layout'
+import { Logo } from '~/components/logo'
+import { Tab, Tabs } from '~/components/tabs'
+import { FooterRow } from '~/components/footer-row'
 
 export function Shell() {
   const { currentRoute, onRouteSelect } = useShell()

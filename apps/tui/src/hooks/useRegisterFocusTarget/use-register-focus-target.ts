@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
-import type { FocusTargetRef, SurfaceId } from '../../store'
-import { useTuiStore } from '../../store'
+import type { FocusTargetRef, SurfaceId } from '~/store'
+import { useTuiStore } from '~/store'
 
 export function useRegisterFocusTarget(
   id: SurfaceId,

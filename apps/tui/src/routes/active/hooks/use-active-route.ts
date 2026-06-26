@@ -1,18 +1,18 @@
 import type { InputRenderable } from '@opentui/core'
 import { useEffect, useMemo, useRef } from 'react'
 
-import { openActiveRuntime } from '../../../actions/runtime'
-import { useRegisterFocusTarget } from '../../../hooks/useRegisterFocusTarget'
-import { useTuiServices } from '../../../hooks/useTuiServices'
+import { openActiveRuntime } from '~/actions/runtime'
+import { useRegisterFocusTarget } from '~/hooks/useRegisterFocusTarget'
+import { useTuiServices } from '~/hooks/useTuiServices'
 import type { RuntimeAttachment } from '@harbr/domain'
-import type { HarbourRow } from '../../../types/rows'
+import type { HarbourRow } from '~/types/rows'
 import {
   selectIsActiveActionsOpen,
   selectIsWindowPickerOpen,
   selectVisibleActiveRows,
   tuiStore,
   useTuiStore,
-} from '../../../store'
+} from '~/store'
 import { useActiveKeybindings } from './use-active-keybindings'
 
 export function useActiveRoute() {

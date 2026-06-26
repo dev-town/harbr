@@ -2,7 +2,7 @@ import { ConfigService } from '@harbr/config'
 import { ProjectService } from '@harbr/db'
 import type { ActiveRuntimeSummary, HarbourContext } from '@harbr/domain'
 import { Effect } from 'effect'
-import type { TuiServices } from '../app-context'
+import type { TuiServices } from '~/app-context'
 
 export async function loadConfiguredProjects(services: TuiServices) {
   const config = await services.effectRuntime.runPromise(

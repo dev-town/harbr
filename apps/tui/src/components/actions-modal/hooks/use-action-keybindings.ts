@@ -1,7 +1,7 @@
 import { useBindings } from '@opentui/keymap/react'
 
-import { makeActionsModalBindings } from '../../../keymap/bindings'
-import { keymapPriority } from '../../../keymap/priorities'
+import { makeActionsModalBindings } from '~/keymap/bindings'
+import { keymapPriority } from '~/keymap/priorities'
 
 type UseActionKeybindingsArgs = {
   enabled: boolean

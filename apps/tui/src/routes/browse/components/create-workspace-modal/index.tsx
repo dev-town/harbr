@@ -4,11 +4,11 @@ import { useBindings } from '@opentui/keymap/react'
 import { useTerminalDimensions } from '@opentui/react'
 import { useRef } from 'react'
 
-import { theme } from '../../../../config/theme'
-import { useRegisterFocusTarget } from '../../../../hooks/useRegisterFocusTarget'
-import { makeCreateWorkspaceBindings } from '../../../../keymap/bindings'
-import { keymapPriority } from '../../../../keymap/priorities'
-import { useCreateWorkspace } from '../../hooks/use-create-workspace'
+import { theme } from '~/config/theme'
+import { useRegisterFocusTarget } from '~/hooks/useRegisterFocusTarget'
+import { makeCreateWorkspaceBindings } from '~/keymap/bindings'
+import { keymapPriority } from '~/keymap/priorities'
+import { useCreateWorkspace } from '~/routes/browse/hooks/use-create-workspace'
 
 export function CreateWorkspaceModal() {
   const {

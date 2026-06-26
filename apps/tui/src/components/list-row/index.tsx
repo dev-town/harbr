@@ -1,6 +1,6 @@
-import { theme } from '../../config/theme'
-import { noticeIcon } from '../../types/notice'
-import { padCell, truncate, truncateLeft } from '../shared/utils/text'
+import { theme } from '~/config/theme'
+import { noticeIcon } from '~/types/notice'
+import { padCell, truncate, truncateLeft } from '~/components/shared/utils/text'
 
 import type { ListRowMeta, ListRowMetaNotice, RowVariant } from './types'
 import { getInlineMeta, getStackedMeta } from './utils'

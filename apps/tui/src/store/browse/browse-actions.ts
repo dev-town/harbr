@@ -1,13 +1,16 @@
-import type { VisibilityFilter } from '../../types/navigation'
-import { getRepairedSelectedId, moveSelectedId } from '../shared/list-selectors'
+import type { VisibilityFilter } from '~/types/navigation'
+import {
+  getRepairedSelectedId,
+  moveSelectedId,
+} from '~/store/shared/list-selectors'
 import { projectsScope, workspacesScope } from './browse-scope'
 import { isImplicitWorkspace } from './browse-state'
 import {
   selectBrowseActionRows,
   selectVisibleBrowseRows,
 } from './browse-selectors'
-import { selectIsActionsOpen } from '../surfaces/surfaces-selectors'
-import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '../types'
+import { selectIsActionsOpen } from '~/store/surfaces/surfaces-selectors'
+import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '~/store/types'
 
 export function createBrowseActions(
   set: TuiStoreSet,

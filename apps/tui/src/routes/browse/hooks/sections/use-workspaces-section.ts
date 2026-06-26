@@ -1,8 +1,8 @@
-import { openModules } from '../../../../actions/drilldown'
-import { openWorkspaceRoot } from '../../../../actions/runtime'
-import { useTuiServices } from '../../../../hooks/useTuiServices'
-import { tuiStore } from '../../../../store'
-import type { WorkspaceRow } from '../../../../types/rows'
+import { openModules } from '~/actions/drilldown'
+import { openWorkspaceRoot } from '~/actions/runtime'
+import { useTuiServices } from '~/hooks/useTuiServices'
+import { tuiStore } from '~/store'
+import type { WorkspaceRow } from '~/types/rows'
 
 export function useWorkspacesSection() {
   const services = useTuiServices()

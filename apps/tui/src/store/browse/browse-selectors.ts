@@ -6,10 +6,10 @@ import type {
   ModuleRow,
   ProjectRow,
   WorkspaceRow,
-} from '../../types/rows'
+} from '~/types/rows'
 import { browseActionIds } from './browse-action-ids'
-import { getSelectedRow } from '../shared/list-selectors'
-import type { TuiStoreModel } from '../types'
+import { getSelectedRow } from '~/store/shared/list-selectors'
+import type { TuiStoreModel } from '~/store/types'
 import {
   getBrowseSection,
   getSelectedProjectId,

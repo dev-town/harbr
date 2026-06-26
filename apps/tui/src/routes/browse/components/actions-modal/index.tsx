@@ -1,16 +1,16 @@
 import type { BoxRenderable } from '@opentui/core'
 import { useMemo, useRef } from 'react'
 
-import { ActionsModal } from '../../../../components/actions-modal'
-import { useRegisterFocusTarget } from '../../../../hooks/useRegisterFocusTarget'
-import { useTuiServices } from '../../../../hooks/useTuiServices'
+import { ActionsModal } from '~/components/actions-modal'
+import { useRegisterFocusTarget } from '~/hooks/useRegisterFocusTarget'
+import { useTuiServices } from '~/hooks/useTuiServices'
 import {
   selectBrowseActionRows,
   selectIsBrowseActionsOpen,
   tuiStore,
   useTuiStore,
-} from '../../../../store'
-import { handleBrowseActionSelect } from '../../actions'
+} from '~/store'
+import { handleBrowseActionSelect } from '~/routes/browse/actions'
 
 export function BrowseActionsModal() {
   const services = useTuiServices()

@@ -1,7 +1,7 @@
-import { openModuleRuntime } from '../../../../actions/runtime'
-import { useTuiServices } from '../../../../hooks/useTuiServices'
-import { tuiStore } from '../../../../store'
-import type { ModuleRow } from '../../../../types/rows'
+import { openModuleRuntime } from '~/actions/runtime'
+import { useTuiServices } from '~/hooks/useTuiServices'
+import { tuiStore } from '~/store'
+import type { ModuleRow } from '~/types/rows'
 
 export function useModulesSection() {
   const services = useTuiServices()

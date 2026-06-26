@@ -3,7 +3,7 @@ import { GitService } from '@harbr/git'
 import { ReconcilerService } from '@harbr/reconciler'
 import { Effect } from 'effect'
 
-import type { TuiServices } from '../app-context'
+import type { TuiServices } from '~/app-context'
 
 export type CreateWorkspaceInput = {
   branchName: string

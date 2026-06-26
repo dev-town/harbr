@@ -1,4 +1,4 @@
-import { clampIndex } from '../../helpers/selection'
+import { clampIndex } from '~/helpers/selection'
 
 export function getSelectedRow<TRow extends { id: string }>(
   rows: readonly TRow[],

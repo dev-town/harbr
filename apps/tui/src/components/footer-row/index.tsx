@@ -1,10 +1,10 @@
-import { theme } from '../../config/theme'
-import { noticeIcon, type NoticeLevel } from '../../types/notice'
+import { theme } from '~/config/theme'
+import { noticeIcon, type NoticeLevel } from '~/types/notice'
 import {
   selectBreadcrumb,
   selectEffectiveVisibility,
   useTuiStore,
-} from '../../store'
+} from '~/store'
 import { breadcrumbLabel } from './utils/breadcrumb-label'
 import { visibilityColor } from './utils/visibility-color'
 

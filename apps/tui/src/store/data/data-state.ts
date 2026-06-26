@@ -5,7 +5,7 @@ import type {
   ModuleRow,
   ProjectRow,
   WorkspaceRow,
-} from '../../types/rows'
+} from '~/types/rows'
 
 export type ProjectWindowConfig = {
   projectId: string

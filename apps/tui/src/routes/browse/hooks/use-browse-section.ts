@@ -1,5 +1,5 @@
-import type { HarbourRow } from '../../../types/rows'
-import { selectCurrentBrowseSection, useTuiStore } from '../../../store'
+import type { HarbourRow } from '~/types/rows'
+import { selectCurrentBrowseSection, useTuiStore } from '~/store'
 import { useModulesSection } from './sections/use-modules-section'
 import { useProjectsSection } from './sections/use-projects-section'
 import { useWorkspacesSection } from './sections/use-workspaces-section'

@@ -8,7 +8,7 @@ import {
   selectVisibleBrowseRows,
   tuiStore,
   useTuiStore,
-} from '../../../store'
+} from '~/store'
 import { useBrowseSearch } from './use-browse-search'
 import { useBrowseSection } from './use-browse-section'
 

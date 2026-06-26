@@ -1,7 +1,7 @@
-import type { TuiServices, TuiStore } from '../../../app-context'
-import { closeActiveRuntime, openActiveRuntime } from '../../../actions/runtime'
-import { activeActionIds } from '../../../store'
-import type { ActiveActionRow } from '../../../types/rows'
+import type { TuiServices, TuiStore } from '~/app-context'
+import { closeActiveRuntime, openActiveRuntime } from '~/actions/runtime'
+import { activeActionIds } from '~/store'
+import type { ActiveActionRow } from '~/types/rows'
 
 export function handleActiveActionSelect(
   services: TuiServices,

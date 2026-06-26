@@ -1,7 +1,7 @@
 import { useBindings } from '@opentui/keymap/react'
 
-import { useTuiServices } from '../hooks/useTuiServices'
-import { tuiStore } from '../store'
+import { useTuiServices } from '~/hooks/useTuiServices'
+import { tuiStore } from '~/store'
 import { makeRootBindings } from './bindings'
 import { keymapPriority } from './priorities'
 

@@ -1,10 +1,10 @@
-import type { TuiServices, TuiStore } from '../../../app-context'
-import { openActiveRuntime } from '../../../actions/runtime'
+import type { TuiServices, TuiStore } from '~/app-context'
+import { openActiveRuntime } from '~/actions/runtime'
 import {
   selectIsActiveActionsOpen,
   selectIsWindowPickerOpen,
   selectSelectedActiveRow,
-} from '../../../store'
+} from '~/store'
 
 export function handleActiveRouteBack(store: TuiStore) {
   if (selectIsActiveActionsOpen(store.getState())) {
