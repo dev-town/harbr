@@ -30,7 +30,7 @@ jobs:
       - name: Verify tag matches package version
         id: version
         run: |
-          version="$(bun -e "console.log((await Bun.file('package.json').json()).version)")"
+          version="$(bun -e "console.log((await Bun.file('apps/tui/package.json').json()).version)")"
           tag_version="${GITHUB_REF_NAME#v}"
 
           if [ "$version" != "$tag_version" ]; then
