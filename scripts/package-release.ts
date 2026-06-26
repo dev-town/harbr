@@ -19,11 +19,13 @@ const releaseTargets = [
   { name: 'linux-x64', bunTarget: 'bun-linux-x64' },
 ] as const satisfies ReadonlyArray<ReleaseTarget>
 
-const rootPackage = (await Bun.file('package.json').json()) as PackageJson
-const version = rootPackage.version
+const tuiPackage = (await Bun.file(
+  'apps/tui/package.json',
+).json()) as PackageJson
+const version = tuiPackage.version
 
 if (!version) {
-  console.error('package.json is missing a version.')
+  console.error('apps/tui/package.json is missing a version.')
   process.exit(1)
 }
 

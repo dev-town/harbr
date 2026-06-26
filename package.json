@@ -1,6 +1,6 @@
 {
   "name": "harbr",
-  "version": "0.1.0-beta.0",
+  "version": "0.0.0-private",
   "private": true,
   "license": "MIT",
   "packageManager": "bun@1.3.14",
@@ -16,6 +16,8 @@
   "scripts": {
     "build": "turbo run build",
     "build:tui": "bun run --cwd apps/tui build",
+    "changeset": "changeset",
+    "version:packages": "changeset version",
     "package:release": "bun scripts/package-release.ts",
     "check:migrations": "bun run --cwd packages/db db:migration:check",
     "check:schema": "bun run --cwd packages/config schema:check",
@@ -32,6 +34,7 @@
     "sync:compiled:json": "bun run build:tui && bun run --cwd apps/tui sync:compiled:json"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.6.2",
     "eslint": "^10.3.0",
