@@ -12,6 +12,20 @@ Project -> Workspace -> Module -> Runtime
 
 Git remains the source of truth for repository state. tmux remains the main local runtime. Harbr observes, reconciles, and coordinates them.
 
+## Screenshots
+
+Browse projects, workspaces, and modules from a tmux popup:
+
+![Harbr Browse tab showing module selection](docs/assets/readme/browse-modules.png)
+
+Switch between active Harbr runtimes:
+
+![Harbr Active tab showing running sessions](docs/assets/readme/active-sessions.png)
+
+Focused popup view:
+
+![Harbr tmux popup focused on active sessions](docs/assets/readme/active-sessions-popup.png)
+
 ## Current Status
 
 Built today:
@@ -49,7 +63,18 @@ To build from source or work on this repo:
 
 ### Homebrew
 
-No Homebrew formula is available yet. Build from source for now.
+Install with Homebrew:
+
+```sh
+brew install dev-town/tap/harbr
+```
+
+Or tap first:
+
+```sh
+brew tap dev-town/tap
+brew install harbr
+```
 
 ### From Source
 
