@@ -16,6 +16,7 @@
   "scripts": {
     "build": "turbo run build",
     "build:tui": "bun run --cwd apps/tui build",
+    "package:release": "bun scripts/package-release.ts",
     "check:migrations": "bun run --cwd packages/db db:migration:check",
     "check:schema": "bun run --cwd packages/config schema:check",
     "lint": "turbo run lint",

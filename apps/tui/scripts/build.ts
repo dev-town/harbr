@@ -2,8 +2,9 @@
 
 import { access, rm } from 'node:fs/promises'
 
-const target = `bun-${process.platform}-${process.arch}`
-const outfile = './dist/harbr'
+const target =
+  Bun.env.HARBR_BUILD_TARGET ?? `bun-${process.platform}-${process.arch}`
+const outfile = Bun.env.HARBR_BUILD_OUTFILE ?? './dist/harbr'
 
 await rm('./dist', { force: true, recursive: true })
 
