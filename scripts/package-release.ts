@@ -28,6 +28,7 @@ if (!version) {
 }
 
 const releaseDir = join('dist', 'release')
+const manifestPath = join(releaseDir, 'manifest.json')
 const requiredFiles = ['LICENSE', 'NOTICE', 'README.md'] as const
 const commandEnv = { ...Bun.env, LANG: 'C', LC_ALL: 'C' }
 
@@ -94,7 +95,12 @@ async function runInherit(
 await rm(releaseDir, { force: true, recursive: true })
 await mkdir(releaseDir, { recursive: true })
 
-const createdArtifacts: Array<{ path: string; sha256: string }> = []
+const createdArtifacts: Array<{
+  name: string
+  path: string
+  sha256: string
+  target: string
+}> = []
 
 for (const target of releaseTargets) {
   const base = artifactBase(target)
@@ -125,7 +131,12 @@ for (const target of releaseTargets) {
   const artifactContents = await run('tar', ['-tzf', artifactPath])
 
   const checksum = await sha256(artifactPath)
-  createdArtifacts.push({ path: artifactPath, sha256: checksum })
+  createdArtifacts.push({
+    name: `${base}.tar.gz`,
+    path: artifactPath,
+    sha256: checksum,
+    target: target.name,
+  })
 
   console.log(`Created ${artifactPath}`)
   console.log(`SHA256 ${checksum}`)
@@ -137,8 +148,15 @@ for (const target of releaseTargets) {
 
 await runInherit('bun', ['scripts/build.ts'], { cwd: 'apps/tui' })
 
+await Bun.write(
+  manifestPath,
+  `${JSON.stringify({ artifacts: createdArtifacts, version }, null, 2)}\n`,
+)
+
 console.log('Release artifacts:')
 for (const artifact of createdArtifacts) {
   console.log(`- ${artifact.path}`)
   console.log(`  sha256: ${artifact.sha256}`)
 }
+console.log('')
+console.log(`Wrote ${manifestPath}`)
