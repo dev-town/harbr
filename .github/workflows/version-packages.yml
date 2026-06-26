@@ -13,8 +13,6 @@ jobs:
   version:
     name: Version Packages
     runs-on: ubuntu-latest
-    env:
-      VERSION_PACKAGES_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN || github.token }}
 
     steps:
       - name: Checkout
@@ -34,7 +32,6 @@ jobs:
           title: Version Packages
           commit: Version Packages
           createGithubReleases: false
-          github-token: ${{ env.VERSION_PACKAGES_TOKEN }}
           version: bun changeset version
         env:
-          GITHUB_TOKEN: ${{ env.VERSION_PACKAGES_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
