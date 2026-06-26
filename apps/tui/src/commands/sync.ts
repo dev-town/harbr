@@ -3,10 +3,17 @@ import { ReconcilerService } from '@harbr/reconciler'
 import { Effect } from 'effect'
 
 import { formatCliError, formatCliOutput } from '~/cli/format'
+import { formatSyncHelp, isHelpRequest } from '~/cli/help'
 import { readArgValue } from '~/helpers/args'
 import { makeTuiEffectRuntime } from '~/services/effect-runtime'
 
 export async function runSyncCommand(args: string[]) {
+  if (isHelpRequest(args)) {
+    console.log(formatSyncHelp())
+    process.exitCode = 0
+    return
+  }
+
   const jsonMode = args.includes('--json')
   const configPath = readArgValue(args, '--path')
   const dbPath = readArgValue(args, '--db-path')

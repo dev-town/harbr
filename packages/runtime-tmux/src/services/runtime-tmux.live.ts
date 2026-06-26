@@ -11,6 +11,7 @@ import {
   formatSessionTarget,
   parseSessionName,
 } from '../session-name.util'
+import { classifyRuntimeDiscoveryIssue } from '../runtime-tmux.discovery'
 import { TmuxCommandError, TmuxNotFoundError } from '../runtime-tmux.errors'
 import type {
   CreateRuntimeWindowsResult,
@@ -60,7 +61,7 @@ function getCurrentRuntimeLive() {
       Effect.succeed<CurrentRuntime>(null),
     ),
     Effect.catchTag('TmuxCommandError', (error) =>
-      isNoServerRunning(error.message)
+      classifyRuntimeDiscoveryIssue(error.message) !== undefined
         ? Effect.succeed<CurrentRuntime>(null)
         : Effect.fail(error),
     ),
@@ -97,14 +98,16 @@ function listRuntimesLive() {
         runtimeIssue: 'tmux_not_found',
       }),
     ),
-    Effect.catchTag('TmuxCommandError', (error) =>
-      isNoServerRunning(error.message)
+    Effect.catchTag('TmuxCommandError', (error) => {
+      const runtimeIssue = classifyRuntimeDiscoveryIssue(error.message)
+
+      return runtimeIssue !== undefined
         ? Effect.succeed<RuntimeDiscovery>({
             runtimes: [],
-            runtimeIssue: null,
+            runtimeIssue,
           })
-        : Effect.fail(error),
-    ),
+        : Effect.fail(error)
+    }),
   )
 }
 
@@ -406,8 +409,12 @@ async function listRuntimeDiscoverySafe() {
   try {
     return await Effect.runPromise(listRuntimesLive())
   } catch (error) {
-    if (error instanceof TmuxCommandError && isNoServerRunning(error.message)) {
-      return { runtimes: [], runtimeIssue: null } satisfies RuntimeDiscovery
+    if (error instanceof TmuxCommandError) {
+      const runtimeIssue = classifyRuntimeDiscoveryIssue(error.message)
+
+      if (runtimeIssue !== undefined) {
+        return { runtimes: [], runtimeIssue } satisfies RuntimeDiscovery
+      }
     }
 
     throw error
@@ -441,10 +448,6 @@ function mapTmuxError(error: unknown) {
         : String(error)
 
   return new TmuxCommandError({ message })
-}
-
-function isNoServerRunning(message: string) {
-  return message.includes('no server running')
 }
 
 function isExecError(

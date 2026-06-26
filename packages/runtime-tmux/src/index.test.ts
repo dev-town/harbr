@@ -13,6 +13,7 @@ import {
   formatSessionTarget,
   parseSessionName,
 } from './session-name.util'
+import { classifyRuntimeDiscoveryIssue } from './runtime-tmux.discovery'
 import { RuntimeTmuxService, RuntimeTmuxServiceLive } from './index'
 
 describe('parseSessionName', () => {
@@ -114,6 +115,18 @@ describe('session helpers', () => {
 })
 
 describe('listRuntimes', () => {
+  it('classifies harmless tmux discovery failures', () => {
+    expect(classifyRuntimeDiscoveryIssue('no server running')).toBeNull()
+    expect(
+      classifyRuntimeDiscoveryIssue(
+        'error connecting to /private/tmp/tmux-501/default (Operation not permitted)',
+      ),
+    ).toBe('tmux_unavailable')
+    expect(classifyRuntimeDiscoveryIssue('unexpected tmux failure')).toBe(
+      undefined,
+    )
+  })
+
   it('returns provided runtime discovery from the service layer', async () => {
     const discovery: RuntimeDiscovery = {
       runtimes: [
