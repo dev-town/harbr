@@ -13,10 +13,10 @@ import {
 import { type ProjectConfig, type ProjectObservation } from '@harbr/domain'
 import { GitServiceLive, RepoNotGitError } from '@harbr/git'
 import {
-  RuntimeTmuxService,
-  type RuntimeTmuxServiceApi,
-} from '@harbr/runtime-tmux'
-import { Effect, Layer } from 'effect'
+  RuntimeDiscoveryService,
+  type RuntimeDiscoveryServiceApi,
+} from '@harbr/runtime-tmux/discovery'
+import { Effect, Either, Layer } from 'effect'
 import { ScannerService, ScannerServiceLive } from '@harbr/scanner'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -154,10 +154,19 @@ describe('reconciler', () => {
     const layer = ReconcilerServiceLive.pipe(
       Layer.provide(
         Layer.succeed(ScannerService, {
-          observeProject: (project: ProjectConfig) =>
-            project.name === 'alpha'
-              ? Effect.succeed(createObservation(project))
-              : Effect.fail(new RepoNotGitError({ repoPath: project.repo })),
+          observeProjects: (projects) =>
+            Effect.succeed(
+              projects.map((project) => ({
+                project,
+                result:
+                  project.name === 'alpha'
+                    ? Either.right(createObservation(project))
+                    : Either.left(
+                        new RepoNotGitError({ repoPath: project.repo }),
+                      ),
+              })),
+            ),
+          observeProject: () => Effect.die('not used'),
         }),
       ),
       Layer.provide(
@@ -260,17 +269,13 @@ function createProjectConfig(
 }
 
 function makeTestReconcilerLayer(dbPath: string) {
-  const runtimeTmux: RuntimeTmuxServiceApi = {
-    closeRuntime: () => Effect.die('not used'),
-    createRuntimeWindows: () => Effect.die('not used'),
-    getCurrentRuntime: Effect.succeed(null),
+  const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
     listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
-    openOrCreateRuntime: () => Effect.void,
   }
 
   const scanner = ScannerServiceLive.pipe(
     Layer.provide(GitServiceLive),
-    Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+    Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
   )
 
   return ReconcilerServiceLive.pipe(

@@ -7,9 +7,9 @@ import { promisify } from 'node:util'
 import type { ProjectConfig } from '@harbr/domain'
 import { GitService, GitServiceLive, type GitServiceApi } from '@harbr/git'
 import {
-  RuntimeTmuxService,
-  type RuntimeTmuxServiceApi,
-} from '@harbr/runtime-tmux'
+  RuntimeDiscoveryService,
+  type RuntimeDiscoveryServiceApi,
+} from '@harbr/runtime-tmux/discovery'
 import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -288,10 +288,7 @@ describe('observeProject', () => {
       resolveWorkspacePath: () => Effect.succeed(null),
     }
 
-    const runtimeTmux: RuntimeTmuxServiceApi = {
-      closeRuntime: () => Effect.die('not used'),
-      createRuntimeWindows: () => Effect.die('not used'),
-      getCurrentRuntime: Effect.succeed(null),
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
@@ -305,7 +302,6 @@ describe('observeProject', () => {
         ],
         runtimeIssue: 'tmux_not_found',
       }),
-      openOrCreateRuntime: () => Effect.void,
     }
 
     await expect(
@@ -315,7 +311,9 @@ describe('observeProject', () => {
         ).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
-              Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+              Layer.provide(
+                Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
+              ),
               Layer.provide(Layer.succeed(GitService, git)),
             ),
           ),
@@ -354,10 +352,7 @@ describe('observeProject', () => {
       modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
     }
 
-    const runtimeTmux: RuntimeTmuxServiceApi = {
-      closeRuntime: () => Effect.die('not used'),
-      createRuntimeWindows: () => Effect.die('not used'),
-      getCurrentRuntime: Effect.succeed(null),
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
@@ -395,7 +390,6 @@ describe('observeProject', () => {
         ],
         runtimeIssue: null,
       }),
-      openOrCreateRuntime: () => Effect.void,
     }
 
     await expect(
@@ -405,7 +399,9 @@ describe('observeProject', () => {
         ).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
-              Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+              Layer.provide(
+                Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
+              ),
               Layer.provide(
                 Layer.succeed(GitService, {
                   createWorktree: () => Effect.die('not used'),
@@ -495,10 +491,7 @@ describe('observeProject', () => {
       modules: [{ raw: '.', path: '.', mode: 'explicit' }],
     }
 
-    const runtimeTmux: RuntimeTmuxServiceApi = {
-      closeRuntime: () => Effect.die('not used'),
-      createRuntimeWindows: () => Effect.die('not used'),
-      getCurrentRuntime: Effect.succeed(null),
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
@@ -520,7 +513,6 @@ describe('observeProject', () => {
         ],
         runtimeIssue: null,
       }),
-      openOrCreateRuntime: () => Effect.void,
     }
 
     await expect(
@@ -530,7 +522,9 @@ describe('observeProject', () => {
         ).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
-              Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+              Layer.provide(
+                Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
+              ),
               Layer.provide(
                 Layer.succeed(GitService, {
                   createWorktree: () => Effect.die('not used'),
@@ -610,12 +604,8 @@ async function runScan(effect: ReturnType<typeof scanProject>) {
 }
 
 async function runObservation(effect: ReturnType<typeof observeProject>) {
-  const runtimeTmux: RuntimeTmuxServiceApi = {
-    closeRuntime: () => Effect.die('not used'),
-    createRuntimeWindows: () => Effect.die('not used'),
-    getCurrentRuntime: Effect.succeed(null),
+  const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
     listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
-    openOrCreateRuntime: () => Effect.void,
   }
 
   return Effect.runPromise(
@@ -623,7 +613,9 @@ async function runObservation(effect: ReturnType<typeof observeProject>) {
       Effect.provide(
         ScannerServiceLive.pipe(
           Layer.provide(GitServiceLive),
-          Layer.provide(Layer.succeed(RuntimeTmuxService, runtimeTmux)),
+          Layer.provide(
+            Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
+          ),
         ),
       ),
     ),

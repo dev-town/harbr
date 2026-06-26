@@ -23,7 +23,7 @@ runtime-tmux
 scanner
   -> domain
   -> git
-  -> runtime-tmux
+  -> runtime-tmux/discovery
 
 reconciler
   -> domain
@@ -51,7 +51,7 @@ git -> db
 - `domain` owns shared public contracts between packages.
 - `domain` may use schema/validation libraries for those contracts.
 - App-local components render and dispatch; they use app-provided command handlers or the app Effect runtime rather than importing package internals.
-- `scanner` reads external state and emits normalized facts. It does not own tmux orchestration or durable belief.
+- `scanner` reads external state and emits normalized facts. It may use read-only `@harbr/runtime-tmux/discovery`, but it must not own tmux orchestration or import the full runtime-tmux service.
 - `reconciler` can consume scanner facts and persist Harbour belief. Do not push this logic back into UI or db.
 - `db` stores Harbour state; it should not reach outward into scanner or reconciler logic.
 - Map package-internal shapes to `domain` contracts at public boundaries instead of leaking internals outward.

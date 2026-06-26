@@ -66,6 +66,30 @@ export const baseConfig = tseslint.config(
       ],
     },
   },
+  {
+    files: ['packages/scanner/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@harbr/runtime-tmux',
+              message:
+                'Scanner may only use read-only runtime discovery. Import from @harbr/runtime-tmux/discovery instead.',
+            },
+          ],
+          patterns: [
+            {
+              regex: '^@harbr/runtime-tmux/(?!discovery$).*',
+              message:
+                'Scanner may only use read-only runtime discovery. Import from @harbr/runtime-tmux/discovery instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 )
 
 export const boundaryConfig = {

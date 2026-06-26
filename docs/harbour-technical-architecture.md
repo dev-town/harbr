@@ -222,7 +222,7 @@ runtime-tmux
 scanner
   → domain
   → git
-  → runtime-tmux
+  → runtime-tmux/discovery
 
 reconciler
   → domain
@@ -260,6 +260,7 @@ domain        = Harbr language
 config        = user/project intent and validation
 git/tmux      = external reality adapters
 scanner       = what exists?
+runtime-tmux  = read/write tmux adapter, with read-only discovery for scanners
 apps          = load validated intent and own runtime entrypoints
 reconciler    = given validated intent and observed facts, what should Harbr believe?
 db            = what Harbr remembers

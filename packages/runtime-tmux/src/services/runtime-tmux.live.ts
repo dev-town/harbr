@@ -22,6 +22,10 @@ import {
   RuntimeTmuxService,
   type RuntimeTmuxServiceApi,
 } from './runtime-tmux.service'
+import {
+  RuntimeDiscoveryService,
+  type RuntimeDiscoveryServiceApi,
+} from './runtime-discovery.service'
 
 const execFileAsync = promisify(execFile)
 
@@ -32,6 +36,13 @@ export const RuntimeTmuxServiceLive = Layer.succeed(RuntimeTmuxService, {
   listRuntimes: listRuntimesLive(),
   openOrCreateRuntime: openOrCreateRuntimeLive,
 } satisfies RuntimeTmuxServiceApi)
+
+export const RuntimeDiscoveryServiceLive = Layer.succeed(
+  RuntimeDiscoveryService,
+  {
+    listRuntimes: listRuntimesLive(),
+  } satisfies RuntimeDiscoveryServiceApi,
+)
 
 function getCurrentRuntimeLive() {
   return Effect.tryPromise({

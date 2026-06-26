@@ -1,13 +1,52 @@
 import type { ProjectConfig, ProjectObservation } from '@harbr/domain'
 import type { GitServiceApi } from '@harbr/git'
-import type { RuntimeTmuxServiceApi } from '@harbr/runtime-tmux'
+import type {
+  RuntimeDiscovery,
+  RuntimeDiscoveryServiceApi,
+} from '@harbr/runtime-tmux/discovery'
 import { Effect } from 'effect'
 
 import { scanProject } from './scanner.scan'
+import type { ProjectObservationResult } from './services/scanner.service'
+
+export function observeProjectsWithGit(
+  git: GitServiceApi,
+  runtimeDiscovery: RuntimeDiscoveryServiceApi,
+  projects: readonly ProjectConfig[],
+) {
+  return runtimeDiscovery.listRuntimes.pipe(
+    Effect.flatMap((discovery) =>
+      Effect.forEach(projects, (project) =>
+        observeProjectWithDiscovery(git, discovery, project).pipe(
+          Effect.either,
+          Effect.map(
+            (result) =>
+              ({
+                project,
+                result,
+              }) satisfies ProjectObservationResult,
+          ),
+        ),
+      ),
+    ),
+  )
+}
 
 export function observeProjectWithGit(
   git: GitServiceApi,
-  runtimeTmux: RuntimeTmuxServiceApi,
+  runtimeDiscovery: RuntimeDiscoveryServiceApi,
+  project: ProjectConfig,
+) {
+  return runtimeDiscovery.listRuntimes.pipe(
+    Effect.flatMap((discovery) =>
+      observeProjectWithDiscovery(git, discovery, project),
+    ),
+  )
+}
+
+function observeProjectWithDiscovery(
+  git: GitServiceApi,
+  discovery: RuntimeDiscovery,
   project: ProjectConfig,
 ) {
   return git.inspectRepo(project.repo).pipe(
@@ -17,40 +56,36 @@ export function observeProjectWithGit(
         workspaces: git.listWorkspaces(repo),
       }).pipe(
         Effect.flatMap(({ projectIssue, workspaces }) =>
-          runtimeTmux.listRuntimes.pipe(
-            Effect.flatMap(({ runtimes, runtimeIssue }) =>
-              Effect.all(
-                workspaces.map((workspace) =>
-                  scanProject(project, workspace.path).pipe(
-                    Effect.map((scan) => ({
-                      branchName: workspace.branchName,
-                      workspaceName: workspace.name,
-                      workspacePath: scan.workspacePath,
-                      kind: workspace.kind,
-                      modules: scan.modules,
-                    })),
-                  ),
-                ),
-              ).pipe(
-                Effect.map(
-                  (observedWorkspaces) =>
-                    ({
-                      projectIssue,
-                      projectName: project.name,
-                      repoPath: repo.repoPath,
-                      repoKind: repo.kind,
-                      workspaces: observedWorkspaces,
-                      runtimes: runtimes.filter((runtime) =>
-                        matchesProjectObservation(
-                          runtime,
-                          project.name,
-                          observedWorkspaces,
-                        ),
-                      ),
-                      runtimeIssue,
-                    }) satisfies ProjectObservation,
-                ),
+          Effect.all(
+            workspaces.map((workspace) =>
+              scanProject(project, workspace.path).pipe(
+                Effect.map((scan) => ({
+                  branchName: workspace.branchName,
+                  workspaceName: workspace.name,
+                  workspacePath: scan.workspacePath,
+                  kind: workspace.kind,
+                  modules: scan.modules,
+                })),
               ),
+            ),
+          ).pipe(
+            Effect.map(
+              (observedWorkspaces) =>
+                ({
+                  projectIssue,
+                  projectName: project.name,
+                  repoPath: repo.repoPath,
+                  repoKind: repo.kind,
+                  workspaces: observedWorkspaces,
+                  runtimes: discovery.runtimes.filter((runtime) =>
+                    matchesProjectObservation(
+                      runtime,
+                      project.name,
+                      observedWorkspaces,
+                    ),
+                  ),
+                  runtimeIssue: discovery.runtimeIssue,
+                }) satisfies ProjectObservation,
             ),
           ),
         ),

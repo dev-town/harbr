@@ -11,7 +11,10 @@ import {
 } from '@harbr/db'
 import { GitServiceLive } from '@harbr/git'
 import { ReconcilerServiceLive } from '@harbr/reconciler'
-import { RuntimeTmuxServiceLive } from '@harbr/runtime-tmux'
+import {
+  RuntimeDiscoveryServiceLive,
+  RuntimeTmuxServiceLive,
+} from '@harbr/runtime-tmux'
 import { ScannerServiceLive } from '@harbr/scanner'
 import { Layer } from 'effect'
 
@@ -32,7 +35,7 @@ export function makeTuiLayer(options: TuiOptions) {
   const database = DatabaseClientLive.pipe(Layer.provide(databaseOptions))
   const projectService = ProjectServiceLive.pipe(Layer.provide(database))
   const scanner = ScannerServiceLive.pipe(
-    Layer.provide(Layer.mergeAll(GitServiceLive, RuntimeTmuxServiceLive)),
+    Layer.provide(Layer.mergeAll(GitServiceLive, RuntimeDiscoveryServiceLive)),
   )
   const reconciler = ReconcilerServiceLive.pipe(
     Layer.provide(Layer.mergeAll(projectService, scanner)),
@@ -42,6 +45,7 @@ export function makeTuiLayer(options: TuiOptions) {
     config,
     database,
     GitServiceLive,
+    RuntimeDiscoveryServiceLive,
     RuntimeTmuxServiceLive,
     projectService,
     scanner,

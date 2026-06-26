@@ -1,12 +1,16 @@
 import type {
   ProjectConfig,
+  ProjectObservation,
   SyncProjectResult,
   SyncResult,
 } from '@harbr/domain'
-import { Effect } from 'effect'
+import { Effect, Either } from 'effect'
 
-import type { ProjectServiceApi } from '@harbr/db'
-import type { ScannerServiceApi } from '@harbr/scanner'
+import type { ProjectServiceApi, ProjectServiceError } from '@harbr/db'
+import type {
+  ProjectObservationResult,
+  ScannerServiceApi,
+} from '@harbr/scanner'
 
 export function syncProjects(
   projects: readonly ProjectConfig[],
@@ -14,22 +18,25 @@ export function syncProjects(
   projectService: ProjectServiceApi,
 ) {
   return Effect.gen(function* () {
-    const results = yield* Effect.forEach(projects, (project) =>
-      refreshConfiguredProject(scanner, projectService, project).pipe(
-        Effect.catchAll((error) =>
-          Effect.succeed<SyncProjectResult>({
-            projectName: project.name,
-            repoPath: project.repo,
-            repoKind: null,
-            workspaceCount: 0,
-            moduleCount: 0,
-            runtimeCount: 0,
-            status: 'error',
-            errorTag: getErrorTag(error),
-            runtimeIssue: null,
-          }),
+    const observations = yield* scanner.observeProjects(projects).pipe(
+      Effect.catchAll((error) =>
+        Effect.succeed<readonly ProjectObservationResult[]>(
+          projects.map((project) => ({
+            project,
+            result: Either.left(error),
+          })),
         ),
       ),
+    )
+
+    const results = yield* Effect.forEach(
+      observations,
+      ({ project, result }) =>
+        Either.isLeft(result)
+          ? Effect.succeed<SyncProjectResult>(
+              projectErrorResult(project, result.left),
+            )
+          : persistObservation(projectService, result.right),
     )
 
     return { projects: results } satisfies SyncResult
@@ -44,6 +51,15 @@ export function refreshConfiguredProject(
   return Effect.gen(function* () {
     const observation = yield* scanner.observeProject(project)
 
+    return yield* persistObservation(projectService, observation)
+  })
+}
+
+function persistObservation(
+  projectService: ProjectServiceApi,
+  observation: ProjectObservation,
+): Effect.Effect<SyncProjectResult, ProjectServiceError> {
+  return Effect.gen(function* () {
     yield* projectService.syncSnapshot({
       projectIssue: observation.projectIssue ?? null,
       projectName: observation.projectName,
@@ -69,6 +85,23 @@ export function refreshConfiguredProject(
       runtimeIssue: observation.runtimeIssue,
     } satisfies SyncProjectResult
   })
+}
+
+function projectErrorResult(
+  project: ProjectConfig,
+  error: unknown,
+): SyncProjectResult {
+  return {
+    projectName: project.name,
+    repoPath: project.repo,
+    repoKind: null,
+    workspaceCount: 0,
+    moduleCount: 0,
+    runtimeCount: 0,
+    status: 'error',
+    errorTag: getErrorTag(error),
+    runtimeIssue: null,
+  } satisfies SyncProjectResult
 }
 
 function getErrorTag(error: unknown) {

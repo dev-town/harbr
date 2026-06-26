@@ -28,6 +28,7 @@ Use this doc to decide where new code belongs.
 
 - Owns raw tmux integration and runtime mapping.
 - Use for session discovery, naming, and runtime lifecycle operations.
+- Expose read-only runtime discovery separately from mutation/lifecycle capabilities so scanners can observe tmux without being able to orchestrate it.
 - Do not let it persist state directly.
 
 ### `scanner`
@@ -35,6 +36,7 @@ Use this doc to decide where new code belongs.
 - Owns read-side observation and normalization.
 - Converts config, Git, and tmux reality into facts.
 - Facts stay read-only and mutation-free.
+- May import only read-only runtime discovery from `@harbr/runtime-tmux/discovery`, not the full runtime-tmux service.
 - Expose scanner capabilities as services and live layers. Keep scanning helpers internal.
 
 ### `reconciler`
