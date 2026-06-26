@@ -353,7 +353,7 @@ Harbr uses Changesets for release notes and version bumps. Feature, fix, and sec
 bun changeset
 ```
 
-For user-facing binary changes, select `@harbr/tui`. After changesets land on `main`, GitHub Actions opens or updates a `Version Packages` PR that updates package versions and changelogs. Merge that version PR when ready to release, then tag the resulting `main` commit.
+For user-facing binary changes, select `@harbr/tui`. While Harbr is in beta, Changesets prerelease mode keeps those Version Packages PRs on the `-beta.N` line. After changesets land on `main`, GitHub Actions opens or updates a `Version Packages` PR that updates package versions and changelogs. Merge that version PR when ready to release, then tag the resulting `main` commit.
 
 Run checks:
 
