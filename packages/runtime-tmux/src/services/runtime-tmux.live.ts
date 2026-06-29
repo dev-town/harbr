@@ -65,6 +65,7 @@ function getCurrentRuntimeLive() {
         ? Effect.succeed<CurrentRuntime>(null)
         : Effect.fail(error),
     ),
+    Effect.withSpan('runtime.tmux.getCurrentRuntime'),
   )
 }
 
@@ -108,6 +109,7 @@ function listRuntimesLive() {
           })
         : Effect.fail(error)
     }),
+    Effect.withSpan('runtime.tmux.listRuntimes'),
   )
 }
 
@@ -140,7 +142,14 @@ function openOrCreateRuntimeLive(target: RuntimeTarget) {
       ])
     },
     catch: (error) => mapTmuxError(error),
-  })
+  }).pipe(
+    Effect.withSpan('runtime.tmux.openOrCreateRuntime', {
+      attributes: {
+        'harbr.project.name': target.projectName,
+        'harbr.runtime.scope': getRuntimeTargetScope(target),
+      },
+    }),
+  )
 }
 
 function closeRuntimeLive(sessionName: string) {
@@ -149,7 +158,13 @@ function closeRuntimeLive(sessionName: string) {
       await execTmux(['kill-session', '-t', formatSessionTarget(sessionName)])
     },
     catch: (error) => mapTmuxError(error),
-  })
+  }).pipe(
+    Effect.withSpan('runtime.tmux.closeRuntime', {
+      attributes: {
+        'tmux.session.name': sessionName,
+      },
+    }),
+  )
 }
 
 function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
@@ -218,7 +233,27 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
       } satisfies CreateRuntimeWindowsResult
     },
     catch: (error) => mapTmuxError(error),
-  })
+  }).pipe(
+    Effect.withSpan('runtime.tmux.createRuntimeWindows', {
+      attributes: {
+        'harbr.project.name': input.target.projectName,
+        'harbr.runtime.scope': getRuntimeTargetScope(input.target),
+        'harbr.window.count': input.windows.length,
+      },
+    }),
+  )
+}
+
+function getRuntimeTargetScope(target: RuntimeTarget) {
+  if (target.moduleName) {
+    return 'module'
+  }
+
+  if (target.workspaceName) {
+    return 'workspace'
+  }
+
+  return 'project'
 }
 
 async function listWindowNames(sessionName: string) {

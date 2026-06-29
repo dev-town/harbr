@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@effect/opentelemetry": "0.63.0",
+    "@effect/platform": "0.96.1",
     "@harbr/config": "workspace:*",
     "@harbr/db": "workspace:*",
     "@harbr/domain": "workspace:*",
@@ -30,7 +32,10 @@
     "sync": "bun src/index.tsx sync",
     "sync:json": "bun src/index.tsx sync --json",
     "sync:compiled": "./dist/harbr sync",
-    "sync:compiled:json": "./dist/harbr sync --json"
+    "sync:compiled:json": "./dist/harbr sync --json",
+    "profile:up": "bun src/index.tsx profile up",
+    "profile:down": "bun src/index.tsx profile down",
+    "profile:status": "bun src/index.tsx profile status"
   },
   "devDependencies": {
     "@types/react": "^19.2.17"

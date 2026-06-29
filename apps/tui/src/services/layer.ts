@@ -18,6 +18,7 @@ import {
 import { ScannerServiceLive } from '@harbr/scanner'
 import { Layer } from 'effect'
 
+import { makeObservabilityLayer } from '~/observability/layer'
 import type { TuiOptions } from '~/types'
 
 export function makeTuiLayer(options: TuiOptions) {
@@ -41,7 +42,7 @@ export function makeTuiLayer(options: TuiOptions) {
     Layer.provide(Layer.mergeAll(projectService, scanner)),
   )
 
-  return Layer.mergeAll(
+  const appLayer = Layer.mergeAll(
     config,
     database,
     GitServiceLive,
@@ -51,4 +52,8 @@ export function makeTuiLayer(options: TuiOptions) {
     scanner,
     reconciler,
   )
+
+  return options.profile
+    ? Layer.mergeAll(appLayer, makeObservabilityLayer(options.profile))
+    : appLayer
 }

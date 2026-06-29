@@ -29,7 +29,13 @@ export const ProjectServiceLive = Layer.effect(
               operation: 'findByName',
               message: error instanceof Error ? error.message : String(error),
             }),
-        }),
+        }).pipe(
+          Effect.withSpan('db.project.findByName', {
+            attributes: {
+              'harbr.project.name': projectName,
+            },
+          }),
+        ),
       loadUiContext: Effect.try({
         try: () => loadUiContextRaw(database.db),
         catch: (error) =>
@@ -37,7 +43,7 @@ export const ProjectServiceLive = Layer.effect(
             operation: 'loadUiContext',
             message: error instanceof Error ? error.message : String(error),
           }),
-      }),
+      }).pipe(Effect.withSpan('db.project.loadUiContext')),
       listProjectSummaries: Effect.try({
         try: () => listProjectSummariesRaw(database.db),
         catch: (error) =>
@@ -45,7 +51,7 @@ export const ProjectServiceLive = Layer.effect(
             operation: 'listProjectSummaries',
             message: error instanceof Error ? error.message : String(error),
           }),
-      }),
+      }).pipe(Effect.withSpan('db.project.listProjectSummaries')),
       listActiveRuntimeSummaries: Effect.try({
         try: () => listActiveRuntimeSummariesRaw(database.db),
         catch: (error) =>
@@ -53,7 +59,7 @@ export const ProjectServiceLive = Layer.effect(
             operation: 'listActiveRuntimeSummaries',
             message: error instanceof Error ? error.message : String(error),
           }),
-      }),
+      }).pipe(Effect.withSpan('db.project.listActiveRuntimeSummaries')),
       listWorkspaceSummaries: (projectId) =>
         Effect.try({
           try: () => listWorkspaceSummariesRaw(database.db, projectId),
@@ -62,7 +68,13 @@ export const ProjectServiceLive = Layer.effect(
               operation: 'listWorkspaceSummaries',
               message: error instanceof Error ? error.message : String(error),
             }),
-        }),
+        }).pipe(
+          Effect.withSpan('db.project.listWorkspaceSummaries', {
+            attributes: {
+              'harbr.project.id': projectId,
+            },
+          }),
+        ),
       listModuleSummaries: (workspaceId) =>
         Effect.try({
           try: () => listModuleSummariesRaw(database.db, workspaceId),
@@ -71,7 +83,13 @@ export const ProjectServiceLive = Layer.effect(
               operation: 'listModuleSummaries',
               message: error instanceof Error ? error.message : String(error),
             }),
-        }),
+        }).pipe(
+          Effect.withSpan('db.project.listModuleSummaries', {
+            attributes: {
+              'harbr.workspace.id': workspaceId,
+            },
+          }),
+        ),
       saveUiContext: (context) =>
         Effect.try({
           try: () => saveUiContextRaw(database.db, context),
@@ -80,7 +98,7 @@ export const ProjectServiceLive = Layer.effect(
               operation: 'saveUiContext',
               message: error instanceof Error ? error.message : String(error),
             }),
-        }),
+        }).pipe(Effect.withSpan('db.project.saveUiContext')),
       syncSnapshot: (input) =>
         Effect.try({
           try: () => replaceProjectSnapshotRaw(database.db, input),
@@ -89,7 +107,13 @@ export const ProjectServiceLive = Layer.effect(
               operation: 'syncSnapshot',
               message: error instanceof Error ? error.message : String(error),
             }),
-        }),
+        }).pipe(
+          Effect.withSpan('db.project.syncSnapshot', {
+            attributes: {
+              'harbr.project.name': input.projectName,
+            },
+          }),
+        ),
     } satisfies ProjectServiceApi
   }),
 )

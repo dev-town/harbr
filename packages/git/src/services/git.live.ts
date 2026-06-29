@@ -76,13 +76,25 @@ function inspectRepoLive(repoPath: string) {
       repoPath: resolvedRepoPath,
       kind: 'standard',
     } satisfies RepoInspection
-  })
+  }).pipe(
+    Effect.withSpan('git.inspectRepo', {
+      attributes: {
+        'git.repo.path': resolvedRepoPath,
+      },
+    }),
+  )
 }
 
 function resolveWorkspacePathLive(repo: RepoInspection) {
   return Effect.map(
     listWorkspacesLive(repo),
     (workspaces) => workspaces[0]?.path ?? null,
+  ).pipe(
+    Effect.withSpan('git.resolveWorkspacePath', {
+      attributes: {
+        'git.repo.path': repo.repoPath,
+      },
+    }),
   )
 }
 
@@ -96,7 +108,13 @@ function getDefaultBranchLive(repo: RepoInspection) {
             message: `Could not detect default branch for ${repo.repoPath}`,
             repoPath: repo.repoPath,
           }),
-  })
+  }).pipe(
+    Effect.withSpan('git.getDefaultBranch', {
+      attributes: {
+        'git.repo.path': repo.repoPath,
+      },
+    }),
+  )
 }
 
 function getDefaultBranchIssueLive(repo: RepoInspection) {
@@ -114,7 +132,13 @@ function getDefaultBranchIssueLive(repo: RepoInspection) {
       }
     },
     catch: () => new RepoNotGitError({ repoPath: repo.repoPath }),
-  })
+  }).pipe(
+    Effect.withSpan('git.getDefaultBranchIssue', {
+      attributes: {
+        'git.repo.path': repo.repoPath,
+      },
+    }),
+  )
 }
 
 function listWorkspacesLive(repo: RepoInspection) {
@@ -133,7 +157,14 @@ function listWorkspacesLive(repo: RepoInspection) {
       new RepoNotGitError({
         repoPath: repo.repoPath,
       }),
-  })
+  }).pipe(
+    Effect.withSpan('git.listWorkspaces', {
+      attributes: {
+        'git.repo.path': repo.repoPath,
+        'git.repo.kind': repo.kind,
+      },
+    }),
+  )
 }
 
 function createWorktreeLive(repo: RepoInspection, input: CreateWorktreeInput) {
@@ -181,7 +212,14 @@ function createWorktreeLive(repo: RepoInspection, input: CreateWorktreeInput) {
       name: input.workspaceName,
       path: resolvedWorkspacePath,
     } satisfies WorkspaceTarget
-  })
+  }).pipe(
+    Effect.withSpan('git.createWorktree', {
+      attributes: {
+        'git.repo.path': repo.repoPath,
+        'harbr.workspace.name': input.workspaceName,
+      },
+    }),
+  )
 }
 
 function runGitRevParse(repoPath: string, flag: string) {

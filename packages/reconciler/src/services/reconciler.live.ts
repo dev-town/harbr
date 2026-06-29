@@ -19,9 +19,21 @@ export const ReconcilerServiceLive = Layer.effect(
 
     return {
       syncProjects: (projects) =>
-        syncProjects(projects, scanner, projectService),
+        syncProjects(projects, scanner, projectService).pipe(
+          Effect.withSpan('reconciler.syncProjects', {
+            attributes: {
+              'harbr.project.count': projects.length,
+            },
+          }),
+        ),
       refreshProject: (project) =>
-        refreshConfiguredProject(scanner, projectService, project),
+        refreshConfiguredProject(scanner, projectService, project).pipe(
+          Effect.withSpan('reconciler.refreshProject', {
+            attributes: {
+              'harbr.project.name': project.name,
+            },
+          }),
+        ),
     } satisfies ReconcilerServiceApi
   }),
 )
