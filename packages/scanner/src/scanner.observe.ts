@@ -9,6 +9,8 @@ import { Effect } from 'effect'
 import { scanProject } from './scanner.scan'
 import type { ProjectObservationResult } from './services/scanner.service'
 
+const scannerConcurrency = 'unbounded' as const
+
 export function observeProjectsWithGit(
   git: GitServiceApi,
   runtimeDiscovery: RuntimeDiscoveryServiceApi,
@@ -16,17 +18,20 @@ export function observeProjectsWithGit(
 ) {
   return runtimeDiscovery.listRuntimes.pipe(
     Effect.flatMap((discovery) =>
-      Effect.forEach(projects, (project) =>
-        observeProjectWithDiscovery(git, discovery, project).pipe(
-          Effect.either,
-          Effect.map(
-            (result) =>
-              ({
-                project,
-                result,
-              }) satisfies ProjectObservationResult,
+      Effect.forEach(
+        projects,
+        (project) =>
+          observeProjectWithDiscovery(git, discovery, project).pipe(
+            Effect.either,
+            Effect.map(
+              (result) =>
+                ({
+                  project,
+                  result,
+                }) satisfies ProjectObservationResult,
+            ),
           ),
-        ),
+        { concurrency: scannerConcurrency },
       ),
     ),
   )
@@ -51,10 +56,13 @@ function observeProjectWithDiscovery(
 ) {
   return git.inspectRepo(project.repo).pipe(
     Effect.flatMap((repo) =>
-      Effect.all({
-        projectIssue: git.getDefaultBranchIssue(repo),
-        workspaces: git.listWorkspaces(repo),
-      }).pipe(
+      Effect.all(
+        {
+          projectIssue: git.getDefaultBranchIssue(repo),
+          workspaces: git.listWorkspaces(repo),
+        },
+        { concurrency: scannerConcurrency },
+      ).pipe(
         Effect.flatMap(({ projectIssue, workspaces }) =>
           Effect.all(
             workspaces.map((workspace) =>
@@ -68,6 +76,7 @@ function observeProjectWithDiscovery(
                 })),
               ),
             ),
+            { concurrency: scannerConcurrency },
           ).pipe(
             Effect.map(
               (observedWorkspaces) =>

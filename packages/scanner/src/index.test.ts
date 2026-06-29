@@ -339,6 +339,62 @@ describe('observeProject', () => {
     })
   })
 
+  it('observes configured projects concurrently while preserving result order', async () => {
+    const projects: ProjectConfig[] = [
+      { name: 'alpha', repo: '/tmp/alpha.git', modules: [] },
+      { name: 'beta', repo: '/tmp/beta.git', modules: [] },
+      { name: 'gamma', repo: '/tmp/gamma.git', modules: [] },
+    ]
+    let activeInspections = 0
+    let maxActiveInspections = 0
+
+    const git: GitServiceApi = {
+      createWorktree: () => Effect.die('not used'),
+      getDefaultBranch: () => Effect.die('not used'),
+      getDefaultBranchIssue: () => Effect.succeed(null),
+      inspectRepo: (repoPath) =>
+        Effect.gen(function* () {
+          activeInspections += 1
+          maxActiveInspections = Math.max(
+            maxActiveInspections,
+            activeInspections,
+          )
+          yield* Effect.sleep('20 millis')
+          activeInspections -= 1
+
+          return {
+            repoPath,
+            kind: 'bare',
+          } as const
+        }),
+      listWorkspaces: () => Effect.succeed([]),
+      resolveWorkspacePath: () => Effect.succeed(null),
+    }
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
+      listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+    }
+
+    const observations = await Effect.runPromise(
+      Effect.flatMap(ScannerService, (service) =>
+        service.observeProjects(projects),
+      ).pipe(
+        Effect.provide(
+          ScannerServiceLive.pipe(
+            Layer.provide(
+              Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
+            ),
+            Layer.provide(Layer.succeed(GitService, git)),
+          ),
+        ),
+      ),
+    )
+
+    expect(maxActiveInspections).toBeGreaterThan(1)
+    expect(observations.map((observation) => observation.project.name)).toEqual(
+      ['alpha', 'beta', 'gamma'],
+    )
+  })
+
   it('maps matching workspace and module runtimes', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
