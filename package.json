@@ -31,7 +31,10 @@
     "sync": "bun run --cwd apps/tui sync",
     "sync:json": "bun run --cwd apps/tui sync:json",
     "sync:compiled": "bun run build:tui && bun run --cwd apps/tui sync:compiled",
-    "sync:compiled:json": "bun run build:tui && bun run --cwd apps/tui sync:compiled:json"
+    "sync:compiled:json": "bun run build:tui && bun run --cwd apps/tui sync:compiled:json",
+    "profile:up": "bun run --cwd apps/tui profile:up",
+    "profile:down": "bun run --cwd apps/tui profile:down",
+    "profile:status": "bun run --cwd apps/tui profile:status"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

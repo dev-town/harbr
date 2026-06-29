@@ -9,6 +9,8 @@ import { Effect } from 'effect'
 import { scanProject } from './scanner.scan'
 import type { ProjectObservationResult } from './services/scanner.service'
 
+const scannerConcurrency = 'unbounded' as const
+
 export function observeProjectsWithGit(
   git: GitServiceApi,
   runtimeDiscovery: RuntimeDiscoveryServiceApi,
@@ -16,17 +18,20 @@ export function observeProjectsWithGit(
 ) {
   return runtimeDiscovery.listRuntimes.pipe(
     Effect.flatMap((discovery) =>
-      Effect.forEach(projects, (project) =>
-        observeProjectWithDiscovery(git, discovery, project).pipe(
-          Effect.either,
-          Effect.map(
-            (result) =>
-              ({
-                project,
-                result,
-              }) satisfies ProjectObservationResult,
+      Effect.forEach(
+        projects,
+        (project) =>
+          observeProjectWithDiscovery(git, discovery, project).pipe(
+            Effect.either,
+            Effect.map(
+              (result) =>
+                ({
+                  project,
+                  result,
+                }) satisfies ProjectObservationResult,
+            ),
           ),
-        ),
+        { concurrency: scannerConcurrency },
       ),
     ),
   )
@@ -51,23 +56,17 @@ function observeProjectWithDiscovery(
 ) {
   return git.inspectRepo(project.repo).pipe(
     Effect.flatMap((repo) =>
-      Effect.all({
-        projectIssue: git.getDefaultBranchIssue(repo),
-        workspaces: git.listWorkspaces(repo),
-      }).pipe(
+      Effect.all(
+        {
+          projectIssue: git.getDefaultBranchIssue(repo),
+          workspaces: git.listWorkspaces(repo),
+        },
+        { concurrency: scannerConcurrency },
+      ).pipe(
         Effect.flatMap(({ projectIssue, workspaces }) =>
           Effect.all(
-            workspaces.map((workspace) =>
-              scanProject(project, workspace.path).pipe(
-                Effect.map((scan) => ({
-                  branchName: workspace.branchName,
-                  workspaceName: workspace.name,
-                  workspacePath: scan.workspacePath,
-                  kind: workspace.kind,
-                  modules: scan.modules,
-                })),
-              ),
-            ),
+            workspaces.map((workspace) => scanWorkspace(project, workspace)),
+            { concurrency: scannerConcurrency },
           ).pipe(
             Effect.map(
               (observedWorkspaces) =>
@@ -91,6 +90,39 @@ function observeProjectWithDiscovery(
         ),
       ),
     ),
+    Effect.withSpan('scanner.observeProject', {
+      attributes: {
+        'harbr.project.name': project.name,
+      },
+    }),
+  )
+}
+
+function scanWorkspace(
+  project: ProjectConfig,
+  workspace: {
+    readonly branchName?: string | null | undefined
+    readonly kind: ProjectObservation['workspaces'][number]['kind']
+    readonly name: string
+    readonly path: string
+  },
+) {
+  return scanProject(project, workspace.path).pipe(
+    Effect.map((scan) => ({
+      branchName: workspace.branchName,
+      workspaceName: workspace.name,
+      workspacePath: scan.workspacePath,
+      kind: workspace.kind,
+      modules: scan.modules,
+    })),
+    Effect.withSpan('scanner.scanWorkspace', {
+      attributes: {
+        'harbr.project.name': project.name,
+        'harbr.workspace.kind': workspace.kind,
+        'harbr.workspace.name': workspace.name,
+        'harbr.workspace.path': workspace.path,
+      },
+    }),
   )
 }
 

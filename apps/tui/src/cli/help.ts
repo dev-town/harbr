@@ -18,18 +18,22 @@ export function formatRootHelp() {
     '  harbr [options]',
     '  harbr tui [options]',
     '  harbr sync [options]',
+    '  harbr profile <command>',
     '  harbr help',
     '',
     'Commands:',
     '  tui        Open the interactive TUI',
     '  sync       Sync configured projects',
+    '  profile    Manage local profiling infrastructure',
     '  help       Show this help',
     '',
     'Options:',
-    '  --path <config>   Config path',
-    '  --db-path <db>    Database path',
-    '  -h, --help        Show help',
-    '  -v, --version     Show version',
+    '  --path <config>              Config path',
+    '  --db-path <db>               Database path',
+    '  --profile                    Export local OTEL traces',
+    '  --profile-endpoint <url>     OTLP endpoint',
+    '  -h, --help                   Show help',
+    '  -v, --version                Show version',
   ].join('\n')
 }
 
@@ -41,10 +45,34 @@ export function formatSyncHelp() {
     '  harbr sync [options]',
     '',
     'Options:',
-    '  --json            Print JSON output',
-    '  --path <config>   Config path',
-    '  --db-path <db>    Database path',
-    '  -h, --help        Show help',
+    '  --json                      Print JSON output',
+    '  --path <config>             Config path',
+    '  --db-path <db>              Database path',
+    '  --profile                   Export local OTEL traces',
+    '  --profile-endpoint <url>    OTLP endpoint',
+    '  -h, --help                  Show help',
+  ].join('\n')
+}
+
+export function formatProfileHelp() {
+  return [
+    'harbr profile - manage local profiling infrastructure',
+    '',
+    'Usage:',
+    '  harbr profile up',
+    '  harbr profile down',
+    '  harbr profile status',
+    '  harbr profile url',
+    '',
+    'Commands:',
+    '  up        Start local Jaeger OTLP tracing',
+    '  down      Stop local Jaeger OTLP tracing',
+    '  status    Show local tracing container status',
+    '  url       Print the Jaeger UI URL',
+    '',
+    'Trace with:',
+    '  harbr --profile',
+    '  harbr sync --profile',
   ].join('\n')
 }
 

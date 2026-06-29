@@ -31,7 +31,16 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
           const reconciler = yield* ReconcilerService
 
           return yield* reconciler.syncProjects(config.projects)
-        }),
+        }).pipe(
+          Effect.withSpan('harbr.loadProjects', {
+            attributes: services.options.profile
+              ? {
+                  'harbr.profile.session_id':
+                    services.options.profile.sessionId,
+                }
+              : {},
+          }),
+        ),
       ),
     )
 

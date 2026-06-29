@@ -5,6 +5,12 @@ import { Effect } from 'effect'
 import { formatCliError, formatCliOutput } from '~/cli/format'
 import { formatSyncHelp, isHelpRequest } from '~/cli/help'
 import { readArgValue } from '~/helpers/args'
+import {
+  checkProfileEndpoint,
+  formatProfileEndpointError,
+  getProfileMissingValueFlag,
+  readProfileOptions,
+} from '~/observability/profile-options'
 import { makeTuiEffectRuntime } from '~/services/effect-runtime'
 
 export async function runSyncCommand(args: string[]) {
@@ -17,8 +23,11 @@ export async function runSyncCommand(args: string[]) {
   const jsonMode = args.includes('--json')
   const configPath = readArgValue(args, '--path')
   const dbPath = readArgValue(args, '--db-path')
+  const profile = readProfileOptions(args)
 
-  const missingFlag = getMissingValueFlag(args, ['--path', '--db-path'])
+  const missingFlag =
+    getMissingValueFlag(args, ['--path', '--db-path']) ??
+    getProfileMissingValueFlag(args)
 
   if (missingFlag) {
     console.error(`missing value for ${missingFlag}`)
@@ -26,9 +35,16 @@ export async function runSyncCommand(args: string[]) {
     return
   }
 
+  if (profile && !(await checkProfileEndpoint(profile.endpoint))) {
+    console.error(formatProfileEndpointError(profile.endpoint))
+    process.exitCode = 1
+    return
+  }
+
   const runtime = makeTuiEffectRuntime({
     ...(configPath ? { configPath } : {}),
     ...(dbPath ? { dbPath } : {}),
+    ...(profile ? { profile } : {}),
   })
 
   const result = await runtime
@@ -40,6 +56,13 @@ export async function runSyncCommand(args: string[]) {
 
         return yield* reconciler.syncProjects(config.projects)
       }).pipe(
+        Effect.withSpan('harbr.sync', {
+          attributes: profile
+            ? {
+                'harbr.profile.session_id': profile.sessionId,
+              }
+            : {},
+        }),
         Effect.match({
           onFailure: (error) => ({
             exitCode: 1,

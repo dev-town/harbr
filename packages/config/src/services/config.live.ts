@@ -167,7 +167,13 @@ function loadConfigFile(configPath: string) {
         ? { $schema: parsedConfig.data.$schema }
         : {}),
     } satisfies HarbourConfig
-  }) as Effect.Effect<HarbourConfig, HarbourConfigError>
+  }).pipe(
+    Effect.withSpan('config.load', {
+      attributes: {
+        'config.path': resolvedConfigPath,
+      },
+    }),
+  ) as Effect.Effect<HarbourConfig, HarbourConfigError>
 }
 
 function resolveProjectWindows(input: {

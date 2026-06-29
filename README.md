@@ -127,6 +127,40 @@ Run with explicit config and database paths:
 harbr --path ~/.config/harbr/config.json --db-path ~/.local/share/harbr/harbr.db
 ```
 
+## Local Profiling
+
+Harbr can export local OpenTelemetry traces for boot and sync debugging. Start the local Jaeger/OTLP stack:
+
+```sh
+harbr profile up
+```
+
+Run Harbr with profiling enabled:
+
+```sh
+harbr --profile
+```
+
+Profile headless sync:
+
+```sh
+harbr sync --profile
+```
+
+Open the Jaeger UI:
+
+```sh
+harbr profile url
+```
+
+The default OTLP endpoint is `http://localhost:4318`. Use `--profile-endpoint <url>` or `HARBR_OTLP_ENDPOINT` to export to a different local collector. Stop the local stack with:
+
+```sh
+harbr profile down
+```
+
+When profiling is enabled and no collector is reachable, Harbr exits with a message telling you to run `harbr profile up`.
+
 ## Config
 
 Default config path:

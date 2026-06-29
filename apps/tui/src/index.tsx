@@ -28,6 +28,9 @@ if (command === 'help' || (!command && isHelpRequest(args))) {
 } else if (command === 'sync') {
   const { runSyncCommand } = await import('./commands/sync')
   await runSyncCommand(commandArgs)
+} else if (command === 'profile') {
+  const { runProfileCommand } = await import('./commands/profile')
+  await runProfileCommand(commandArgs)
 } else {
   console.error(formatUnknownCommandHelp(command))
   process.exitCode = 1

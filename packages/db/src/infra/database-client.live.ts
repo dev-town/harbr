@@ -30,7 +30,13 @@ export const DatabaseClientLive = Layer.scoped(
         yield* migrateDatabaseEffect(database)
 
         return database
-      }),
+      }).pipe(
+        Effect.withSpan('db.open', {
+          attributes: {
+            'db.path': dbPath,
+          },
+        }),
+      ),
       (database) => Effect.sync(() => database.sqlite.close()),
     ).pipe(
       Effect.map(
@@ -51,5 +57,5 @@ function migrateDatabaseEffect(database: HarbourDatabaseConnection) {
       new DatabaseMigrationError({
         message: error instanceof Error ? error.message : String(error),
       }),
-  })
+  }).pipe(Effect.withSpan('db.migrate'))
 }
