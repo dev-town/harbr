@@ -65,17 +65,7 @@ function observeProjectWithDiscovery(
       ).pipe(
         Effect.flatMap(({ projectIssue, workspaces }) =>
           Effect.all(
-            workspaces.map((workspace) =>
-              scanProject(project, workspace.path).pipe(
-                Effect.map((scan) => ({
-                  branchName: workspace.branchName,
-                  workspaceName: workspace.name,
-                  workspacePath: scan.workspacePath,
-                  kind: workspace.kind,
-                  modules: scan.modules,
-                })),
-              ),
-            ),
+            workspaces.map((workspace) => scanWorkspace(project, workspace)),
             { concurrency: scannerConcurrency },
           ).pipe(
             Effect.map(
@@ -100,6 +90,39 @@ function observeProjectWithDiscovery(
         ),
       ),
     ),
+    Effect.withSpan('scanner.observeProject', {
+      attributes: {
+        'harbr.project.name': project.name,
+      },
+    }),
+  )
+}
+
+function scanWorkspace(
+  project: ProjectConfig,
+  workspace: {
+    readonly branchName?: string | null | undefined
+    readonly kind: ProjectObservation['workspaces'][number]['kind']
+    readonly name: string
+    readonly path: string
+  },
+) {
+  return scanProject(project, workspace.path).pipe(
+    Effect.map((scan) => ({
+      branchName: workspace.branchName,
+      workspaceName: workspace.name,
+      workspacePath: scan.workspacePath,
+      kind: workspace.kind,
+      modules: scan.modules,
+    })),
+    Effect.withSpan('scanner.scanWorkspace', {
+      attributes: {
+        'harbr.project.name': project.name,
+        'harbr.workspace.kind': workspace.kind,
+        'harbr.workspace.name': workspace.name,
+        'harbr.workspace.path': workspace.path,
+      },
+    }),
   )
 }
 

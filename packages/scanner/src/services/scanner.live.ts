@@ -25,13 +25,7 @@ export const ScannerServiceLive = Layer.effect(
           }),
         ),
       observeProject: (project: ProjectConfig) =>
-        observeProjectWithGit(git, runtimeDiscovery, project).pipe(
-          Effect.withSpan('scanner.observeProject', {
-            attributes: {
-              'harbr.project.name': project.name,
-            },
-          }),
-        ),
+        observeProjectWithGit(git, runtimeDiscovery, project),
     } satisfies ScannerServiceApi
   }),
 )
