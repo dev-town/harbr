@@ -66,14 +66,30 @@ To build from source or work on this repo:
 Install with Homebrew:
 
 ```sh
+brew tap dev-town/tap
 brew install dev-town/tap/harbr
 ```
 
-Or tap first:
+After tapping, you can also trust the tap and install by the short formula name:
 
 ```sh
-brew tap dev-town/tap
+brew trust dev-town/tap
 brew install harbr
+```
+
+Update an existing Homebrew install:
+
+```sh
+brew update
+brew upgrade dev-town/tap/harbr
+harbr --version
+```
+
+If Homebrew still reports an older Harbr version after `brew update`, reset the tap and check again:
+
+```sh
+brew update-reset dev-town/tap
+brew info dev-town/tap/harbr
 ```
 
 ### From Source

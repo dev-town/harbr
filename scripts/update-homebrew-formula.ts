@@ -64,6 +64,18 @@ const formula = `class Harbr < Formula
   version "${manifest.version}"
   license "MIT"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\\d+(?:\\.\\d+)+(?:-[0-9A-Za-z.-]+)?)$/i)
+    strategy :github_releases do |json, regex|
+      json.filter_map do |release|
+        next if release["draft"]
+
+        release["tag_name"]&.[](regex, 1)
+      end
+    end
+  end
+
   on_macos do
     if Hardware::CPU.arm?
       url "${artifactUrl('darwin-arm64')}"
