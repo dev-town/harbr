@@ -5,6 +5,21 @@
   "type": "object",
   "properties": {
     "$schema": { "type": "string", "minLength": 1 },
+    "theme": {
+      "type": "string",
+      "enum": [
+        "system",
+        "tokyonight",
+        "everforest",
+        "ayu",
+        "catppuccin",
+        "catppuccin-macchiato",
+        "gruvbox",
+        "kanagawa",
+        "nord",
+        "atom-one-dark"
+      ]
+    },
     "windows": {
       "type": "array",
       "items": {

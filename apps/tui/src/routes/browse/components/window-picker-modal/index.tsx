@@ -1,5 +1,4 @@
 import type { BoxRenderable } from '@opentui/core'
-import { RGBA } from '@opentui/core'
 import { useBindings } from '@opentui/keymap/react'
 import { useTerminalDimensions } from '@opentui/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -134,7 +133,7 @@ export function WindowPickerModal() {
         height="100%"
         left={0}
         position="absolute"
-        style={{ backgroundColor: RGBA.fromInts(0, 0, 0, 150) }}
+        style={{ backgroundColor: theme.modalBackdrop }}
         top={0}
         width="100%"
       />

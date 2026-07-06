@@ -18,6 +18,7 @@ coverage/
 logs/
 tmp/
 temp/
+.artifacts/
 
 # Local secrets and certificates
 *.key

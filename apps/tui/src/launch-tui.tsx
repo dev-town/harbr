@@ -1,9 +1,12 @@
 import { createCliRenderer } from '@opentui/core'
 import { KeymapProvider } from '@opentui/keymap/react'
 import { createRoot } from '@opentui/react'
+import { ConfigService } from '@harbr/config'
+import { Effect, Either } from 'effect'
 
 import { App } from './app'
 import { TuiServicesProvider, type TuiServices } from './app-context'
+import { resolveTheme, setActiveTheme } from './config/theme'
 import { readArgValue } from './helpers/args'
 import { createTuiKeymap } from './keymap/create-keymap'
 import {
@@ -51,6 +54,23 @@ export async function launchTui(args: string[]) {
   // renderer.console.toggle()
 
   const effectRuntime = makeTuiEffectRuntime(options)
+  const configuredTheme = await effectRuntime.runPromise(
+    Effect.either(
+      Effect.gen(function* () {
+        const config = yield* ConfigService
+
+        return (yield* config.load).theme
+      }),
+    ),
+  )
+  const activeTheme = await resolveTheme(
+    Either.isRight(configuredTheme) ? configuredTheme.right : 'system',
+    renderer,
+  )
+
+  setActiveTheme(activeTheme)
+  renderer.setBackgroundColor(activeTheme.backdrop)
+
   let isShuttingDown = false
 
   async function shutdown() {

@@ -24,6 +24,7 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "test": "vitest run",
+    "test:e2e:tui-themes": "bun run --cwd apps/tui test:e2e:tui-themes",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
