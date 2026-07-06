@@ -1,5 +1,11 @@
 # @harbr/tui
 
+## 0.1.0-beta.3
+
+### Minor Changes
+
+- 806952f: Theme support
+
 ## 0.1.0-beta.1
 
 ### Patch Changes
