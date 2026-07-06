@@ -196,6 +196,7 @@ Example config:
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/dev-town/harbr/main/packages/config/harbr.schema.json",
+  "theme": "system",
   "projects": [
     {
       "name": "harbr",
@@ -247,6 +248,8 @@ Example config:
 
 Config notes:
 
+- `theme` is optional and defaults to `system`.
+- Supported themes: `system`, `tokyonight`, `everforest`, `ayu`, `catppuccin`, `catppuccin-macchiato`, `gruvbox`, `kanagawa`, `nord`, and `atom-one-dark`.
 - `repo` may use `~` and is resolved to an absolute path.
 - `repo` can point at a normal checkout or a bare Git directory.
 - For bare repositories, Harbr discovers and creates worktrees from the Git directory.

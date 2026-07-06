@@ -7,6 +7,19 @@ export const moduleSelectorSchema = z
   .trim()
   .min(1, 'module selector required')
 
+export const themeSchema = z.enum([
+  'system',
+  'tokyonight',
+  'everforest',
+  'ayu',
+  'catppuccin',
+  'catppuccin-macchiato',
+  'gruvbox',
+  'kanagawa',
+  'nord',
+  'atom-one-dark',
+])
+
 export const windowPaneSchema = z.object({
   name: z.string().trim().min(1, 'pane name required'),
   command: z
@@ -54,6 +67,7 @@ export const projectSchema = z.object({
 export const configSchema = z
   .object({
     $schema: z.string().trim().min(1).optional(),
+    theme: themeSchema.optional(),
     windows: z.array(windowSchema).optional(),
     projects: z.array(projectSchema),
   })
@@ -122,4 +136,5 @@ export const configSchema = z
 
 export type HarbourModuleSelectorInput = z.infer<typeof moduleSelectorSchema>
 export type HarbourProjectInput = z.infer<typeof projectSchema>
+export type HarbourThemeInput = z.infer<typeof themeSchema>
 export type HarbourConfigInput = z.infer<typeof configSchema>

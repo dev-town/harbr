@@ -87,6 +87,89 @@ describe('loadConfigAtPath', () => {
     )
   })
 
+  it('accepts supported theme ids', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+    const themeIds = [
+      'system',
+      'tokyonight',
+      'everforest',
+      'ayu',
+      'catppuccin',
+      'catppuccin-macchiato',
+      'gruvbox',
+      'kanagawa',
+      'nord',
+      'atom-one-dark',
+    ] as const
+
+    await mkdir(repoPath, { recursive: true })
+
+    for (const theme of themeIds) {
+      await writeJson(configPath, {
+        theme,
+        projects: [
+          {
+            name: 'alpha',
+            repo: repoPath,
+          },
+        ],
+      })
+
+      await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
+        configPath,
+        theme,
+        projects: [
+          {
+            name: 'alpha',
+            repo: repoPath,
+            modules: [],
+            windows: [],
+          },
+        ],
+      })
+    }
+  })
+
+  it('rejects unknown theme ids', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const configPath = path.join(tempRoot, 'config.json')
+
+    await mkdir(repoPath, { recursive: true })
+    await writeJson(configPath, {
+      theme: 'dracula',
+      projects: [
+        {
+          name: 'alpha',
+          repo: repoPath,
+        },
+      ],
+    })
+
+    const result = await runEither(loadConfigAtPath(configPath))
+
+    expect(Either.isLeft(result)).toBe(true)
+    if (!Either.isLeft(result)) {
+      return
+    }
+
+    expect(result.left).toBeInstanceOf(InvalidConfigError)
+    if (!(result.left instanceof InvalidConfigError)) {
+      return
+    }
+
+    expect(result.left.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'schema',
+          path: ['theme'],
+        }),
+      ]),
+    )
+  })
+
   it('normalizes explicit selectors without checking existence', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
@@ -105,6 +188,7 @@ describe('loadConfigAtPath', () => {
 
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',
@@ -140,6 +224,7 @@ describe('loadConfigAtPath', () => {
 
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',
@@ -240,6 +325,7 @@ describe('loadConfigAtPath', () => {
 
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',
@@ -308,6 +394,7 @@ describe('loadConfigAtPath', () => {
 
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',
@@ -383,6 +470,7 @@ describe('loadConfigAtPath', () => {
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
       $schema: '../../packages/config/harbr.schema.json',
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',
@@ -421,6 +509,7 @@ describe('loadConfigAtPath', () => {
       runSuccess(loadConfigAtPath(tildeConfigPath)),
     ).resolves.toEqual({
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',
@@ -463,6 +552,7 @@ describe('loadConfigAtPath', () => {
 
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',
@@ -503,6 +593,7 @@ describe('loadConfigAtPath', () => {
 
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',
@@ -544,6 +635,7 @@ describe('loadConfigAtPath', () => {
 
     await expect(runSuccess(loadConfigAtPath(configPath))).resolves.toEqual({
       configPath,
+      theme: 'system',
       projects: [
         {
           name: 'alpha',

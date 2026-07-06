@@ -163,6 +163,7 @@ function loadConfigFile(configPath: string) {
     return {
       configPath: resolvedConfigPath,
       projects,
+      theme: parsedConfig.data.theme ?? 'system',
       ...(parsedConfig.data.$schema
         ? { $schema: parsedConfig.data.$schema }
         : {}),
