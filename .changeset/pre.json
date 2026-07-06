@@ -4,5 +4,7 @@
   "initialVersions": {
     "@harbr/tui": "0.1.0"
   },
-  "changesets": []
+  "changesets": [
+    "tricky-buses-own"
+  ]
 }
