@@ -252,7 +252,8 @@ Config notes:
 - Supported themes: `system`, `tokyonight`, `everforest`, `ayu`, `catppuccin`, `catppuccin-macchiato`, `gruvbox`, `kanagawa`, `nord`, and `atom-one-dark`.
 - `repo` may use `~` and is resolved to an absolute path.
 - `repo` can point at a normal checkout or a bare Git directory.
-- For bare repositories, Harbr discovers and creates worktrees from the Git directory.
+- Harbr discovers existing Git worktrees wherever Git reports them.
+- Harbr-created worktrees are stored under `~/.local/share/harbr/worktrees/<project>/<workspace>`.
 - `modules` are repo-relative selectors.
 - Use `.` for the repo root module.
 - Use a trailing slash like `apps/` or `packages/` to expand child directories.

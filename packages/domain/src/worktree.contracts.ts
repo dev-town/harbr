@@ -33,6 +33,7 @@ export type BranchName = z.infer<typeof BranchNameSchema>
 
 export const CreateWorktreeInputSchema = z.object({
   branchName: BranchNameSchema,
+  projectName: z.string().trim().min(1, 'Project name is required'),
   workspaceName: WorkspaceNameSchema,
 })
 

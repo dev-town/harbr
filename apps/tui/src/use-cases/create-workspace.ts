@@ -18,14 +18,6 @@ export async function createWorkspace(
 ) {
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
-      const git = yield* GitService
-      const repo = yield* git.inspectRepo(input.repoPath)
-
-      yield* git.createWorktree(repo, {
-        branchName: input.branchName,
-        workspaceName: input.workspaceName,
-      })
-
       const configService = yield* ConfigService
       const config = yield* configService.load
       const projectConfig = config.projects.find(
@@ -37,6 +29,15 @@ export async function createWorkspace(
           new Error(`Project config not found: ${input.projectName}`),
         )
       }
+
+      const git = yield* GitService
+      const repo = yield* git.inspectRepo(input.repoPath)
+
+      yield* git.createWorktree(repo, {
+        branchName: input.branchName,
+        projectName: projectConfig.name,
+        workspaceName: input.workspaceName,
+      })
 
       const reconciler = yield* ReconcilerService
 

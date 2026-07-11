@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process'
-import { realpath, stat } from 'node:fs/promises'
+import { mkdir, realpath, stat } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
@@ -172,10 +173,16 @@ function createWorktreeLive(repo: RepoInspection, input: CreateWorktreeInput) {
     yield* validateBranchName(repo, input.branchName)
 
     const defaultBranch = yield* getDefaultBranchLive(repo)
-    const workspacePath = path.join(
-      path.dirname(repo.repoPath),
-      input.workspaceName,
-    )
+    const workspacePath = getManagedWorktreePath(input)
+
+    yield* Effect.tryPromise({
+      try: () => mkdir(path.dirname(workspacePath), { recursive: true }),
+      catch: (error) =>
+        new WorktreeCreateError({
+          message: error instanceof Error ? error.message : String(error),
+          repoPath: repo.repoPath,
+        }),
+    })
 
     yield* Effect.tryPromise({
       try: () =>
@@ -216,10 +223,34 @@ function createWorktreeLive(repo: RepoInspection, input: CreateWorktreeInput) {
     Effect.withSpan('git.createWorktree', {
       attributes: {
         'git.repo.path': repo.repoPath,
+        'harbr.project.name': input.projectName,
         'harbr.workspace.name': input.workspaceName,
       },
     }),
   )
+}
+
+function getManagedWorktreePath(input: CreateWorktreeInput) {
+  return path.join(
+    getHarbrDataDir(),
+    'worktrees',
+    slugifyProjectName(input.projectName),
+    input.workspaceName,
+  )
+}
+
+function getHarbrDataDir() {
+  return path.join(homedir(), '.local', 'share', 'harbr')
+}
+
+function slugifyProjectName(projectName: string) {
+  const slug = projectName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  return slug.length > 0 ? slug : 'project'
 }
 
 function runGitRevParse(repoPath: string, flag: string) {

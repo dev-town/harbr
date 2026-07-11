@@ -50,6 +50,7 @@ describe('worktree contracts', () => {
     expect(
       CreateWorktreeInputSchema.safeParse({
         branchName: 'feature/auth',
+        projectName: 'Harbr Main',
         workspaceName: 'feature_auth',
       }).success,
     ).toBe(true)

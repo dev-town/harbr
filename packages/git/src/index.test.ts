@@ -20,8 +20,15 @@ import type { CreateWorktreeInput } from '@harbr/domain'
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
+const originalHome = process.env.HOME
 
 afterEach(async () => {
+  if (originalHome === undefined) {
+    delete process.env.HOME
+  } else {
+    process.env.HOME = originalHome
+  }
+
   await Promise.all(
     tempRoots
       .splice(0)
@@ -243,7 +250,19 @@ describe('getDefaultBranch', () => {
 describe('createWorktree', () => {
   it('creates a linked worktree from workspace and branch names', async () => {
     const tempRoot = await createTempRoot()
+    process.env.HOME = tempRoot
+
     const repoPath = path.join(tempRoot, 'repo')
+    const expectedRoot = await realpath(tempRoot)
+    const expectedPath = path.join(
+      expectedRoot,
+      '.local',
+      'share',
+      'harbr',
+      'worktrees',
+      'harbr-main',
+      'auth',
+    )
 
     await execFileAsync('git', ['init', repoPath])
     await execFileAsync('git', [
@@ -262,7 +281,11 @@ describe('createWorktree', () => {
     const created = await Effect.runPromise(
       createWorktree(
         { repoPath, kind: 'standard' },
-        { workspaceName: 'auth', branchName: 'feat/auth' },
+        {
+          branchName: 'feat/auth',
+          projectName: 'Harbr Main',
+          workspaceName: 'auth',
+        },
       ).pipe(Effect.provide(GitServiceLive)),
     )
     const defaultBranch = await Effect.runPromise(
@@ -275,6 +298,7 @@ describe('createWorktree', () => {
       branchName: 'feat/auth',
       kind: 'worktree',
       name: 'auth',
+      path: expectedPath,
     })
     await expect(
       runWorkspacesSuccess(listWorkspaces({ repoPath, kind: 'standard' })),
