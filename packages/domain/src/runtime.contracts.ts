@@ -54,6 +54,23 @@ export const RuntimeFactSchema = z.object({
 
 export type RuntimeFact = z.infer<typeof RuntimeFactSchema>
 
+export const RuntimePathObservationSchema = z.object({
+  contextPath: z.string().min(1),
+  identity: RuntimeIdentitySchema,
+  status: RuntimeStatusSchema,
+})
+
+export type RuntimePathObservation = z.infer<
+  typeof RuntimePathObservationSchema
+>
+
+export const RuntimeObservationSchema = z.union([
+  RuntimeFactSchema,
+  RuntimePathObservationSchema,
+])
+
+export type RuntimeObservation = z.infer<typeof RuntimeObservationSchema>
+
 export const ActiveRuntimeSummarySchema = z.object({
   id: z.string(),
   moduleId: z.string().nullable(),
@@ -73,12 +90,12 @@ export type ActiveRuntimeSummary = z.infer<typeof ActiveRuntimeSummarySchema>
 
 export const RuntimeDiscoverySchema = z.object({
   runtimeIssue: RuntimeIssueSchema.nullable(),
-  runtimes: z.array(RuntimeFactSchema),
+  runtimes: z.array(RuntimeObservationSchema),
   source: RuntimeSourceSchema,
 })
 export type RuntimeDiscovery = z.infer<typeof RuntimeDiscoverySchema>
 
-export const CurrentRuntimeSchema = RuntimeFactSchema.nullable()
+export const CurrentRuntimeSchema = RuntimeAttachmentSchema.nullable()
 export type CurrentRuntime = z.infer<typeof CurrentRuntimeSchema>
 
 export function isSameRuntimeSource(left: RuntimeSource, right: RuntimeSource) {

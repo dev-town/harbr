@@ -1,7 +1,7 @@
 import {
+  type CurrentRuntime,
   isSameRuntimeIdentity,
   type RuntimeAttachment,
-  type RuntimeFact,
 } from '@harbr/domain'
 
 import type {
@@ -413,10 +413,7 @@ function getBrowseRowScore(row: HarbourRow, query: string) {
   return -1
 }
 
-function isCurrentBrowseRow(
-  row: HarbourRow,
-  currentRuntime: RuntimeFact | null,
-) {
+function isCurrentBrowseRow(row: HarbourRow, currentRuntime: CurrentRuntime) {
   return row.runtime && currentRuntime
     ? isSameRuntimeIdentity(row.runtime.identity, currentRuntime.identity)
     : false

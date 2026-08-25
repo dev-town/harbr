@@ -3,7 +3,12 @@ import { isAbsolute, join } from 'node:path'
 import { promisify } from 'node:util'
 
 import { Effect, Layer } from 'effect'
-import type { RuntimeIdentity, RuntimeTarget } from '@harbr/domain'
+import type {
+  RuntimeFact,
+  RuntimeIdentity,
+  RuntimeObservation,
+  RuntimeTarget,
+} from '@harbr/domain'
 import {
   RuntimeDiscoveryService,
   RuntimeProviderError,
@@ -52,7 +57,11 @@ function getCurrentRuntimeLive() {
         '-p',
         '#{session_name}',
       ])
-      return parseSessionName(stdout.trim(), source) satisfies CurrentRuntime
+      const runtime = parseSessionName(stdout.trim(), source)
+
+      return runtime
+        ? { identity: runtime.identity, status: runtime.status }
+        : (null satisfies CurrentRuntime)
     },
     catch: (error) => mapTmuxError(error),
   }).pipe(
@@ -121,7 +130,10 @@ function openOrCreateRuntimeLive(target: RuntimeTarget) {
     try: async () => {
       const discovery = await listRuntimeDiscoverySafe()
       const client = await getCurrentClient()
-      const existingRuntime = findMatchingRuntime(discovery.runtimes, target)
+      const existingRuntime = findMatchingRuntime(
+        runtimeFacts(discovery.runtimes),
+        target,
+      )
 
       if (existingRuntime) {
         await execTmux([
@@ -184,7 +196,7 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
     try: async () => {
       const discovery = await listRuntimeDiscoverySafe()
       const existingRuntime = findMatchingRuntime(
-        discovery.runtimes,
+        runtimeFacts(discovery.runtimes),
         input.target,
       )
       const firstWindow = input.windows[0]
@@ -514,4 +526,12 @@ function isExecError(
   error: unknown,
 ): error is Error & { code?: number | string | undefined } {
   return error instanceof Error
+}
+
+function isRuntimeFact(runtime: RuntimeObservation): runtime is RuntimeFact {
+  return !('contextPath' in runtime)
+}
+
+function runtimeFacts(runtimes: readonly RuntimeObservation[]): RuntimeFact[] {
+  return runtimes.filter(isRuntimeFact)
 }

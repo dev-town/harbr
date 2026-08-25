@@ -1,4 +1,11 @@
-import type { ProjectConfig, ProjectObservation } from '@harbr/domain'
+import path from 'node:path'
+
+import type {
+  ProjectConfig,
+  ProjectObservation,
+  RuntimeFact,
+  RuntimeObservation,
+} from '@harbr/domain'
 import type { GitServiceApi } from '@harbr/git'
 import type {
   RuntimeDiscovery,
@@ -76,13 +83,17 @@ function observeProjectWithDiscovery(
                   repoPath: repo.repoPath,
                   repoKind: repo.kind,
                   workspaces: observedWorkspaces,
-                  runtimes: discovery.runtimes.filter((runtime) =>
-                    matchesProjectObservation(
-                      runtime,
-                      project.name,
-                      observedWorkspaces,
+                  runtimes: discovery.runtimes
+                    .map((runtime) =>
+                      normalizeRuntimeObservation(
+                        runtime,
+                        project,
+                        observedWorkspaces,
+                      ),
+                    )
+                    .filter(
+                      (runtime): runtime is RuntimeFact => runtime !== null,
                     ),
-                  ),
                   runtimeIssue: discovery.runtimeIssue,
                   runtimeSource: discovery.source,
                 }) satisfies ProjectObservation,
@@ -97,6 +108,67 @@ function observeProjectWithDiscovery(
       },
     }),
   )
+}
+
+function normalizeRuntimeObservation(
+  runtime: RuntimeObservation,
+  project: ProjectConfig,
+  workspaces: ProjectObservation['workspaces'],
+): RuntimeFact | null {
+  if (!('contextPath' in runtime)) {
+    return matchesProjectObservation(runtime, project.name, workspaces)
+      ? runtime
+      : null
+  }
+
+  const contextPath = path.resolve(runtime.contextPath)
+
+  for (const workspace of workspaces) {
+    const module = workspace.modules.find(
+      (candidate) =>
+        candidate.path !== '.' &&
+        path.resolve(candidate.workspacePath) === contextPath,
+    )
+
+    if (module) {
+      return {
+        identity: runtime.identity,
+        moduleName: module.name,
+        projectName: project.name,
+        scope: 'module',
+        status: runtime.status,
+        workspaceName: workspace.workspaceName,
+      }
+    }
+  }
+
+  const workspace = workspaces.find(
+    (candidate) => path.resolve(candidate.workspacePath) === contextPath,
+  )
+
+  if (workspace?.kind === 'worktree') {
+    return {
+      identity: runtime.identity,
+      moduleName: null,
+      projectName: project.name,
+      scope: 'workspace',
+      status: runtime.status,
+      workspaceName: workspace.workspaceName,
+    }
+  }
+
+  if (path.resolve(project.repo) === contextPath || workspace) {
+    return {
+      identity: runtime.identity,
+      moduleName: null,
+      projectName: project.name,
+      scope: 'project',
+      status: runtime.status,
+      workspaceName: null,
+    }
+  }
+
+  return null
 }
 
 function scanWorkspace(

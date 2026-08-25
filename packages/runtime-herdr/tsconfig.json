@@ -1,0 +1,7 @@
+{
+  "extends": "@harbr/config-typescript/library.json",
+  "compilerOptions": {
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}

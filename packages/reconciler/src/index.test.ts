@@ -162,6 +162,96 @@ describe('reconciler', () => {
     expect(project?.repoPath).toBe(repoPath)
   })
 
+  it('persists mapped Herdr observations into Active and Browse summaries', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const dbPath = path.join(tempRoot, 'harbour.db')
+    const modulePath = path.join(repoPath, 'apps', 'cli')
+    const herdrSource = { provider: 'herdr', sourceId: '/tmp/herdr.sock' }
+
+    await execFileAsync('git', ['init', repoPath])
+    await mkdir(modulePath, { recursive: true })
+    const project = createProjectConfig('alpha', repoPath, 'apps/')
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
+      listRuntimes: Effect.succeed({
+        runtimes: [
+          {
+            contextPath: repoPath,
+            identity: {
+              displayLabel: 'Alpha',
+              externalId: 'herdr-project',
+              source: herdrSource,
+            },
+            status: 'open',
+          },
+          {
+            contextPath: modulePath,
+            identity: {
+              displayLabel: 'CLI',
+              externalId: 'herdr-module',
+              source: herdrSource,
+            },
+            status: 'open',
+          },
+        ],
+        runtimeIssue: null,
+        source: herdrSource,
+      }),
+    }
+    const scanner = ScannerServiceLive.pipe(
+      Layer.provide(GitServiceLive),
+      Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
+    )
+    const reconciler = ReconcilerServiceLive.pipe(
+      Layer.provide(makeTestProjectServiceLayer(dbPath)),
+      Layer.provide(scanner),
+    )
+
+    await Effect.runPromise(
+      Effect.flatMap(ReconcilerService, (service) =>
+        service.syncProjects([project]),
+      ).pipe(Effect.provide(reconciler)),
+    )
+
+    const summaries = await Effect.runPromise(
+      Effect.gen(function* () {
+        const projects = yield* ProjectService
+        const browse = yield* projects.listProjectSummaries(herdrSource)
+        const workspaces = yield* projects.listWorkspaceSummaries(
+          browse[0]!.id,
+          herdrSource,
+        )
+
+        return {
+          active: yield* projects.listActiveRuntimeSummaries(herdrSource),
+          browse,
+          modules: yield* projects.listModuleSummaries(
+            workspaces[0]!.id,
+            herdrSource,
+          ),
+          tmuxActive: yield* projects.listActiveRuntimeSummaries(runtimeSource),
+        }
+      }).pipe(Effect.provide(makeTestProjectServiceLayer(dbPath))),
+    )
+
+    expect(
+      summaries.active.map((summary) => ({
+        externalId: summary.runtime.identity.externalId,
+        scope: summary.scope,
+      })),
+    ).toEqual([
+      { externalId: 'herdr-project', scope: 'project' },
+      { externalId: 'herdr-module', scope: 'module' },
+    ])
+    expect(summaries.browse[0]?.runtime?.identity.externalId).toBe(
+      'herdr-project',
+    )
+    expect(summaries.modules[0]?.runtime?.identity.externalId).toBe(
+      'herdr-module',
+    )
+    expect(summaries.tmuxActive).toEqual([])
+  })
+
   it('persists project only when bare repo has no linked workspace', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo.git')

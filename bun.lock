@@ -29,6 +29,7 @@
         "@harbr/git": "workspace:*",
         "@harbr/reconciler": "workspace:*",
         "@harbr/runtime": "workspace:*",
+        "@harbr/runtime-herdr": "workspace:*",
         "@harbr/runtime-tmux": "workspace:*",
         "@opentui/core": "^0.2.16",
         "@opentui/keymap": "^0.2.16",
@@ -96,6 +97,14 @@
       "name": "@harbr/runtime",
       "dependencies": {
         "@harbr/domain": "workspace:*",
+        "effect": "catalog:",
+      },
+    },
+    "packages/runtime-herdr": {
+      "name": "@harbr/runtime-herdr",
+      "dependencies": {
+        "@harbr/domain": "workspace:*",
+        "@harbr/runtime": "workspace:*",
         "effect": "catalog:",
       },
     },
@@ -263,6 +272,8 @@
     "@harbr/reconciler": ["@harbr/reconciler@workspace:packages/reconciler"],
 
     "@harbr/runtime": ["@harbr/runtime@workspace:packages/runtime"],
+
+    "@harbr/runtime-herdr": ["@harbr/runtime-herdr@workspace:packages/runtime-herdr"],
 
     "@harbr/runtime-tmux": ["@harbr/runtime-tmux@workspace:packages/runtime-tmux"],
 

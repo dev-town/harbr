@@ -28,6 +28,18 @@ function runtimeIdentity(externalId: string) {
   return { displayLabel: externalId, externalId, source: runtimeSource }
 }
 
+function pathRuntime(
+  externalId: string,
+  contextPath: string,
+  source: { provider: string; sourceId: string },
+) {
+  return {
+    contextPath,
+    identity: { displayLabel: externalId, externalId, source },
+    status: 'open' as const,
+  }
+}
+
 afterEach(async () => {
   await Promise.all(
     tempRoots
@@ -548,6 +560,92 @@ describe('observeProject', () => {
       runtimeIssue: null,
       runtimeSource,
     })
+  })
+
+  it('maps Herdr paths to project, worktree, and module contexts', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const featurePath = path.join(tempRoot, 'feature')
+    const modulePath = path.join(featurePath, 'apps', 'cli')
+
+    await mkdir(path.join(repoPath, 'apps', 'cli'), { recursive: true })
+    await mkdir(modulePath, { recursive: true })
+
+    const project: ProjectConfig = {
+      name: 'alpha',
+      repo: repoPath,
+      modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
+    }
+    const herdrSource = { provider: 'herdr', sourceId: '/tmp/herdr.sock' }
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
+      listRuntimes: Effect.succeed({
+        runtimes: [
+          pathRuntime('project', repoPath, herdrSource),
+          pathRuntime('workspace', featurePath, herdrSource),
+          pathRuntime('module', modulePath, herdrSource),
+          pathRuntime('unmapped', '/tmp/elsewhere', herdrSource),
+        ],
+        runtimeIssue: null,
+        source: herdrSource,
+      }),
+    }
+    const git: GitServiceApi = {
+      createWorktree: () => Effect.die('not used'),
+      getDefaultBranch: () => Effect.die('not used'),
+      getDefaultBranchIssue: () => Effect.succeed(null),
+      inspectRepo: () => Effect.succeed({ repoPath, kind: 'standard' }),
+      listWorkspaces: () =>
+        Effect.succeed([
+          {
+            branchName: 'main',
+            name: 'main',
+            path: repoPath,
+            kind: 'default',
+          },
+          {
+            branchName: 'feature',
+            name: 'feature',
+            path: featurePath,
+            kind: 'worktree',
+          },
+        ]),
+      resolveWorkspacePath: () => Effect.succeed(repoPath),
+    }
+
+    const observation = await Effect.runPromise(
+      Effect.flatMap(ScannerService, (service) =>
+        service.observeProject(project),
+      ).pipe(
+        Effect.provide(
+          ScannerServiceLive.pipe(
+            Layer.provide(
+              Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
+            ),
+            Layer.provide(Layer.succeed(GitService, git)),
+          ),
+        ),
+      ),
+    )
+
+    expect(observation.runtimes).toEqual([
+      expect.objectContaining({
+        projectName: 'alpha',
+        scope: 'project',
+        workspaceName: null,
+      }),
+      expect.objectContaining({
+        projectName: 'alpha',
+        scope: 'workspace',
+        workspaceName: 'feature',
+      }),
+      expect.objectContaining({
+        moduleName: 'apps/cli',
+        projectName: 'alpha',
+        scope: 'module',
+        workspaceName: 'feature',
+      }),
+    ])
+    expect(observation.runtimeSource).toEqual(herdrSource)
   })
 
   it('keeps root module runtimes when slash module exists', async () => {

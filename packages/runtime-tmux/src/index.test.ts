@@ -197,10 +197,6 @@ describe('getCurrentRuntime', () => {
   it('returns provided current runtime from the service layer', async () => {
     const currentRuntime: CurrentRuntime = {
       identity: identity('alpha~~main~~apps/cli'),
-      scope: 'module',
-      projectName: 'alpha',
-      workspaceName: 'main',
-      moduleName: 'apps/cli',
       status: 'open',
     }
 
