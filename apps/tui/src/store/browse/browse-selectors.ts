@@ -1,4 +1,8 @@
-import type { RuntimeAttachment, RuntimeFact } from '@harbr/domain'
+import {
+  isSameRuntimeIdentity,
+  type RuntimeAttachment,
+  type RuntimeFact,
+} from '@harbr/domain'
 
 import type {
   HarbourRow,
@@ -304,7 +308,7 @@ function makeCloseSessionActionRow(
     makeActionRow(
       browseActionIds.closeRuntimeSession,
       'Close session',
-      'tmux runtime',
+      `${runtime.identity.source.provider} runtime`,
       target,
       isCurrentActiveRuntime(state, runtime)
         ? 'Cannot close current session'
@@ -317,7 +321,9 @@ function isCurrentActiveRuntime(
   state: TuiStoreModel,
   runtime: RuntimeAttachment,
 ) {
-  return state.app.currentRuntime?.sessionName === runtime.sessionName
+  return state.app.currentRuntime
+    ? isSameRuntimeIdentity(state.app.currentRuntime.identity, runtime.identity)
+    : false
 }
 
 function makeActionRow(
@@ -411,5 +417,7 @@ function isCurrentBrowseRow(
   row: HarbourRow,
   currentRuntime: RuntimeFact | null,
 ) {
-  return row.runtime?.sessionName === currentRuntime?.sessionName
+  return row.runtime && currentRuntime
+    ? isSameRuntimeIdentity(row.runtime.identity, currentRuntime.identity)
+    : false
 }

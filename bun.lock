@@ -19,7 +19,7 @@
     },
     "apps/tui": {
       "name": "@harbr/tui",
-      "version": "0.1.0-beta.1",
+      "version": "0.1.0-beta.3",
       "dependencies": {
         "@effect/opentelemetry": "0.63.0",
         "@effect/platform": "0.96.1",
@@ -28,6 +28,7 @@
         "@harbr/domain": "workspace:*",
         "@harbr/git": "workspace:*",
         "@harbr/reconciler": "workspace:*",
+        "@harbr/runtime": "workspace:*",
         "@harbr/runtime-tmux": "workspace:*",
         "@opentui/core": "^0.2.16",
         "@opentui/keymap": "^0.2.16",
@@ -91,10 +92,18 @@
         "effect": "catalog:",
       },
     },
+    "packages/runtime": {
+      "name": "@harbr/runtime",
+      "dependencies": {
+        "@harbr/domain": "workspace:*",
+        "effect": "catalog:",
+      },
+    },
     "packages/runtime-tmux": {
       "name": "@harbr/runtime-tmux",
       "dependencies": {
         "@harbr/domain": "workspace:*",
+        "@harbr/runtime": "workspace:*",
         "effect": "catalog:",
       },
     },
@@ -103,7 +112,7 @@
       "dependencies": {
         "@harbr/domain": "workspace:*",
         "@harbr/git": "workspace:*",
-        "@harbr/runtime-tmux": "workspace:*",
+        "@harbr/runtime": "workspace:*",
         "effect": "catalog:",
       },
     },
@@ -252,6 +261,8 @@
     "@harbr/git": ["@harbr/git@workspace:packages/git"],
 
     "@harbr/reconciler": ["@harbr/reconciler@workspace:packages/reconciler"],
+
+    "@harbr/runtime": ["@harbr/runtime@workspace:packages/runtime"],
 
     "@harbr/runtime-tmux": ["@harbr/runtime-tmux@workspace:packages/runtime-tmux"],
 

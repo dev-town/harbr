@@ -15,7 +15,7 @@ import { GitServiceLive, RepoNotGitError } from '@harbr/git'
 import {
   RuntimeDiscoveryService,
   type RuntimeDiscoveryServiceApi,
-} from '@harbr/runtime-tmux/discovery'
+} from '@harbr/runtime/discovery'
 import { Effect, Either, Layer } from 'effect'
 import { ScannerService, ScannerServiceLive } from '@harbr/scanner'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -24,6 +24,7 @@ import { ReconcilerService, ReconcilerServiceLive } from './index'
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
+const runtimeSource = { provider: 'tmux', sourceId: 'test' }
 
 afterEach(async () => {
   await Promise.all(
@@ -34,6 +35,95 @@ afterEach(async () => {
 })
 
 describe('reconciler', () => {
+  it('persists provider identity and isolates runtime sources end to end', async () => {
+    const tempRoot = await createTempRoot()
+    const dbPath = path.join(tempRoot, 'harbour.db')
+    const project = createProjectConfig('alpha')
+    const otherSource = { provider: 'test', sourceId: 'secondary' }
+    let observation = createObservation(project)
+    const scanner = Layer.succeed(ScannerService, {
+      observeProjects: () => Effect.die('not used'),
+      observeProject: () => Effect.succeed(observation),
+    })
+    const layer = ReconcilerServiceLive.pipe(
+      Layer.provide(makeTestProjectServiceLayer(dbPath)),
+      Layer.provide(scanner),
+    )
+
+    observation = {
+      ...observation,
+      runtimes: [
+        {
+          identity: {
+            displayLabel: 'alpha',
+            externalId: 'alpha',
+            source: runtimeSource,
+          },
+          moduleName: null,
+          projectName: 'alpha',
+          scope: 'project',
+          status: 'open',
+          workspaceName: null,
+        },
+      ],
+      runtimeIssue: null,
+      runtimeSource,
+    }
+    await Effect.runPromise(
+      Effect.flatMap(ReconcilerService, (service) =>
+        service.refreshProject(project),
+      ).pipe(Effect.provide(layer)),
+    )
+
+    observation = {
+      ...observation,
+      runtimes: [
+        {
+          identity: {
+            displayLabel: 'alpha-other',
+            externalId: 'alpha-other',
+            source: otherSource,
+          },
+          moduleName: null,
+          projectName: 'alpha',
+          scope: 'project',
+          status: 'open',
+          workspaceName: null,
+        },
+      ],
+      runtimeSource: otherSource,
+    }
+    await Effect.runPromise(
+      Effect.flatMap(ReconcilerService, (service) =>
+        service.refreshProject(project),
+      ).pipe(Effect.provide(layer)),
+    )
+
+    const summaries = await Effect.runPromise(
+      Effect.gen(function* () {
+        const projects = yield* ProjectService
+
+        return {
+          otherActive: yield* projects.listActiveRuntimeSummaries(otherSource),
+          otherBrowse: yield* projects.listProjectSummaries(otherSource),
+          tmuxActive: yield* projects.listActiveRuntimeSummaries(runtimeSource),
+        }
+      }).pipe(Effect.provide(makeTestProjectServiceLayer(dbPath))),
+    )
+
+    expect(summaries.tmuxActive[0]?.runtime.identity).toEqual({
+      displayLabel: 'alpha',
+      externalId: 'alpha',
+      source: runtimeSource,
+    })
+    expect(summaries.otherActive[0]?.runtime.identity.source).toEqual(
+      otherSource,
+    )
+    expect(summaries.otherBrowse[0]?.runtime?.identity.externalId).toBe(
+      'alpha-other',
+    )
+  })
+
   it('syncs configured projects and persists snapshots', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo')
@@ -59,8 +149,8 @@ describe('reconciler', () => {
       status: 'synced',
       errorTag: null,
     })
-    expect([null, 'tmux_not_found']).toContain(
-      result.projects[0]?.runtimeIssue ?? null,
+    expect([null, 'provider_not_found']).toContain(
+      result.projects[0]?.runtimeIssue?.code ?? null,
     )
 
     const project = await Effect.runPromise(
@@ -95,7 +185,9 @@ describe('reconciler', () => {
       status: 'no_workspace',
       errorTag: null,
     })
-    expect([null, 'tmux_not_found']).toContain(result.runtimeIssue)
+    expect([null, 'provider_not_found']).toContain(
+      result.runtimeIssue?.code ?? null,
+    )
   })
 
   it('isolates per-project failures during sync', async () => {
@@ -128,8 +220,8 @@ describe('reconciler', () => {
       status: 'synced',
       errorTag: null,
     })
-    expect([null, 'tmux_not_found']).toContain(
-      result.projects[0]?.runtimeIssue ?? null,
+    expect([null, 'provider_not_found']).toContain(
+      result.projects[0]?.runtimeIssue?.code ?? null,
     )
     expect(result.projects[1]).toEqual({
       projectName: 'beta',
@@ -173,9 +265,9 @@ describe('reconciler', () => {
         Layer.succeed(ProjectService, {
           findByName: () => Effect.succeed(null),
           loadUiContext: Effect.succeed({}),
-          listActiveRuntimeSummaries: Effect.die('not used'),
+          listActiveRuntimeSummaries: () => Effect.die('not used'),
           listModuleSummaries: () => Effect.die('not used'),
-          listProjectSummaries: Effect.die('not used'),
+          listProjectSummaries: () => Effect.die('not used'),
           listWorkspaceSummaries: () => Effect.die('not used'),
           saveUiContext: () => Effect.die('not used'),
           syncSnapshot: (input) => {
@@ -223,7 +315,10 @@ describe('reconciler', () => {
           runtimeCount: 0,
           status: 'synced',
           errorTag: null,
-          runtimeIssue: 'tmux_not_found',
+          runtimeIssue: {
+            code: 'provider_not_found',
+            source: runtimeSource,
+          },
         },
         {
           projectName: 'beta',
@@ -270,7 +365,11 @@ function createProjectConfig(
 
 function makeTestReconcilerLayer(dbPath: string) {
   const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
-    listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+    listRuntimes: Effect.succeed({
+      runtimes: [],
+      runtimeIssue: null,
+      source: runtimeSource,
+    }),
   }
 
   const scanner = ScannerServiceLive.pipe(
@@ -313,6 +412,7 @@ function createObservation(project: ProjectConfig): ProjectObservation {
       },
     ],
     runtimes: [],
-    runtimeIssue: 'tmux_not_found',
+    runtimeIssue: { code: 'provider_not_found', source: runtimeSource },
+    runtimeSource,
   }
 }

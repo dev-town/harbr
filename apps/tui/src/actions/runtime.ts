@@ -1,9 +1,10 @@
-import type {
-  HarbourContext,
-  RuntimeAttachment,
-  RuntimeTarget,
+import {
+  isSameRuntimeIdentity,
+  type HarbourContext,
+  type RuntimeAttachment,
+  type RuntimeTarget,
 } from '@harbr/domain'
-import { RuntimeTmuxService } from '@harbr/runtime-tmux'
+import { RuntimeService } from '@harbr/runtime'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '~/app-context'
@@ -85,9 +86,12 @@ export async function closeActiveRuntime(
   store: TuiStore,
   row: HarbourRow & { runtime: RuntimeAttachment },
 ) {
+  const currentRuntime = store.getState().app.currentRuntime
+
   if (
     row.isCurrent ||
-    store.getState().app.currentRuntime?.sessionName === row.runtime.sessionName
+    (currentRuntime &&
+      isSameRuntimeIdentity(currentRuntime.identity, row.runtime.identity))
   ) {
     store.getState().setNotice('Cannot close current session', 'warning')
     return
@@ -99,9 +103,9 @@ export async function closeActiveRuntime(
   try {
     await services.effectRuntime.runPromise(
       Effect.gen(function* () {
-        const runtimeTmux = yield* RuntimeTmuxService
+        const runtime = yield* RuntimeService
 
-        yield* runtimeTmux.closeRuntime(row.runtime.sessionName)
+        yield* runtime.closeRuntime(row.runtime.identity)
       }),
     )
     store.getState().closeActionsMenu()
@@ -126,9 +130,9 @@ export async function openRuntimeForTarget(
     await persistContext(services, nextContext)
     await services.effectRuntime.runPromise(
       Effect.gen(function* () {
-        const runtimeTmux = yield* RuntimeTmuxService
+        const runtime = yield* RuntimeService
 
-        yield* runtimeTmux.openOrCreateRuntime(target)
+        yield* runtime.openOrCreateRuntime(target)
       }),
     )
     await services.shutdown()

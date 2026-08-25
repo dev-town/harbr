@@ -1,4 +1,5 @@
 import { ConfigService } from '@harbr/config'
+import { isSameRuntimeIdentity } from '@harbr/domain'
 import { ReconcilerService } from '@harbr/reconciler'
 import { Effect, Either } from 'effect'
 
@@ -158,7 +159,9 @@ function getActiveRuntimeRowId(
   }
 
   return (
-    rows.find((row) => row.sessionName === currentRuntime.sessionName)?.id ??
+    rows.find((row) =>
+      isSameRuntimeIdentity(row.runtime.identity, currentRuntime.identity),
+    )?.id ??
     rows.find(
       (row) =>
         row.scope === currentRuntime.scope &&

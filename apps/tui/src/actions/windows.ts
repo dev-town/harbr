@@ -1,5 +1,5 @@
 import type { ResolvedContextTarget, WindowConfig } from '@harbr/domain'
-import { RuntimeTmuxService } from '@harbr/runtime-tmux'
+import { RuntimeService } from '@harbr/runtime'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '~/app-context'
@@ -19,9 +19,9 @@ export async function createWindowsForContext(
     await persistContext(services, target.context)
     const result = await services.effectRuntime.runPromise(
       Effect.gen(function* () {
-        const runtimeTmux = yield* RuntimeTmuxService
+        const runtime = yield* RuntimeService
 
-        return yield* runtimeTmux.createRuntimeWindows({
+        return yield* runtime.createRuntimeWindows({
           target: target.runtimeTarget,
           windows,
         })

@@ -13,7 +13,7 @@ import { GitServiceLive } from '@harbr/git'
 import { ReconcilerServiceLive } from '@harbr/reconciler'
 import {
   RuntimeDiscoveryServiceLive,
-  RuntimeTmuxServiceLive,
+  RuntimeServiceLive,
 } from '@harbr/runtime-tmux'
 import { ScannerServiceLive } from '@harbr/scanner'
 import { Layer } from 'effect'
@@ -47,7 +47,7 @@ export function makeTuiLayer(options: TuiOptions) {
     database,
     GitServiceLive,
     RuntimeDiscoveryServiceLive,
-    RuntimeTmuxServiceLive,
+    RuntimeServiceLive,
     projectService,
     scanner,
     reconciler,

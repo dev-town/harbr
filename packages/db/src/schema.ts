@@ -65,7 +65,10 @@ export const runtimes = sqliteTable(
     workspaceId: text('workspace_id').references(() => workspaces.id, {
       onDelete: 'cascade',
     }),
-    sessionName: text('session_name').notNull().unique(),
+    provider: text('provider').notNull(),
+    sourceId: text('source_id').notNull(),
+    externalId: text('external_id').notNull(),
+    displayLabel: text('display_label').notNull(),
     scope: text('scope', {
       enum: ['module', 'project', 'workspace'],
     }).notNull(),
@@ -75,9 +78,10 @@ export const runtimes = sqliteTable(
     updatedAt: integer('updated_at').notNull(),
   },
   (table) => [
-    uniqueIndex('runtimes_project_session_idx').on(
-      table.projectId,
-      table.sessionName,
+    uniqueIndex('runtimes_source_external_idx').on(
+      table.provider,
+      table.sourceId,
+      table.externalId,
     ),
   ],
 )

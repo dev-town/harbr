@@ -8,5 +8,6 @@ export const embeddedMigrationSources = (
     import('./migrations/0003_silver_ui_context'),
     import('./migrations/0004_teal_workspace_branches'),
     import('./migrations/0005_orange_project_issues'),
+    import('./migrations/0006_common_ricochet'),
   ])
 ).map((module) => module.default) satisfies EmbeddedMigrationSource[]

@@ -6,6 +6,7 @@ import type {
   ModuleSummary,
   ProjectSummary,
   RuntimeFact,
+  RuntimeSource,
   WorkspaceSummary,
 } from '@harbr/domain'
 import { eq } from 'drizzle-orm'
@@ -41,7 +42,10 @@ export function getProjectByName(db: HarbourDatabase, projectName: string) {
   return row ? mapProjectRow(projectRowSchema.parse(row)) : null
 }
 
-export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
+export function listProjectSummaries(
+  db: HarbourDatabase,
+  source: RuntimeSource,
+): ProjectSummary[] {
   const projectRows = db
     .select()
     .from(projects)
@@ -62,6 +66,7 @@ export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
     .from(runtimes)
     .all()
     .map((row) => runtimeRowSchema.parse(row))
+    .filter((runtime) => matchesRuntimeSource(runtime, source))
 
   return projectRows
     .map((project) => {
@@ -101,6 +106,7 @@ export function listProjectSummaries(db: HarbourDatabase): ProjectSummary[] {
 
 export function listActiveRuntimeSummaries(
   db: HarbourDatabase,
+  source: RuntimeSource,
 ): ActiveRuntimeSummary[] {
   const projectRows = db
     .select()
@@ -122,6 +128,7 @@ export function listActiveRuntimeSummaries(
     .from(runtimes)
     .all()
     .map((row) => runtimeRowSchema.parse(row))
+    .filter((runtime) => matchesRuntimeSource(runtime, source))
 
   return runtimeRows
     .map((runtime) => {
@@ -159,16 +166,19 @@ export function listActiveRuntimeSummaries(
         projectId: project.id,
         projectName: project.name,
         repoPath: project.repoPath,
+        runtime: mapRuntimeAttachment(runtime)!,
         scope: runtime.scope,
-        sessionName: runtime.sessionName,
-        status: runtime.status,
         workspaceId: workspace?.id ?? null,
         workspaceName: workspace?.name ?? null,
         workspacePath: workspace?.workspacePath ?? null,
       } satisfies ActiveRuntimeSummary
     })
     .filter((runtime): runtime is ActiveRuntimeSummary => runtime !== null)
-    .sort((left, right) => left.sessionName.localeCompare(right.sessionName))
+    .sort((left, right) =>
+      left.runtime.identity.displayLabel.localeCompare(
+        right.runtime.identity.displayLabel,
+      ),
+    )
 }
 
 export function loadUiContext(db: HarbourDatabase): HarbourContext {
@@ -218,6 +228,7 @@ export function saveUiContext(
 export function listWorkspaceSummaries(
   db: HarbourDatabase,
   projectId: string,
+  source: RuntimeSource,
 ): WorkspaceSummary[] {
   const projectRow = db
     .select()
@@ -246,6 +257,7 @@ export function listWorkspaceSummaries(
     .from(runtimes)
     .all()
     .map((row) => runtimeRowSchema.parse(row))
+    .filter((runtime) => matchesRuntimeSource(runtime, source))
 
   return workspaceRows
     .map((workspace) => {
@@ -289,6 +301,7 @@ export function listWorkspaceSummaries(
 export function listModuleSummaries(
   db: HarbourDatabase,
   workspaceId: string,
+  source: RuntimeSource,
 ): ModuleSummary[] {
   const workspaceRow = db
     .select()
@@ -324,6 +337,7 @@ export function listModuleSummaries(
     .where(eq(runtimes.workspaceId, workspaceId))
     .all()
     .map((row) => runtimeRowSchema.parse(row))
+    .filter((runtime) => matchesRuntimeSource(runtime, source))
 
   return moduleRows
     .map((module) => ({
@@ -419,18 +433,55 @@ export function replaceProjectSnapshot(
   db: HarbourDatabase,
   input: ReplaceProjectSnapshotInput,
 ) {
+  if (
+    input.runtimes.some(
+      (runtime) =>
+        runtime.identity.source.provider !== input.runtimeSource.provider ||
+        runtime.identity.source.sourceId !== input.runtimeSource.sourceId,
+    )
+  ) {
+    throw new Error('runtime observation contains a different source')
+  }
+
   return db.transaction((tx) => {
     const project = upsertProject(tx, input)
+    const existingWorkspaces = tx
+      .select()
+      .from(workspaces)
+      .where(eq(workspaces.projectId, project.id))
+      .all()
+      .map((row) => workspaceRowSchema.parse(row))
+    const workspaceNamesById = new Map(
+      existingWorkspaces.map((workspace) => [workspace.id, workspace.name]),
+    )
+    const preservedRuntimes = tx
+      .select()
+      .from(runtimes)
+      .where(eq(runtimes.projectId, project.id))
+      .all()
+      .map((row) => runtimeRowSchema.parse(row))
+      .filter(
+        (runtime) =>
+          !matchesRuntimeSource(runtime, input.runtimeSource) ||
+          input.runtimeIssue !== null,
+      )
+      .map((runtime) => ({
+        runtime,
+        workspaceName: runtime.workspaceId
+          ? (workspaceNamesById.get(runtime.workspaceId) ?? null)
+          : null,
+      }))
 
     tx.delete(workspaces).where(eq(workspaces.projectId, project.id)).run()
     tx.delete(runtimes).where(eq(runtimes.projectId, project.id)).run()
 
     if (input.workspaces.length === 0) {
+      restoreRuntimes(tx, project.id, new Map(), preservedRuntimes)
       const runtimeRecords = insertRuntimes(
         tx,
         project.id,
         new Map(),
-        input.runtimes,
+        input.runtimeIssue === null ? input.runtimes : [],
         now(),
       )
 
@@ -452,6 +503,7 @@ export function replaceProjectSnapshot(
     const workspacesByName = new Map(
       workspaceRecords.map((workspace) => [workspace.name, workspace]),
     )
+    restoreRuntimes(tx, project.id, workspacesByName, preservedRuntimes)
 
     const moduleRecords = workspaceRecords.flatMap((workspace) => {
       const source = input.workspaces.find(
@@ -469,7 +521,7 @@ export function replaceProjectSnapshot(
       tx,
       project.id,
       workspacesByName,
-      input.runtimes,
+      input.runtimeIssue === null ? input.runtimes : [],
       createdAt,
     )
 
@@ -567,6 +619,12 @@ function insertRuntimes(
   createdAt: number,
 ) {
   for (const runtime of runtimeFacts) {
+    if (
+      runtime.identity.source.provider.length === 0 ||
+      runtime.identity.source.sourceId.length === 0
+    ) {
+      throw new Error('runtime source identity must not be empty')
+    }
     const workspace =
       runtime.workspaceName === null
         ? null
@@ -578,7 +636,10 @@ function insertRuntimes(
         projectId,
         workspaceId:
           runtime.scope === 'project' ? null : (workspace?.id ?? null),
-        sessionName: runtime.sessionName,
+        provider: runtime.identity.source.provider,
+        sourceId: runtime.identity.source.sourceId,
+        externalId: runtime.identity.externalId,
+        displayLabel: runtime.identity.displayLabel,
         scope: runtime.scope,
         modulePath:
           runtime.scope === 'module'
@@ -600,6 +661,35 @@ function insertRuntimes(
     .all()
 
   return rows.map((row) => mapRuntimeRow(runtimeRowSchema.parse(row)))
+}
+
+function restoreRuntimes(
+  db: HarbourDatabase,
+  projectId: string,
+  workspacesByName: Map<string, WorkspaceRecord>,
+  preserved: ReadonlyArray<{
+    runtime: ReturnType<typeof runtimeRowSchema.parse>
+    workspaceName: string | null
+  }>,
+) {
+  for (const { runtime, workspaceName } of preserved) {
+    const workspace = workspaceName
+      ? (workspacesByName.get(workspaceName) ?? null)
+      : null
+
+    if (runtime.scope !== 'project' && !workspace) {
+      continue
+    }
+
+    db.insert(runtimes)
+      .values({
+        ...runtime,
+        projectId,
+        workspaceId:
+          runtime.scope === 'project' ? null : (workspace?.id ?? null),
+      })
+      .run()
+  }
 }
 
 function mapProjectRow(
@@ -656,7 +746,11 @@ function mapRuntimeRow(
     id: row.id,
     projectId: row.projectId,
     workspaceId: row.workspaceId,
-    sessionName: row.sessionName,
+    identity: {
+      displayLabel: row.displayLabel,
+      externalId: row.externalId,
+      source: { provider: row.provider, sourceId: row.sourceId },
+    },
     scope: row.scope,
     modulePath: row.modulePath,
     status: row.status,
@@ -665,11 +759,29 @@ function mapRuntimeRow(
   }
 }
 
-function mapRuntimeAttachment(runtime: RuntimeRecord | null) {
+function mapRuntimeAttachment(
+  runtime: ReturnType<typeof runtimeRowSchema.parse> | null,
+) {
   return runtime
     ? {
-        sessionName: runtime.sessionName,
+        identity: {
+          displayLabel: runtime.displayLabel,
+          externalId: runtime.externalId,
+          source: {
+            provider: runtime.provider,
+            sourceId: runtime.sourceId,
+          },
+        },
         status: runtime.status,
       }
     : null
+}
+
+function matchesRuntimeSource(
+  runtime: ReturnType<typeof runtimeRowSchema.parse>,
+  source: RuntimeSource,
+) {
+  return (
+    runtime.provider === source.provider && runtime.sourceId === source.sourceId
+  )
 }

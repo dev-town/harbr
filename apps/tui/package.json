@@ -11,6 +11,7 @@
     "@harbr/domain": "workspace:*",
     "@harbr/git": "workspace:*",
     "@harbr/reconciler": "workspace:*",
+    "@harbr/runtime": "workspace:*",
     "@harbr/runtime-tmux": "workspace:*",
     "@opentui/core": "^0.2.16",
     "@opentui/keymap": "^0.2.16",

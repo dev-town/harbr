@@ -7,6 +7,7 @@ const layerNames = [
   'db',
   'config',
   'git',
+  'runtime',
   'runtime-tmux',
   'scanner',
   'reconciler',
@@ -76,14 +77,14 @@ export const baseConfig = tseslint.config(
             {
               name: '@harbr/runtime-tmux',
               message:
-                'Scanner may only use read-only runtime discovery. Import from @harbr/runtime-tmux/discovery instead.',
+                'Scanner consumes the provider-neutral read-only boundary from @harbr/runtime/discovery.',
             },
           ],
           patterns: [
             {
               regex: '^@harbr/runtime-tmux/(?!discovery$).*',
               message:
-                'Scanner may only use read-only runtime discovery. Import from @harbr/runtime-tmux/discovery instead.',
+                'Scanner consumes the provider-neutral read-only boundary from @harbr/runtime/discovery.',
             },
           ],
         },
@@ -139,6 +140,11 @@ export const boundaryConfig = {
       {
         type: 'git',
         pattern: 'packages/git/src/**',
+        mode: 'full',
+      },
+      {
+        type: 'runtime',
+        pattern: 'packages/runtime/src/**',
         mode: 'full',
       },
       {
@@ -200,12 +206,16 @@ export const boundaryConfig = {
             allow: ['domain'],
           },
           {
-            from: ['runtime-tmux'],
+            from: ['runtime'],
             allow: ['domain'],
           },
           {
+            from: ['runtime-tmux'],
+            allow: ['domain', 'runtime'],
+          },
+          {
             from: ['scanner'],
-            allow: ['domain', 'config', 'git'],
+            allow: ['domain', 'config', 'git', 'runtime'],
           },
           {
             from: ['reconciler'],

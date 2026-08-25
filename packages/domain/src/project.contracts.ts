@@ -2,7 +2,11 @@ import { z } from 'zod'
 
 import { ModuleSelectorSchema, ResolvedModuleSchema } from './module.contracts'
 import { RuntimeAttachmentSchema, RuntimeFactSchema } from './runtime.contracts'
-import { RepoKindSchema, RuntimeIssueSchema } from './shared.contracts'
+import {
+  RepoKindSchema,
+  RuntimeIssueSchema,
+  RuntimeSourceSchema,
+} from './shared.contracts'
 import { WindowConfigSchema } from './window.contracts'
 import { WorkspaceObservationSchema } from './workspace.contracts'
 
@@ -28,6 +32,7 @@ export const ProjectObservationSchema = z.object({
   repoKind: RepoKindSchema,
   repoPath: z.string(),
   runtimeIssue: RuntimeIssueSchema.nullable(),
+  runtimeSource: RuntimeSourceSchema,
   runtimes: z.array(RuntimeFactSchema),
   workspaces: z.array(WorkspaceObservationSchema),
 })

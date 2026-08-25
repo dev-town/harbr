@@ -44,25 +44,27 @@ export const ProjectServiceLive = Layer.effect(
             message: error instanceof Error ? error.message : String(error),
           }),
       }).pipe(Effect.withSpan('db.project.loadUiContext')),
-      listProjectSummaries: Effect.try({
-        try: () => listProjectSummariesRaw(database.db),
-        catch: (error) =>
-          new ProjectServiceError({
-            operation: 'listProjectSummaries',
-            message: error instanceof Error ? error.message : String(error),
-          }),
-      }).pipe(Effect.withSpan('db.project.listProjectSummaries')),
-      listActiveRuntimeSummaries: Effect.try({
-        try: () => listActiveRuntimeSummariesRaw(database.db),
-        catch: (error) =>
-          new ProjectServiceError({
-            operation: 'listActiveRuntimeSummaries',
-            message: error instanceof Error ? error.message : String(error),
-          }),
-      }).pipe(Effect.withSpan('db.project.listActiveRuntimeSummaries')),
-      listWorkspaceSummaries: (projectId) =>
+      listProjectSummaries: (source) =>
         Effect.try({
-          try: () => listWorkspaceSummariesRaw(database.db, projectId),
+          try: () => listProjectSummariesRaw(database.db, source),
+          catch: (error) =>
+            new ProjectServiceError({
+              operation: 'listProjectSummaries',
+              message: error instanceof Error ? error.message : String(error),
+            }),
+        }).pipe(Effect.withSpan('db.project.listProjectSummaries')),
+      listActiveRuntimeSummaries: (source) =>
+        Effect.try({
+          try: () => listActiveRuntimeSummariesRaw(database.db, source),
+          catch: (error) =>
+            new ProjectServiceError({
+              operation: 'listActiveRuntimeSummaries',
+              message: error instanceof Error ? error.message : String(error),
+            }),
+        }).pipe(Effect.withSpan('db.project.listActiveRuntimeSummaries')),
+      listWorkspaceSummaries: (projectId, source) =>
+        Effect.try({
+          try: () => listWorkspaceSummariesRaw(database.db, projectId, source),
           catch: (error) =>
             new ProjectServiceError({
               operation: 'listWorkspaceSummaries',
@@ -75,9 +77,9 @@ export const ProjectServiceLive = Layer.effect(
             },
           }),
         ),
-      listModuleSummaries: (workspaceId) =>
+      listModuleSummaries: (workspaceId, source) =>
         Effect.try({
-          try: () => listModuleSummariesRaw(database.db, workspaceId),
+          try: () => listModuleSummariesRaw(database.db, workspaceId, source),
           catch: (error) =>
             new ProjectServiceError({
               operation: 'listModuleSummaries',

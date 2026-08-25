@@ -9,7 +9,7 @@ import { GitService, GitServiceLive, type GitServiceApi } from '@harbr/git'
 import {
   RuntimeDiscoveryService,
   type RuntimeDiscoveryServiceApi,
-} from '@harbr/runtime-tmux/discovery'
+} from '@harbr/runtime/discovery'
 import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -22,6 +22,11 @@ import {
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
+const runtimeSource = { provider: 'tmux', sourceId: 'test' }
+
+function runtimeIdentity(externalId: string) {
+  return { displayLabel: externalId, externalId, source: runtimeSource }
+}
 
 afterEach(async () => {
   await Promise.all(
@@ -265,7 +270,9 @@ describe('observeProject', () => {
         },
       ],
     })
-    expect([null, 'tmux_not_found']).toContain(observation.runtimeIssue)
+    expect([null, 'provider_not_found']).toContain(
+      observation.runtimeIssue?.code ?? null,
+    )
   })
 
   it('can run against a provided git service layer', async () => {
@@ -292,7 +299,7 @@ describe('observeProject', () => {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
-            sessionName: 'alpha',
+            identity: runtimeIdentity('alpha'),
             scope: 'project',
             projectName: 'alpha',
             workspaceName: null,
@@ -300,7 +307,8 @@ describe('observeProject', () => {
             status: 'open',
           },
         ],
-        runtimeIssue: 'tmux_not_found',
+        runtimeIssue: { code: 'provider_not_found', source: runtimeSource },
+        source: runtimeSource,
       }),
     }
 
@@ -327,7 +335,7 @@ describe('observeProject', () => {
       workspaces: [],
       runtimes: [
         {
-          sessionName: 'alpha',
+          identity: runtimeIdentity('alpha'),
           scope: 'project',
           projectName: 'alpha',
           workspaceName: null,
@@ -335,7 +343,8 @@ describe('observeProject', () => {
           status: 'open',
         },
       ],
-      runtimeIssue: 'tmux_not_found',
+      runtimeIssue: { code: 'provider_not_found', source: runtimeSource },
+      runtimeSource,
     })
   })
 
@@ -371,7 +380,11 @@ describe('observeProject', () => {
       resolveWorkspacePath: () => Effect.succeed(null),
     }
     const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
-      listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+      listRuntimes: Effect.succeed({
+        runtimes: [],
+        runtimeIssue: null,
+        source: runtimeSource,
+      }),
     }
 
     const observations = await Effect.runPromise(
@@ -412,7 +425,7 @@ describe('observeProject', () => {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
-            sessionName: 'alpha',
+            identity: runtimeIdentity('alpha'),
             scope: 'project',
             projectName: 'alpha',
             workspaceName: null,
@@ -420,7 +433,7 @@ describe('observeProject', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main',
+            identity: runtimeIdentity('alpha__main'),
             scope: 'workspace',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -428,7 +441,7 @@ describe('observeProject', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main__apps/cli',
+            identity: runtimeIdentity('alpha__main__apps/cli'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -436,7 +449,7 @@ describe('observeProject', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main__apps/tui',
+            identity: runtimeIdentity('alpha__main__apps/tui'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -445,6 +458,7 @@ describe('observeProject', () => {
           },
         ],
         runtimeIssue: null,
+        source: runtimeSource,
       }),
     }
 
@@ -507,7 +521,7 @@ describe('observeProject', () => {
       ],
       runtimes: [
         {
-          sessionName: 'alpha',
+          identity: runtimeIdentity('alpha'),
           scope: 'project',
           projectName: 'alpha',
           workspaceName: null,
@@ -515,7 +529,7 @@ describe('observeProject', () => {
           status: 'open',
         },
         {
-          sessionName: 'alpha__main',
+          identity: runtimeIdentity('alpha__main'),
           scope: 'workspace',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -523,7 +537,7 @@ describe('observeProject', () => {
           status: 'open',
         },
         {
-          sessionName: 'alpha__main__apps/cli',
+          identity: runtimeIdentity('alpha__main__apps/cli'),
           scope: 'module',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -532,6 +546,7 @@ describe('observeProject', () => {
         },
       ],
       runtimeIssue: null,
+      runtimeSource,
     })
   })
 
@@ -551,7 +566,7 @@ describe('observeProject', () => {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
-            sessionName: 'alpha~~main',
+            identity: runtimeIdentity('alpha~~main'),
             scope: 'workspace',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -559,7 +574,7 @@ describe('observeProject', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha~~main~~/',
+            identity: runtimeIdentity('alpha~~main~~/'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -568,6 +583,7 @@ describe('observeProject', () => {
           },
         ],
         runtimeIssue: null,
+        source: runtimeSource,
       }),
     }
 
@@ -630,7 +646,7 @@ describe('observeProject', () => {
       ],
       runtimes: [
         {
-          sessionName: 'alpha~~main',
+          identity: runtimeIdentity('alpha~~main'),
           scope: 'workspace',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -638,7 +654,7 @@ describe('observeProject', () => {
           status: 'open',
         },
         {
-          sessionName: 'alpha~~main~~/',
+          identity: runtimeIdentity('alpha~~main~~/'),
           scope: 'module',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -647,6 +663,7 @@ describe('observeProject', () => {
         },
       ],
       runtimeIssue: null,
+      runtimeSource,
     })
   })
 })
@@ -661,7 +678,11 @@ async function runScan(effect: ReturnType<typeof scanProject>) {
 
 async function runObservation(effect: ReturnType<typeof observeProject>) {
   const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
-    listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+    listRuntimes: Effect.succeed({
+      runtimes: [],
+      runtimeIssue: null,
+      source: runtimeSource,
+    }),
   }
 
   return Effect.runPromise(

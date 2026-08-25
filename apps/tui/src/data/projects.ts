@@ -1,6 +1,7 @@
 import { ConfigService } from '@harbr/config'
 import { ProjectService } from '@harbr/db'
 import type { ActiveRuntimeSummary, HarbourContext } from '@harbr/domain'
+import { RuntimeService } from '@harbr/runtime'
 import { Effect } from 'effect'
 import type { TuiServices } from '~/app-context'
 
@@ -30,8 +31,9 @@ export async function listProjectSummaries(services: TuiServices) {
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
       const projects = yield* ProjectService
+      const runtime = yield* RuntimeService
 
-      return yield* projects.listProjectSummaries
+      return yield* projects.listProjectSummaries(runtime.source)
     }),
   )
 }
@@ -42,8 +44,9 @@ export async function listActiveRuntimeSummaries(
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
       const projects = yield* ProjectService
+      const runtime = yield* RuntimeService
 
-      return yield* projects.listActiveRuntimeSummaries
+      return yield* projects.listActiveRuntimeSummaries(runtime.source)
     }),
   )
 }
@@ -55,8 +58,9 @@ export async function listWorkspaceSummaries(
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
       const projects = yield* ProjectService
+      const runtime = yield* RuntimeService
 
-      return yield* projects.listWorkspaceSummaries(projectId)
+      return yield* projects.listWorkspaceSummaries(projectId, runtime.source)
     }),
   )
 }
@@ -68,8 +72,9 @@ export async function listModuleSummaries(
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
       const projects = yield* ProjectService
+      const runtime = yield* RuntimeService
 
-      return yield* projects.listModuleSummaries(workspaceId)
+      return yield* projects.listModuleSummaries(workspaceId, runtime.source)
     }),
   )
 }

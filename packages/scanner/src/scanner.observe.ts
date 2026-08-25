@@ -3,7 +3,7 @@ import type { GitServiceApi } from '@harbr/git'
 import type {
   RuntimeDiscovery,
   RuntimeDiscoveryServiceApi,
-} from '@harbr/runtime-tmux/discovery'
+} from '@harbr/runtime/discovery'
 import { Effect } from 'effect'
 
 import { scanProject } from './scanner.scan'
@@ -84,6 +84,7 @@ function observeProjectWithDiscovery(
                     ),
                   ),
                   runtimeIssue: discovery.runtimeIssue,
+                  runtimeSource: discovery.source,
                 }) satisfies ProjectObservation,
             ),
           ),
