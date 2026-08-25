@@ -16,8 +16,11 @@ export async function parseWorktreeList(output: string) {
   for (const block of blocks) {
     const lines = block.split('\n')
     const worktreeLine = lines.find((line) => line.startsWith('worktree '))
+    const isPrunable = lines.some(
+      (line) => line === 'prunable' || line.startsWith('prunable '),
+    )
 
-    if (!worktreeLine) {
+    if (!worktreeLine || isPrunable) {
       continue
     }
 
