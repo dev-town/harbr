@@ -4,6 +4,11 @@ import {
   type RuntimeAttachment,
 } from '@harbr/domain'
 
+import {
+  getCannotCloseCurrentRuntimeNotice,
+  getCloseRuntimeLabel,
+} from '~/helpers/runtime-terminology'
+
 import type {
   HarbourRow,
   ActionRow,
@@ -307,11 +312,11 @@ function makeCloseSessionActionRow(
   return [
     makeActionRow(
       browseActionIds.closeRuntimeSession,
-      'Close session',
+      getCloseRuntimeLabel(runtime.identity),
       `${runtime.identity.source.provider} runtime`,
       target,
       isCurrentActiveRuntime(state, runtime)
-        ? 'Cannot close current session'
+        ? getCannotCloseCurrentRuntimeNotice(runtime.identity)
         : undefined,
     ),
   ]

@@ -1,4 +1,4 @@
-import type { RuntimeTarget } from '@harbr/domain'
+import type { RuntimeIdentity, RuntimeTarget } from '@harbr/domain'
 import { RuntimeService } from '@harbr/runtime'
 import { Effect, Layer } from 'effect'
 import { describe, expect, it } from 'vitest'
@@ -13,13 +13,18 @@ import { normalizeHerdrSnapshot } from './herdr.snapshot'
 import { getHerdrRuntimeSource } from './index'
 import { RuntimeServiceLayer } from './services/runtime-herdr.live'
 
-const source = { provider: 'herdr', sourceId: '/tmp/herdr/session.sock' }
+const source = getHerdrRuntimeSource()
 
 describe('getHerdrRuntimeSource', () => {
   it('uses the current Herdr socket as the contextual source', () => {
     expect(
-      getHerdrRuntimeSource({ HERDR_SOCKET_PATH: source.sourceId }),
-    ).toEqual(source)
+      getHerdrRuntimeSource({
+        HERDR_SOCKET_PATH: '/tmp/herdr/session.sock',
+      }),
+    ).toEqual({
+      provider: 'herdr',
+      sourceId: '/tmp/herdr/session.sock',
+    })
   })
 })
 
@@ -77,6 +82,44 @@ describe('normalizeHerdrSnapshot', () => {
 })
 
 describe('RuntimeService', () => {
+  it('closes a workspace by its stable Herdr ID', async () => {
+    const commands: string[][] = []
+    const layer = runtimeLayer(commands, snapshotFixture())
+
+    await closeRuntime(layer, identity('workspace-module'))
+
+    expect(commands).toEqual([['workspace', 'close', 'workspace-module']])
+  })
+
+  it('returns an actionable error when Herdr cannot close a workspace', async () => {
+    const client = Layer.succeed(HerdrClient, {
+      execute: () =>
+        Effect.fail(new HerdrUnavailable('workspace is busy', false)),
+    } satisfies HerdrClientApi)
+    const layer = RuntimeServiceLayer.pipe(Layer.provide(client))
+
+    const result = closeRuntime(layer, identity('workspace-module'))
+
+    await expect(result).rejects.toThrow(
+      'Herdr could not close this workspace: workspace is busy',
+    )
+  })
+
+  it('refuses to close a workspace from another runtime source', async () => {
+    const commands: string[][] = []
+    const layer = runtimeLayer(commands, snapshotFixture())
+
+    const result = closeRuntime(layer, {
+      ...identity('workspace-module'),
+      source: { provider: 'herdr', sourceId: `${source.sourceId}:other` },
+    })
+
+    await expect(result).rejects.toThrow(
+      'Runtime does not belong to the active Herdr source',
+    )
+    expect(commands).toEqual([])
+  })
+
   it('focuses an existing workspace by its stable Herdr ID', async () => {
     const commands: string[][] = []
     const target = {
@@ -157,6 +200,22 @@ async function openRuntime(
       yield* runtime.openOrCreateRuntime(target)
     }).pipe(Effect.provide(layer)),
   )
+}
+
+async function closeRuntime(
+  layer: Layer.Layer<RuntimeService>,
+  targetIdentity: RuntimeIdentity,
+) {
+  await Effect.runPromise(
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeService
+      yield* runtime.closeRuntime(targetIdentity)
+    }).pipe(Effect.provide(layer)),
+  )
+}
+
+function identity(externalId: string): RuntimeIdentity {
+  return { displayLabel: externalId, externalId, source }
 }
 
 function runtimeLayer(commands: string[][], snapshot: unknown) {

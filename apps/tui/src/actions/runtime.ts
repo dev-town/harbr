@@ -16,6 +16,7 @@ import type {
 } from '~/types/rows'
 import { saveUiContext } from '~/data'
 import { formatError } from '~/helpers/errors'
+import { getCannotCloseCurrentRuntimeNotice } from '~/helpers/runtime-terminology'
 import { loadProjects } from './refresh'
 
 export async function persistContext(
@@ -85,6 +86,7 @@ export async function closeActiveRuntime(
   services: TuiServices,
   store: TuiStore,
   row: HarbourRow & { runtime: RuntimeAttachment },
+  hooks: CloseRuntimeHooks = defaultCloseRuntimeHooks,
 ) {
   const currentRuntime = store.getState().app.currentRuntime
 
@@ -93,7 +95,12 @@ export async function closeActiveRuntime(
     (currentRuntime &&
       isSameRuntimeIdentity(currentRuntime.identity, row.runtime.identity))
   ) {
-    store.getState().setNotice('Cannot close current session', 'warning')
+    store
+      .getState()
+      .setNotice(
+        getCannotCloseCurrentRuntimeNotice(row.runtime.identity),
+        'warning',
+      )
     return
   }
 
@@ -109,12 +116,20 @@ export async function closeActiveRuntime(
       }),
     )
     store.getState().closeActionsMenu()
-    await loadProjects(services, store)
+    await hooks.refresh(services, store)
   } catch (error) {
     store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }
+}
+
+type CloseRuntimeHooks = {
+  refresh: typeof loadProjects
+}
+
+const defaultCloseRuntimeHooks: CloseRuntimeHooks = {
+  refresh: loadProjects,
 }
 
 export async function openRuntimeForTarget(

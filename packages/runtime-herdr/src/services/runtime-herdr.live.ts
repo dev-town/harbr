@@ -1,6 +1,11 @@
 import { normalize, resolve } from 'node:path'
 
-import type { CurrentRuntime, RuntimeDiscovery } from '@harbr/domain'
+import {
+  isSameRuntimeSource,
+  type CurrentRuntime,
+  type RuntimeDiscovery,
+  type RuntimeIdentity,
+} from '@harbr/domain'
 import {
   RuntimeDiscoveryService,
   RuntimeProviderError,
@@ -39,7 +44,7 @@ export const RuntimeServiceLayer = Layer.effect(
     const client = yield* HerdrClient
 
     return {
-      closeRuntime: () => unsupported('closeRuntime'),
+      closeRuntime: (identity) => closeRuntimeLive(client, identity),
       createRuntimeWindows: () => unsupported('createRuntimeWindows'),
       getCurrentRuntime: getCurrentRuntimeLive(client),
       openOrCreateRuntime: (target) => openOrCreateRuntimeLive(client, target),
@@ -79,6 +84,35 @@ function discoverHerdrRuntimes(client: HerdrClientApi) {
       }),
     ),
     Effect.withSpan('runtime.herdr.listRuntimes'),
+  )
+}
+
+function closeRuntimeLive(client: HerdrClientApi, identity: RuntimeIdentity) {
+  if (!isSameRuntimeSource(identity.source, source)) {
+    return Effect.fail(
+      new RuntimeProviderError({
+        message: 'Runtime does not belong to the active Herdr source',
+        operation: 'closeRuntime',
+        provider: source.provider,
+      }),
+    )
+  }
+
+  return client.execute(['workspace', 'close', identity.externalId]).pipe(
+    Effect.mapError(
+      (error) =>
+        new RuntimeProviderError({
+          message: `Herdr could not close this workspace: ${error.message}`,
+          operation: 'closeRuntime',
+          provider: source.provider,
+        }),
+    ),
+    Effect.asVoid,
+    Effect.withSpan('runtime.herdr.closeRuntime', {
+      attributes: {
+        'herdr.workspace.id': identity.externalId,
+      },
+    }),
   )
 }
 
