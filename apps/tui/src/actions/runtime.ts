@@ -122,12 +122,12 @@ export async function openRuntimeForTarget(
   store: TuiStore,
   target: RuntimeTarget,
   nextContext: HarbourContext,
+  hooks: OpenRuntimeHooks = defaultOpenRuntimeHooks,
 ) {
   store.getState().setLoading(true)
   store.getState().clearNotice()
 
   try {
-    await persistContext(services, nextContext)
     await services.effectRuntime.runPromise(
       Effect.gen(function* () {
         const runtime = yield* RuntimeService
@@ -135,10 +135,23 @@ export async function openRuntimeForTarget(
         yield* runtime.openOrCreateRuntime(target)
       }),
     )
+    await hooks.persistContext(services, nextContext)
+    await hooks.refresh(services, store)
+    store.getState().closeActionsMenu()
     await services.shutdown()
   } catch (error) {
     store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }
+}
+
+type OpenRuntimeHooks = {
+  persistContext: typeof persistContext
+  refresh: typeof loadProjects
+}
+
+const defaultOpenRuntimeHooks: OpenRuntimeHooks = {
+  persistContext,
+  refresh: loadProjects,
 }

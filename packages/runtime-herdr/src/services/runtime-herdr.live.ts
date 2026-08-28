@@ -1,5 +1,4 @@
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
+import { normalize, resolve } from 'node:path'
 
 import type { CurrentRuntime, RuntimeDiscovery } from '@harbr/domain'
 import {
@@ -11,29 +10,54 @@ import {
 } from '@harbr/runtime'
 import { Effect, Layer } from 'effect'
 
+import {
+  HerdrClient,
+  HerdrClientLive,
+  HerdrUnavailable,
+  type HerdrClientApi,
+} from '../herdr.client'
+import { formatHerdrWorkspaceLabel } from '../herdr.label'
 import { getHerdrRuntimeSource } from '../herdr.source'
 import { normalizeHerdrSnapshot } from '../herdr.snapshot'
 
-const execFileAsync = promisify(execFile)
 const source = getHerdrRuntimeSource()
 
-export const RuntimeDiscoveryServiceLive = Layer.succeed(
+export const RuntimeDiscoveryServiceLayer = Layer.effect(
   RuntimeDiscoveryService,
-  {
-    listRuntimes: discoverHerdrRuntimes(),
-  } satisfies RuntimeDiscoveryServiceApi,
+  Effect.gen(function* () {
+    const client = yield* HerdrClient
+
+    return {
+      listRuntimes: discoverHerdrRuntimes(client),
+    } satisfies RuntimeDiscoveryServiceApi
+  }),
 )
 
-export const RuntimeServiceLive = Layer.succeed(RuntimeService, {
-  closeRuntime: () => unsupported('closeRuntime'),
-  createRuntimeWindows: () => unsupported('createRuntimeWindows'),
-  getCurrentRuntime: getCurrentRuntimeLive(),
-  openOrCreateRuntime: () => unsupported('openOrCreateRuntime'),
-  source,
-} satisfies RuntimeServiceApi)
+export const RuntimeServiceLayer = Layer.effect(
+  RuntimeService,
+  Effect.gen(function* () {
+    const client = yield* HerdrClient
 
-function discoverHerdrRuntimes() {
-  return readNormalizedSnapshot().pipe(
+    return {
+      closeRuntime: () => unsupported('closeRuntime'),
+      createRuntimeWindows: () => unsupported('createRuntimeWindows'),
+      getCurrentRuntime: getCurrentRuntimeLive(client),
+      openOrCreateRuntime: (target) => openOrCreateRuntimeLive(client, target),
+      source,
+    } satisfies RuntimeServiceApi
+  }),
+)
+
+export const RuntimeDiscoveryServiceLive = RuntimeDiscoveryServiceLayer.pipe(
+  Layer.provide(HerdrClientLive),
+)
+
+export const RuntimeServiceLive = RuntimeServiceLayer.pipe(
+  Layer.provide(HerdrClientLive),
+)
+
+function discoverHerdrRuntimes(client: HerdrClientApi) {
+  return readNormalizedSnapshot(client).pipe(
     Effect.map(
       (snapshot) =>
         ({
@@ -58,8 +82,8 @@ function discoverHerdrRuntimes() {
   )
 }
 
-function getCurrentRuntimeLive() {
-  return readNormalizedSnapshot().pipe(
+function getCurrentRuntimeLive(client: HerdrClientApi) {
+  return readNormalizedSnapshot(client).pipe(
     Effect.map((snapshot) => snapshot.currentRuntime),
     Effect.catchTag('HerdrUnavailable', () =>
       Effect.succeed<CurrentRuntime>(null),
@@ -68,36 +92,72 @@ function getCurrentRuntimeLive() {
   )
 }
 
-class HerdrUnavailable extends Error {
-  readonly _tag = 'HerdrUnavailable'
+function openOrCreateRuntimeLive(
+  client: HerdrClientApi,
+  target: Parameters<RuntimeServiceApi['openOrCreateRuntime']>[0],
+) {
+  return Effect.gen(function* () {
+    const snapshot = yield* readNormalizedSnapshot(client)
+    const existing = snapshot.runtimes.find(
+      (runtime) =>
+        canonicalPath(runtime.contextPath) === canonicalPath(target.cwd),
+    )
 
-  constructor(
-    message: string,
-    readonly providerMissing: boolean,
-  ) {
-    super(message)
-  }
+    if (existing) {
+      yield* client.execute([
+        'workspace',
+        'focus',
+        existing.identity.externalId,
+      ])
+      return
+    }
+
+    yield* client.execute([
+      'workspace',
+      'create',
+      '--cwd',
+      target.cwd,
+      '--label',
+      formatHerdrWorkspaceLabel(target),
+      '--focus',
+    ])
+  }).pipe(
+    Effect.mapError(
+      (error) =>
+        new RuntimeProviderError({
+          message: `Herdr could not open this context: ${error.message}`,
+          operation: 'openOrCreateRuntime',
+          provider: source.provider,
+        }),
+    ),
+    Effect.withSpan('runtime.herdr.openOrCreateRuntime', {
+      attributes: {
+        'harbr.project.name': target.projectName,
+        'harbr.runtime.scope': getRuntimeTargetScope(target),
+      },
+    }),
+  )
 }
 
-function readNormalizedSnapshot() {
-  return Effect.tryPromise({
-    try: async () => {
-      const { stdout } = await execFileAsync(
-        process.env.HERDR_BIN_PATH || 'herdr',
-        ['api', 'snapshot'],
-      )
-      return normalizeHerdrSnapshot(
-        JSON.parse(stdout) as unknown,
-        source,
-        process.env.HERDR_WORKSPACE_ID,
-      )
-    },
-    catch: (error) =>
-      new HerdrUnavailable(
-        error instanceof Error ? error.message : String(error),
-        isExecError(error) && error.code === 'ENOENT',
-      ),
-  })
+function readNormalizedSnapshot(client: HerdrClientApi) {
+  return client.execute(['api', 'snapshot']).pipe(
+    Effect.flatMap((stdout) =>
+      Effect.try({
+        try: () =>
+          normalizeHerdrSnapshot(
+            JSON.parse(stdout) as unknown,
+            source,
+            process.env.HERDR_ACTIVE_WORKSPACE_ID ||
+              process.env.HERDR_WORKSPACE_ID,
+          ),
+        catch: (error) =>
+          new HerdrUnavailable(
+            error instanceof Error ? error.message : String(error),
+            false,
+          ),
+      }),
+    ),
+  )
 }
 
 function unsupported(operation: string) {
@@ -110,8 +170,20 @@ function unsupported(operation: string) {
   )
 }
 
-function isExecError(
-  error: unknown,
-): error is Error & { code?: number | string | undefined } {
-  return error instanceof Error
+function canonicalPath(path: string) {
+  return normalize(resolve(path))
+}
+
+function getRuntimeTargetScope(
+  target: Parameters<RuntimeServiceApi['openOrCreateRuntime']>[0],
+) {
+  if (target.moduleName) {
+    return 'module'
+  }
+
+  if (target.workspaceName) {
+    return 'workspace'
+  }
+
+  return 'project'
 }
