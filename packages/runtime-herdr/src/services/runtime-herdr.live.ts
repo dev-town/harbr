@@ -22,6 +22,7 @@ import {
   type HerdrClientApi,
 } from '../herdr.client'
 import { formatHerdrWorkspaceLabel } from '../herdr.label'
+import { createHerdrRuntimeWindows } from '../herdr.layout'
 import { getHerdrRuntimeSource } from '../herdr.source'
 import { normalizeHerdrSnapshot } from '../herdr.snapshot'
 
@@ -45,7 +46,8 @@ export const RuntimeServiceLayer = Layer.effect(
 
     return {
       closeRuntime: (identity) => closeRuntimeLive(client, identity),
-      createRuntimeWindows: () => unsupported('createRuntimeWindows'),
+      createRuntimeWindows: (input) =>
+        createHerdrRuntimeWindows(client, input, source),
       getCurrentRuntime: getCurrentRuntimeLive(client),
       openOrCreateRuntime: (target) => openOrCreateRuntimeLive(client, target),
       source,
@@ -191,16 +193,6 @@ function readNormalizedSnapshot(client: HerdrClientApi) {
           ),
       }),
     ),
-  )
-}
-
-function unsupported(operation: string) {
-  return Effect.fail(
-    new RuntimeProviderError({
-      message: 'Herdr runtime mutations are not available in this release',
-      operation,
-      provider: source.provider,
-    }),
   )
 }
 

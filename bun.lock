@@ -39,6 +39,7 @@
         "zustand": "^5.0.14",
       },
       "devDependencies": {
+        "@harbr/test-utils": "workspace:*",
         "@types/react": "^19.2.17",
       },
     },
@@ -99,6 +100,9 @@
         "@harbr/domain": "workspace:*",
         "effect": "catalog:",
       },
+      "devDependencies": {
+        "@harbr/test-utils": "workspace:*",
+      },
     },
     "packages/runtime-herdr": {
       "name": "@harbr/runtime-herdr",
@@ -107,6 +111,9 @@
         "@harbr/runtime": "workspace:*",
         "effect": "catalog:",
       },
+      "devDependencies": {
+        "@harbr/test-utils": "workspace:*",
+      },
     },
     "packages/runtime-tmux": {
       "name": "@harbr/runtime-tmux",
@@ -114,6 +121,9 @@
         "@harbr/domain": "workspace:*",
         "@harbr/runtime": "workspace:*",
         "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@harbr/test-utils": "workspace:*",
       },
     },
     "packages/scanner": {
@@ -127,6 +137,9 @@
     },
     "packages/test-utils": {
       "name": "@harbr/test-utils",
+      "dependencies": {
+        "@harbr/domain": "workspace:*",
+      },
     },
   },
   "catalog": {

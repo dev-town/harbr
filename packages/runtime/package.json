@@ -10,6 +10,9 @@
     "@harbr/domain": "workspace:*",
     "effect": "catalog:"
   },
+  "devDependencies": {
+    "@harbr/test-utils": "workspace:*"
+  },
   "scripts": {
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",

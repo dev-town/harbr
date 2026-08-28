@@ -4,23 +4,33 @@ import type {
   RuntimeSource,
 } from '@harbr/domain'
 
-type HerdrWorkspace = {
+export type HerdrWorkspace = {
   readonly focused?: boolean
   readonly label: string
   readonly workspace_id: string
   readonly worktree?: { readonly checkout_path?: string } | null
 }
 
-type HerdrPane = {
+export type HerdrPane = {
   readonly cwd?: string | null
   readonly focused?: boolean
   readonly foreground_cwd?: string | null
+  readonly label?: string | null
+  readonly pane_id?: string
+  readonly tab_id?: string
   readonly workspace_id: string
 }
 
-type HerdrSessionSnapshot = {
+export type HerdrTab = {
+  readonly label: string
+  readonly tab_id: string
+  readonly workspace_id: string
+}
+
+export type HerdrSessionSnapshot = {
   readonly focused_workspace_id?: string | null
   readonly panes: readonly HerdrPane[]
+  readonly tabs: readonly HerdrTab[]
   readonly workspaces: readonly HerdrWorkspace[]
 }
 
@@ -34,7 +44,7 @@ export function normalizeHerdrSnapshot(
   source: RuntimeSource,
   launchWorkspaceId?: string,
 ): NormalizedHerdrSnapshot {
-  const snapshot = readSnapshot(input)
+  const snapshot = readHerdrSessionSnapshot(input)
   const runtimes = snapshot.workspaces.flatMap((workspace) => {
     const contextPath = findWorkspacePath(snapshot.panes, workspace)
 
@@ -68,7 +78,7 @@ export function normalizeHerdrSnapshot(
   }
 }
 
-function readSnapshot(input: unknown): HerdrSessionSnapshot {
+export function readHerdrSessionSnapshot(input: unknown): HerdrSessionSnapshot {
   if (!isRecord(input)) {
     throw new Error('Herdr snapshot response is not an object')
   }
@@ -85,6 +95,7 @@ function readSnapshot(input: unknown): HerdrSessionSnapshot {
 
   const workspaces = snapshot.workspaces.map(readWorkspace)
   const panes = snapshot.panes.map(readPane)
+  const tabs = Array.isArray(snapshot.tabs) ? snapshot.tabs.map(readTab) : []
 
   return {
     focused_workspace_id:
@@ -92,6 +103,7 @@ function readSnapshot(input: unknown): HerdrSessionSnapshot {
         ? snapshot.focused_workspace_id
         : null,
     panes,
+    tabs,
     workspaces,
   }
 }
@@ -129,6 +141,26 @@ function readPane(input: unknown): HerdrPane {
     focused: input.focused === true,
     foreground_cwd:
       typeof input.foreground_cwd === 'string' ? input.foreground_cwd : null,
+    label: typeof input.label === 'string' ? input.label : null,
+    ...(typeof input.pane_id === 'string' ? { pane_id: input.pane_id } : {}),
+    ...(typeof input.tab_id === 'string' ? { tab_id: input.tab_id } : {}),
+    workspace_id: input.workspace_id,
+  }
+}
+
+function readTab(input: unknown): HerdrTab {
+  if (
+    !isRecord(input) ||
+    typeof input.tab_id !== 'string' ||
+    typeof input.workspace_id !== 'string' ||
+    typeof input.label !== 'string'
+  ) {
+    throw new Error('Herdr snapshot contains an invalid tab')
+  }
+
+  return {
+    label: input.label,
+    tab_id: input.tab_id,
     workspace_id: input.workspace_id,
   }
 }

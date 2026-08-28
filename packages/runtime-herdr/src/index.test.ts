@@ -1,5 +1,9 @@
 import type { RuntimeIdentity, RuntimeTarget } from '@harbr/domain'
 import { RuntimeService } from '@harbr/runtime'
+import {
+  runtimeLayoutTargetFixture,
+  runtimeLayoutWindowsFixture,
+} from '@harbr/test-utils'
 import { Effect, Layer } from 'effect'
 import { describe, expect, it } from 'vitest'
 
@@ -82,6 +86,112 @@ describe('normalizeHerdrSnapshot', () => {
 })
 
 describe('RuntimeService', () => {
+  it('applies the shared logical layout as idempotent Herdr tabs and panes', async () => {
+    const commands: string[][] = []
+    const layer = layoutRuntimeLayer(commands)
+
+    const first = await createRuntimeWindows(layer, runtimeLayoutWindowsFixture)
+    const second = await createRuntimeWindows(
+      layer,
+      runtimeLayoutWindowsFixture,
+    )
+
+    expect(first).toEqual({
+      createdWindowNames: ['Editor', 'Logs'],
+      skippedWindowNames: [],
+    })
+    expect(second).toEqual({
+      createdWindowNames: [],
+      skippedWindowNames: ['Editor', 'Logs'],
+    })
+    expect(commands).toEqual([
+      ['api', 'snapshot'],
+      ['tab', 'rename', 'tab-initial', 'Editor'],
+      ['pane', 'rename', 'pane-initial', 'Code'],
+      ['pane', 'run', 'pane-initial', 'nvim .'],
+      [
+        'pane',
+        'split',
+        'pane-initial',
+        '--direction',
+        'right',
+        '--cwd',
+        '/work/alpha-feature/apps/cli',
+        '--no-focus',
+      ],
+      ['pane', 'rename', 'pane-split-1', 'Tests'],
+      ['pane', 'run', 'pane-split-1', 'bun run test'],
+      ['pane', 'run', 'pane-split-1', 'bun run lint'],
+      [
+        'tab',
+        'create',
+        '--workspace',
+        'workspace-feature',
+        '--cwd',
+        '/var/log/alpha',
+        '--label',
+        'Logs',
+        '--no-focus',
+      ],
+      ['pane', 'rename', 'pane-logs', 'Server logs'],
+      ['workspace', 'focus', 'workspace-feature'],
+      ['api', 'snapshot'],
+    ])
+  })
+
+  it('removes an unused automatic initial tab after creating the configured tab', async () => {
+    const commands: string[][] = []
+    const layer = layoutRuntimeLayer(commands)
+
+    const result = await createRuntimeWindows(
+      layer,
+      runtimeLayoutWindowsFixture.slice(1),
+    )
+
+    expect(result.createdWindowNames).toEqual(['Logs'])
+    expect(commands).toContainEqual(['tab', 'close', 'tab-initial'])
+  })
+
+  it('creates a missing workspace before applying its layout', async () => {
+    const commands: string[][] = []
+    const layer = layoutRuntimeLayer(commands, false)
+
+    const result = await createRuntimeWindows(
+      layer,
+      runtimeLayoutWindowsFixture.slice(0, 1),
+    )
+
+    expect(result.createdWindowNames).toEqual(['Editor'])
+    expect(commands.slice(0, 3)).toEqual([
+      ['api', 'snapshot'],
+      [
+        'workspace',
+        'create',
+        '--cwd',
+        '/work/alpha-feature',
+        '--label',
+        'alpha › feature',
+        '--no-focus',
+      ],
+      ['api', 'snapshot'],
+    ])
+  })
+
+  it('returns a structured provider error when layout application fails', async () => {
+    const snapshot = layoutSnapshotFixture()
+    const client = Layer.succeed(HerdrClient, {
+      execute: (args) =>
+        args[0] === 'api'
+          ? Effect.succeed(JSON.stringify(snapshot))
+          : Effect.fail(new HerdrUnavailable('tab creation failed', false)),
+    } satisfies HerdrClientApi)
+    const layer = RuntimeServiceLayer.pipe(Layer.provide(client))
+
+    await expect(
+      createRuntimeWindows(layer, runtimeLayoutWindowsFixture),
+    ).rejects.toThrow('Herdr could not apply this layout: tab creation failed')
+  })
+
   it('closes a workspace by its stable Herdr ID', async () => {
     const commands: string[][] = []
     const layer = runtimeLayer(commands, snapshotFixture())
@@ -214,6 +324,21 @@ async function closeRuntime(
   )
 }
 
+async function createRuntimeWindows(
+  layer: Layer.Layer<RuntimeService>,
+  windows: typeof runtimeLayoutWindowsFixture,
+) {
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeService
+      return yield* runtime.createRuntimeWindows({
+        target: runtimeLayoutTargetFixture,
+        windows,
+      })
+    }).pipe(Effect.provide(layer)),
+  )
+}
+
 function identity(externalId: string): RuntimeIdentity {
   return { displayLabel: externalId, externalId, source }
 }
@@ -228,6 +353,187 @@ function runtimeLayer(commands: string[][], snapshot: unknown) {
   } satisfies HerdrClientApi)
 
   return RuntimeServiceLayer.pipe(Layer.provide(client))
+}
+
+function layoutRuntimeLayer(commands: string[][], hasWorkspace = true) {
+  const workspaceId = 'workspace-feature'
+  const tabs: Array<{
+    focused: boolean
+    label: string
+    pane_count: number
+    tab_id: string
+    workspace_id: string
+  }> = []
+  const panes: Array<{
+    cwd: string
+    focused: boolean
+    label: string | null
+    pane_id: string
+    tab_id: string
+    workspace_id: string
+  }> = []
+
+  if (hasWorkspace) {
+    addInitialSurface()
+  }
+
+  const client = Layer.succeed(HerdrClient, {
+    execute: (args) =>
+      Effect.sync(() => {
+        commands.push([...args])
+
+        if (args[0] === 'api') {
+          return JSON.stringify(layoutSnapshotFixture(tabs, panes))
+        }
+
+        if (args[0] === 'workspace' && args[1] === 'create') {
+          addInitialSurface()
+          return creationResponse(
+            'workspace-feature',
+            'tab-initial',
+            'pane-initial',
+          )
+        }
+
+        if (args[0] === 'tab' && args[1] === 'rename') {
+          const tab = tabs.find((candidate) => candidate.tab_id === args[2])
+          if (tab) tab.label = args[3] ?? ''
+          return '{}'
+        }
+
+        if (args[0] === 'tab' && args[1] === 'create') {
+          const label = args[args.indexOf('--label') + 1] ?? 'tab'
+          const slug = label.toLowerCase()
+          const tabId = `tab-${slug}`
+          const paneId = `pane-${slug}`
+          tabs.push({
+            focused: false,
+            label,
+            pane_count: 1,
+            tab_id: tabId,
+            workspace_id: workspaceId,
+          })
+          panes.push({
+            cwd: args[args.indexOf('--cwd') + 1] ?? '',
+            focused: false,
+            label: null,
+            pane_id: paneId,
+            tab_id: tabId,
+            workspace_id: workspaceId,
+          })
+          return creationResponse(undefined, tabId, paneId)
+        }
+
+        if (args[0] === 'tab' && args[1] === 'close') {
+          const tabIndex = tabs.findIndex((tab) => tab.tab_id === args[2])
+          if (tabIndex >= 0) tabs.splice(tabIndex, 1)
+          const remainingPanes = panes.filter((pane) => pane.tab_id !== args[2])
+          panes.splice(0, panes.length, ...remainingPanes)
+          return '{}'
+        }
+
+        if (args[0] === 'pane' && args[1] === 'split') {
+          const target = panes.find((pane) => pane.pane_id === args[2])
+          const paneId = `pane-split-${panes.length}`
+          panes.push({
+            cwd: args[args.indexOf('--cwd') + 1] ?? '',
+            focused: false,
+            label: null,
+            pane_id: paneId,
+            tab_id: target?.tab_id ?? '',
+            workspace_id: workspaceId,
+          })
+          return JSON.stringify({ result: { pane: { pane_id: paneId } } })
+        }
+
+        if (args[0] === 'pane' && args[1] === 'rename') {
+          const pane = panes.find((candidate) => candidate.pane_id === args[2])
+          if (pane) pane.label = args[3] ?? ''
+        }
+
+        return '{}'
+      }),
+  } satisfies HerdrClientApi)
+
+  return RuntimeServiceLayer.pipe(Layer.provide(client))
+
+  function addInitialSurface() {
+    tabs.push({
+      focused: true,
+      label: 'shell',
+      pane_count: 1,
+      tab_id: 'tab-initial',
+      workspace_id: workspaceId,
+    })
+    panes.push({
+      cwd: runtimeLayoutTargetFixture.cwd,
+      focused: true,
+      label: null,
+      pane_id: 'pane-initial',
+      tab_id: 'tab-initial',
+      workspace_id: workspaceId,
+    })
+  }
+}
+
+function layoutSnapshotFixture(
+  tabs: readonly unknown[] = [
+    {
+      focused: true,
+      label: 'shell',
+      pane_count: 1,
+      tab_id: 'tab-initial',
+      workspace_id: 'workspace-feature',
+    },
+  ],
+  panes: readonly unknown[] = [
+    {
+      cwd: runtimeLayoutTargetFixture.cwd,
+      focused: true,
+      label: null,
+      pane_id: 'pane-initial',
+      tab_id: 'tab-initial',
+      workspace_id: 'workspace-feature',
+    },
+  ],
+) {
+  return {
+    result: {
+      type: 'session_snapshot',
+      snapshot: {
+        focused_workspace_id: 'workspace-feature',
+        panes,
+        tabs,
+        workspaces:
+          tabs.length > 0
+            ? [
+                {
+                  focused: true,
+                  label: 'Alpha feature',
+                  workspace_id: 'workspace-feature',
+                  worktree: {
+                    checkout_path: runtimeLayoutTargetFixture.cwd,
+                  },
+                },
+              ]
+            : [],
+      },
+    },
+  }
+}
+
+function creationResponse(
+  workspaceId: string | undefined,
+  tabId: string,
+  paneId: string,
+) {
+  return JSON.stringify({
+    result: {
+      root_pane: { pane_id: paneId },
+      tab: { tab_id: tabId },
+      ...(workspaceId ? { workspace: { workspace_id: workspaceId } } : {}),
+    },
+  })
 }
 
 function runtimeTarget(scope: 'module' | 'project' | 'workspace') {

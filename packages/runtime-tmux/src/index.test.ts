@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { Effect, Layer } from 'effect'
 import type { RuntimeTarget } from '@harbr/domain'
-import { RuntimeDiscoveryService, RuntimeService } from '@harbr/runtime'
+import {
+  RuntimeDiscoveryService,
+  RuntimeService,
+  normalizeRuntimePaneCommands,
+  resolveRuntimePaneCwd,
+} from '@harbr/runtime'
+import {
+  runtimeLayoutTargetFixture,
+  runtimeLayoutWindowsFixture,
+} from '@harbr/test-utils'
 
 import type {
   CreateRuntimeWindowsResult,
@@ -142,6 +151,47 @@ describe('session helpers', () => {
         moduleName: '/',
       }),
     ).toBe('alpha~~main~~/')
+  })
+})
+
+describe('layout semantics', () => {
+  it('maps the shared logical fixture to tmux window and pane inputs', () => {
+    expect(
+      runtimeLayoutWindowsFixture.map((window) => ({
+        name: window.name,
+        panes: window.panes.map((pane) => ({
+          commands: normalizeRuntimePaneCommands(pane.command),
+          cwd: resolveRuntimePaneCwd(runtimeLayoutTargetFixture.cwd, pane.cwd),
+          name: pane.name,
+        })),
+      })),
+    ).toEqual([
+      {
+        name: 'Editor',
+        panes: [
+          {
+            commands: ['nvim .'],
+            cwd: '/work/alpha-feature',
+            name: 'Code',
+          },
+          {
+            commands: ['bun run test', 'bun run lint'],
+            cwd: '/work/alpha-feature/apps/cli',
+            name: 'Tests',
+          },
+        ],
+      },
+      {
+        name: 'Logs',
+        panes: [
+          {
+            commands: [],
+            cwd: '/var/log/alpha',
+            name: 'Server logs',
+          },
+        ],
+      },
+    ])
   })
 })
 

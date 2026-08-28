@@ -1,5 +1,4 @@
 import { execFile } from 'node:child_process'
-import { isAbsolute, join } from 'node:path'
 import { promisify } from 'node:util'
 
 import { Effect, Layer } from 'effect'
@@ -13,6 +12,8 @@ import {
   RuntimeDiscoveryService,
   RuntimeProviderError,
   RuntimeService,
+  normalizeRuntimePaneCommands,
+  resolveRuntimePaneCwd,
   type CreateRuntimeWindowsResult,
   type CurrentRuntime,
   type RuntimeDiscovery,
@@ -314,7 +315,7 @@ async function createWindowLayout(
   const firstPaneId = await createWindowPane(
     sessionName,
     window.name,
-    resolvePaneCwd(runtimeCwd, firstPane.cwd),
+    resolveRuntimePaneCwd(runtimeCwd, firstPane.cwd),
   )
   const panes = [{ id: firstPaneId, config: firstPane }]
 
@@ -323,7 +324,7 @@ async function createWindowLayout(
   for (const pane of window.panes.slice(1)) {
     const paneId = await splitWindowPane(
       firstPaneId,
-      resolvePaneCwd(runtimeCwd, pane.cwd),
+      resolveRuntimePaneCwd(runtimeCwd, pane.cwd),
     )
     await setPaneName(paneId, pane.name)
     panes.push({ id: paneId, config: pane })
@@ -347,7 +348,7 @@ async function createSessionWindowLayout(
   const firstPaneId = await createSessionWindowPane(
     sessionName,
     window.name,
-    firstPane ? resolvePaneCwd(runtimeCwd, firstPane.cwd) : runtimeCwd,
+    firstPane ? resolveRuntimePaneCwd(runtimeCwd, firstPane.cwd) : runtimeCwd,
   )
 
   if (!firstPane) {
@@ -361,7 +362,7 @@ async function createSessionWindowLayout(
   for (const pane of window.panes.slice(1)) {
     const paneId = await splitWindowPane(
       firstPaneId,
-      resolvePaneCwd(runtimeCwd, pane.cwd),
+      resolveRuntimePaneCwd(runtimeCwd, pane.cwd),
     )
     await setPaneName(paneId, pane.name)
     panes.push({ id: paneId, config: pane })
@@ -444,27 +445,9 @@ async function sendPaneCommands(
   paneId: string,
   paneCommand: RuntimeWindowCreation['windows'][number]['panes'][number]['command'],
 ) {
-  for (const command of normalizePaneCommands(paneCommand)) {
+  for (const command of normalizeRuntimePaneCommands(paneCommand)) {
     await execTmux(['send-keys', '-t', paneId, command, 'C-m'])
   }
-}
-
-function normalizePaneCommands(
-  command: string | readonly string[] | undefined,
-) {
-  if (!command) {
-    return []
-  }
-
-  return typeof command === 'string' ? [command] : command
-}
-
-function resolvePaneCwd(runtimeCwd: string, paneCwd: string | undefined) {
-  if (!paneCwd) {
-    return runtimeCwd
-  }
-
-  return isAbsolute(paneCwd) ? paneCwd : join(runtimeCwd, paneCwd)
 }
 
 async function listRuntimeDiscoverySafe() {
