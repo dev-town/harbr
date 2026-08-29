@@ -1,5 +1,15 @@
 # @harbr/tui
 
+## 0.1.0-beta.5
+
+### Minor Changes
+
+- 791545d: Boot time improvements
+
+### Patch Changes
+
+- 14974dd: Add a checksum-verified installer for macOS and Linux release binaries.
+
 ## 0.1.0-beta.4
 
 ### Minor Changes
