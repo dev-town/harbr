@@ -6,6 +6,9 @@ import {
   isVersionRequest,
 } from '~/cli/help'
 
+const processStartedAtUnixNanos = BigInt(Date.now()) * 1_000_000n
+const processStartedAt = performance.now()
+
 const args = process.argv.slice(2)
 const command = args[0]?.startsWith('-') ? undefined : args[0]
 const commandArgs = command ? args.slice(1) : args
@@ -23,7 +26,11 @@ if (command === 'help' || (!command && isHelpRequest(args))) {
     process.exitCode = 0
   } else {
     const { launchTui } = await import('./launch-tui')
-    await launchTui(commandArgs)
+    await launchTui(commandArgs, {
+      processStartedAt,
+      processStartedAtUnixNanos,
+      tuiModuleLoadedAt: performance.now(),
+    })
   }
 } else if (command === 'sync') {
   const { runSyncCommand } = await import('./commands/sync')

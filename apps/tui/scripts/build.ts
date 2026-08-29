@@ -11,6 +11,7 @@ await rm('./dist', { force: true, recursive: true })
 const result = await Bun.build({
   conditions: ['node'],
   entrypoints: ['./src/index.tsx'],
+  bytecode: true,
   format: 'esm',
   minify: true,
   target: 'bun',

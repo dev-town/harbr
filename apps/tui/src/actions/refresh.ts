@@ -20,30 +20,37 @@ import {
 import { restoreCurrentRuntime, restoreUiContext } from './restore'
 
 export async function loadProjects(services: TuiServices, store: TuiStore) {
+  services.startupTelemetry.mark('data.load_started')
   store.getState().setLoading(true)
   store.getState().clearNotice()
 
   try {
     const syncResult = await services.effectRuntime.runPromise(
-      Effect.either(
-        Effect.gen(function* () {
-          const configService = yield* ConfigService
-          const config = yield* configService.load
-          const reconciler = yield* ReconcilerService
+      services.startupTelemetry.withParent(
+        Effect.either(
+          Effect.gen(function* () {
+            const configService = yield* ConfigService
+            const config = yield* configService.load
+            const reconciler = yield* ReconcilerService
 
-          return yield* reconciler.syncProjects(config.projects)
-        }).pipe(
-          Effect.withSpan('harbr.loadProjects', {
-            attributes: services.options.profile
-              ? {
-                  'harbr.profile.session_id':
-                    services.options.profile.sessionId,
-                }
-              : {},
-          }),
+            return yield* reconciler.syncProjects(config.projects)
+          }).pipe(
+            Effect.withSpan('harbr.loadProjects', {
+              attributes: services.options.profile
+                ? {
+                    'harbr.profile.session_id':
+                      services.options.profile.sessionId,
+                  }
+                : {},
+            }),
+          ),
         ),
       ),
     )
+
+    services.startupTelemetry.mark('data.sync_completed', {
+      'data.sync_succeeded': Either.isRight(syncResult),
+    })
 
     if (Either.isLeft(syncResult)) {
       store.setState((state) => ({
@@ -86,6 +93,11 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
         ) ?? null)
       : null
 
+    services.startupTelemetry.mark('data.results_loaded', {
+      'data.active_runtime_count': activeRuntimeSummaries.length,
+      'data.project_count': summaries.length,
+    })
+
     store.setState((state) => ({
       active: {
         ...state.active,
@@ -114,6 +126,10 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
         workspaceRows: [],
       },
     }))
+    services.startupTelemetry.mark('data.results_stored', {
+      'data.active_runtime_count': activeRuntimeSummaries.length,
+      'data.project_count': summaries.length,
+    })
 
     const restoredFromRuntime = await restoreCurrentRuntime(
       services,
