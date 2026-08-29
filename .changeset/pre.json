@@ -5,6 +5,8 @@
     "@harbr/tui": "0.1.0"
   },
   "changesets": [
+    "brave-herdrs-jump",
+    "fuzzy-emus-fetch",
     "tricky-buses-own"
   ]
 }
