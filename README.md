@@ -52,7 +52,7 @@ Built today:
 
 To run Harbr locally:
 
-- macOS. Other Unix-like systems may work, but are not the current release target.
+- macOS or Linux on x64 or ARM64.
 - Git with worktree support.
 - tmux or [Herdr](https://herdr.dev/) for local runtimes and popup usage. If tmux `display-popup -B` fails, remove `-B` from the binding.
 
@@ -61,6 +61,30 @@ To build from source or work on this repo:
 - Bun `1.3.14`.
 
 ## Install
+
+### Installer
+
+Install the latest stable release to `~/.local/bin`:
+
+```sh
+curl -fsSL https://dev-town.com/labs/harbr/install.sh | sh
+```
+
+Until the first stable release, install a specific beta by passing the version to the installer process:
+
+```sh
+curl -fsSL https://dev-town.com/labs/harbr/install.sh | \
+  HARBR_VERSION=0.1.0-beta.4 sh
+```
+
+Override the installation directory if needed:
+
+```sh
+curl -fsSL https://dev-town.com/labs/harbr/install.sh | \
+  HARBR_INSTALL_DIR="$HOME/bin" sh
+```
+
+The installer downloads the matching macOS or Linux release archive from GitHub and verifies it against the release's `SHA256SUMS` file before installing `harbr`.
 
 ### Homebrew
 
