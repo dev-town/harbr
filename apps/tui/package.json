@@ -36,6 +36,7 @@
     "sync:compiled": "./dist/harbr sync",
     "sync:compiled:json": "./dist/harbr sync --json",
     "test:e2e:tui-themes": "bun scripts/e2e-themes.ts",
+    "test:e2e:startup-layout": "bun scripts/e2e-startup-layout.tsx",
     "profile:up": "bun src/index.tsx profile up",
     "profile:down": "bun src/index.tsx profile down",
     "profile:status": "bun src/index.tsx profile status"
