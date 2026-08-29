@@ -5,10 +5,12 @@ import path from 'node:path'
 import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
 import { migrateDatabase } from './migrate'
+import { getEmbeddedMigrations } from './migrations'
 import { openDatabase } from './client'
 import {
   getProjectByName,
   loadUiContext,
+  listActiveRuntimeSummaries,
   listModuleSummaries,
   listProjectSummaries,
   listWorkspaceSummaries,
@@ -18,6 +20,40 @@ import {
 import { modules, projects, runtimes, workspaces } from './schema'
 
 const tempRoots: string[] = []
+const runtimeSource = { provider: 'tmux', sourceId: 'test' }
+
+function runtimeIdentity(externalId: string) {
+  return { displayLabel: externalId, externalId, source: runtimeSource }
+}
+
+function runtimeAttachment(externalId: string) {
+  return { identity: runtimeIdentity(externalId), status: 'open' as const }
+}
+
+function runtimeAttachmentFor(
+  source: { provider: string; sourceId: string },
+  externalId: string,
+) {
+  return {
+    identity: { displayLabel: externalId, externalId, source },
+    status: 'open' as const,
+  }
+}
+
+function projectRuntime(
+  projectName: string,
+  source: { provider: string; sourceId: string },
+  externalId: string,
+) {
+  return {
+    identity: { displayLabel: externalId, externalId, source },
+    moduleName: null,
+    projectName,
+    scope: 'project' as const,
+    status: 'open' as const,
+    workspaceName: null,
+  }
+}
 
 afterEach(async () => {
   await Promise.all(
@@ -28,6 +64,127 @@ afterEach(async () => {
 })
 
 describe('db', () => {
+  it('migrates legacy tmux runtime cache by safely rebuilding it', async () => {
+    const tempRoot = await createTempRoot()
+    const database = await openDatabase(path.join(tempRoot, 'legacy.db'))
+
+    try {
+      const migrations = getEmbeddedMigrations()
+      const sqlite = database.sqlite as unknown as {
+        exec(sql: string): unknown
+        prepare(sql: string): {
+          all(): unknown[]
+          get(): unknown
+          run(...values: unknown[]): unknown
+        }
+      }
+
+      for (const migration of migrations.slice(0, 6)) {
+        for (const statement of migration.sql) {
+          sqlite.exec(statement)
+        }
+      }
+
+      sqlite
+        .prepare(
+          'INSERT INTO projects (id, name, repo_path, repo_kind, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+        )
+        .run('project', 'alpha', '/tmp/alpha.git', 'bare', 0, 0)
+      sqlite
+        .prepare(
+          'INSERT INTO runtimes (id, project_id, session_name, scope, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        )
+        .run('runtime', 'project', 'alpha', 'project', 'open', 0, 0)
+
+      for (const statement of migrations[6]?.sql ?? []) {
+        sqlite.exec(statement)
+      }
+
+      const columns = sqlite
+        .prepare('PRAGMA table_info(runtimes)')
+        .all() as Array<{ name: string }>
+      const runtimeCount = sqlite
+        .prepare('SELECT count(*) AS count FROM runtimes')
+        .get() as { count: number }
+
+      expect(columns.map((column) => column.name)).toEqual(
+        expect.arrayContaining([
+          'provider',
+          'source_id',
+          'external_id',
+          'display_label',
+        ]),
+      )
+      expect(runtimeCount.count).toBe(0)
+    } finally {
+      database.sqlite.close()
+    }
+  })
+
+  it('reconciles runtime observations by source and preserves failed sources', async () => {
+    const tempRoot = await createTempRoot()
+    const database = await openDatabase(path.join(tempRoot, 'harbour.db'))
+    const tmuxSource = { provider: 'tmux', sourceId: '/tmp/tmux/default' }
+    const otherSource = { provider: 'test', sourceId: 'secondary' }
+
+    try {
+      await migrateDatabase(database)
+      const snapshot = {
+        projectName: 'alpha',
+        repoPath: '/tmp/alpha.git',
+        repoKind: 'bare' as const,
+        workspaces: [],
+      }
+
+      await replaceProjectSnapshot(database.db, {
+        ...snapshot,
+        runtimes: [projectRuntime('alpha', tmuxSource, 'tmux-alpha')],
+        runtimeIssue: null,
+        runtimeSource: tmuxSource,
+      })
+      await replaceProjectSnapshot(database.db, {
+        ...snapshot,
+        runtimes: [projectRuntime('alpha', otherSource, 'other-alpha')],
+        runtimeIssue: null,
+        runtimeSource: otherSource,
+      })
+
+      expect(listActiveRuntimeSummaries(database.db, tmuxSource)).toEqual([
+        expect.objectContaining({
+          runtime: runtimeAttachmentFor(tmuxSource, 'tmux-alpha'),
+        }),
+      ])
+      expect(
+        listProjectSummaries(database.db, otherSource)[0]?.runtime,
+      ).toEqual(runtimeAttachmentFor(otherSource, 'other-alpha'))
+
+      await replaceProjectSnapshot(database.db, {
+        ...snapshot,
+        runtimes: [],
+        runtimeIssue: null,
+        runtimeSource: tmuxSource,
+      })
+
+      expect(listActiveRuntimeSummaries(database.db, tmuxSource)).toEqual([])
+      expect(listActiveRuntimeSummaries(database.db, otherSource)).toHaveLength(
+        1,
+      )
+
+      await replaceProjectSnapshot(database.db, {
+        ...snapshot,
+        runtimes: [],
+        runtimeIssue: { code: 'source_unavailable', source: otherSource },
+        runtimeSource: otherSource,
+      })
+
+      expect(listActiveRuntimeSummaries(database.db, otherSource)).toHaveLength(
+        1,
+      )
+    } finally {
+      database.sqlite.close()
+    }
+  })
+
   it('applies migrations and upserts project snapshot', async () => {
     const tempRoot = await createTempRoot()
     const databasePath = path.join(tempRoot, 'harbour.db')
@@ -57,7 +214,7 @@ describe('db', () => {
         ],
         runtimes: [
           {
-            sessionName: 'alpha__main__apps/cli',
+            identity: runtimeIdentity('alpha__main__apps/cli'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -66,6 +223,7 @@ describe('db', () => {
           },
         ],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       expect(snapshot.project.name).toBe('alpha')
@@ -134,7 +292,7 @@ describe('db', () => {
         ],
         runtimes: [
           {
-            sessionName: 'alpha__main',
+            identity: runtimeIdentity('alpha__main'),
             scope: 'workspace',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -143,6 +301,7 @@ describe('db', () => {
           },
         ],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       await replaceProjectSnapshot(database.db, {
@@ -166,7 +325,7 @@ describe('db', () => {
         ],
         runtimes: [
           {
-            sessionName: 'alpha__next__apps/cli',
+            identity: runtimeIdentity('alpha__next__apps/cli'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'next',
@@ -175,6 +334,7 @@ describe('db', () => {
           },
         ],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       const projectRows = await database.db.select().from(projects)
@@ -190,7 +350,7 @@ describe('db', () => {
       expect(moduleRows).toHaveLength(1)
       expect(moduleRows[0]?.modulePath).toBe('apps/cli')
       expect(runtimeRows).toHaveLength(1)
-      expect(runtimeRows[0]?.sessionName).toBe('alpha__next__apps/cli')
+      expect(runtimeRows[0]?.externalId).toBe('alpha__next__apps/cli')
     } finally {
       database.sqlite.close()
     }
@@ -225,7 +385,7 @@ describe('db', () => {
         ],
         runtimes: [
           {
-            sessionName: 'alpha',
+            identity: runtimeIdentity('alpha'),
             scope: 'project',
             projectName: 'alpha',
             workspaceName: null,
@@ -233,7 +393,7 @@ describe('db', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main__docs',
+            identity: runtimeIdentity('alpha__main__docs'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -242,6 +402,7 @@ describe('db', () => {
           },
         ],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       await replaceProjectSnapshot(database.db, {
@@ -251,7 +412,7 @@ describe('db', () => {
         workspaces: [],
         runtimes: [
           {
-            sessionName: 'alpha',
+            identity: runtimeIdentity('alpha'),
             scope: 'project',
             projectName: 'alpha',
             workspaceName: null,
@@ -260,6 +421,7 @@ describe('db', () => {
           },
         ],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       const project = await database.db.query.projects.findFirst({
@@ -273,7 +435,7 @@ describe('db', () => {
       expect(workspaceRows).toHaveLength(0)
       expect(moduleRows).toHaveLength(0)
       expect(runtimeRows).toHaveLength(1)
-      expect(runtimeRows[0]?.sessionName).toBe('alpha')
+      expect(runtimeRows[0]?.externalId).toBe('alpha')
     } finally {
       database.sqlite.close()
     }
@@ -334,7 +496,7 @@ describe('db', () => {
         ],
         runtimes: [
           {
-            sessionName: 'alpha',
+            identity: runtimeIdentity('alpha'),
             scope: 'project',
             projectName: 'alpha',
             workspaceName: null,
@@ -342,7 +504,7 @@ describe('db', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main',
+            identity: runtimeIdentity('alpha__main'),
             scope: 'workspace',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -350,7 +512,7 @@ describe('db', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main__apps/cli',
+            identity: runtimeIdentity('alpha__main__apps/cli'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -358,7 +520,7 @@ describe('db', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__feature-auth__apps/web',
+            identity: runtimeIdentity('alpha__feature-auth__apps/web'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'feature-auth',
@@ -367,6 +529,7 @@ describe('db', () => {
           },
         ],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       await replaceProjectSnapshot(database.db, {
@@ -376,6 +539,7 @@ describe('db', () => {
         workspaces: [],
         runtimes: [],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       const mainWorkspaceId = alphaSnapshot.workspaces.find(
@@ -385,14 +549,14 @@ describe('db', () => {
         (workspace) => workspace.name === 'feature-auth',
       )?.id
 
-      expect(listProjectSummaries(database.db)).toEqual([
+      expect(listProjectSummaries(database.db, runtimeSource)).toEqual([
         {
           id: alphaSnapshot.project.id,
           name: 'alpha',
           projectIssue: 'Repo HEAD points to missing branch refs/heads/master',
           repoPath: '/tmp/alpha.git',
           repoKind: 'standard',
-          runtime: { sessionName: 'alpha', status: 'open' },
+          runtime: runtimeAttachment('alpha'),
           activeSessionCount: 4,
           workspaceCount: 2,
           hasModules: true,
@@ -413,7 +577,11 @@ describe('db', () => {
       ])
 
       expect(
-        listWorkspaceSummaries(database.db, alphaSnapshot.project.id),
+        listWorkspaceSummaries(
+          database.db,
+          alphaSnapshot.project.id,
+          runtimeSource,
+        ),
       ).toEqual([
         {
           branchName: null,
@@ -423,7 +591,7 @@ describe('db', () => {
           name: 'main',
           projectName: 'alpha',
           repoPath: '/tmp/alpha.git',
-          runtime: { sessionName: 'alpha__main', status: 'open' },
+          runtime: runtimeAttachment('alpha__main'),
           workspacePath: '/tmp/alpha-main',
           activeSessionCount: 2,
           moduleCount: 2,
@@ -450,7 +618,11 @@ describe('db', () => {
       expect(mainWorkspaceId).toBeDefined()
 
       expect(
-        listModuleSummaries(database.db, mainWorkspaceId ?? 'missing'),
+        listModuleSummaries(
+          database.db,
+          mainWorkspaceId ?? 'missing',
+          runtimeSource,
+        ),
       ).toEqual([
         {
           id: expect.any(String),
@@ -460,7 +632,7 @@ describe('db', () => {
           path: 'apps/cli',
           projectName: 'alpha',
           repoPath: '/tmp/alpha.git',
-          runtime: { sessionName: 'alpha__main__apps/cli', status: 'open' },
+          runtime: runtimeAttachment('alpha__main__apps/cli'),
           workspaceName: 'main',
           workspacePath: '/tmp/alpha-main',
           hasActiveSession: true,
@@ -513,7 +685,7 @@ describe('db', () => {
         ],
         runtimes: [
           {
-            sessionName: 'alpha~~main',
+            identity: runtimeIdentity('alpha~~main'),
             scope: 'workspace',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -522,12 +694,17 @@ describe('db', () => {
           },
         ],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       const workspaceId = snapshot.workspaces[0]?.id
 
       expect(
-        listModuleSummaries(database.db, workspaceId ?? 'missing'),
+        listModuleSummaries(
+          database.db,
+          workspaceId ?? 'missing',
+          runtimeSource,
+        ),
       ).toEqual([
         {
           id: expect.any(String),
@@ -577,7 +754,7 @@ describe('db', () => {
         ],
         runtimes: [
           {
-            sessionName: 'alpha~~main~~/',
+            identity: runtimeIdentity('alpha~~main~~/'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -586,6 +763,7 @@ describe('db', () => {
           },
         ],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       const runtimeRows = await database.db.select().from(runtimes)
@@ -593,7 +771,11 @@ describe('db', () => {
 
       expect(runtimeRows[0]?.modulePath).toBe('.')
       expect(
-        listModuleSummaries(database.db, workspaceId ?? 'missing'),
+        listModuleSummaries(
+          database.db,
+          workspaceId ?? 'missing',
+          runtimeSource,
+        ),
       ).toEqual([
         {
           id: expect.any(String),
@@ -603,7 +785,7 @@ describe('db', () => {
           path: '.',
           projectName: 'alpha',
           repoPath: '/tmp/alpha.git',
-          runtime: { sessionName: 'alpha~~main~~/', status: 'open' },
+          runtime: runtimeAttachment('alpha~~main~~/'),
           workspaceName: 'main',
           workspacePath: '/tmp/alpha-main',
           hasActiveSession: true,
@@ -643,6 +825,7 @@ describe('db', () => {
         ],
         runtimes: [],
         runtimeIssue: null,
+        runtimeSource,
       })
 
       const workspace = snapshot.workspaces[0]

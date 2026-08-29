@@ -60,8 +60,8 @@ key press
 
 - `domain` defines shared Harbour contracts and language for cross-package boundaries.
 - `config` expresses user or project intent.
-- `git` and `runtime-tmux` adapt external systems.
-- `scanner` observes reality and emits facts only. It may use read-only runtime discovery, but not full tmux lifecycle capabilities.
+- `runtime` defines provider-neutral service boundaries; `git` and `runtime-tmux` adapt external systems.
+- `scanner` observes reality and emits facts only. It may use provider-neutral read-only runtime discovery, but not lifecycle capabilities or concrete adapters.
 - `reconciler` owns belief, state transitions, and durable updates from validated project intent.
 - `db` stores Harbour metadata, cache, and history. It is not source of truth for Git or tmux.
 - `ui` renders state and dispatches actions. Keep shell logic out.

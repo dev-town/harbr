@@ -2,9 +2,12 @@ import { Context, type Effect, type Either } from 'effect'
 
 import type { ProjectConfig, ProjectObservation } from '@harbr/domain'
 import type { RepoInspectionError, RepoNotGitError } from '@harbr/git'
-import type { TmuxError } from '@harbr/runtime-tmux/discovery'
+import type { RuntimeProviderError } from '@harbr/runtime/discovery'
 
-export type ScannerError = RepoInspectionError | RepoNotGitError | TmuxError
+export type ScannerError =
+  | RepoInspectionError
+  | RepoNotGitError
+  | RuntimeProviderError
 
 export type ProjectObservationResult = {
   readonly project: ProjectConfig
@@ -14,7 +17,7 @@ export type ProjectObservationResult = {
 export type ScannerServiceApi = {
   readonly observeProjects: (
     projects: readonly ProjectConfig[],
-  ) => Effect.Effect<readonly ProjectObservationResult[], TmuxError>
+  ) => Effect.Effect<readonly ProjectObservationResult[], RuntimeProviderError>
   readonly observeProject: (
     project: ProjectConfig,
   ) => Effect.Effect<ProjectObservation, ScannerError>

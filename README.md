@@ -1,6 +1,6 @@
 # Harbr
 
-Harbr is a terminal-native workspace orchestrator for developers working with Git repositories, monorepos, worktrees, tmux sessions, and configured command layouts.
+Harbr is a terminal-native workspace orchestrator for developers working with Git repositories, monorepos, worktrees, tmux or Herdr runtimes, and configured command layouts.
 
 Harbr is not an IDE, terminal multiplexer, Git client, or AI coding tool. It is the control layer that understands development contexts and helps you create, navigate, restore, and jump into the right runtime.
 
@@ -10,7 +10,7 @@ Core model:
 Project -> Workspace -> Module -> Runtime
 ```
 
-Git remains the source of truth for repository state. tmux remains the main local runtime. Harbr observes, reconciles, and coordinates them.
+Git remains the source of truth for repository state. The environment that launches Harbr selects the current tmux server or Herdr session as its runtime source. Harbr observes, reconciles, and coordinates them while keeping project configuration provider-neutral.
 
 ## Screenshots
 
@@ -37,6 +37,7 @@ Built today:
 - SQLite state and migrations.
 - Reconciler flow from validated config intent, scanner facts, and runtime facts into the database.
 - tmux session discovery, open/create, close, and configured window/pane creation.
+- Herdr workspace discovery plus project, workspace, and module open/create/focus.
 - Workspace creation that creates Git worktrees.
 - Configured window/pane layout loading into project, workspace, and module sessions.
 - CLI sync entrypoint.
@@ -53,7 +54,7 @@ To run Harbr locally:
 
 - macOS. Other Unix-like systems may work, but are not the current release target.
 - Git with worktree support.
-- tmux for local sessions and popup usage. If `display-popup -B` fails, remove `-B` from the binding.
+- tmux or [Herdr](https://herdr.dev/) for local runtimes and popup usage. If tmux `display-popup -B` fails, remove `-B` from the binding.
 
 To build from source or work on this repo:
 
@@ -258,7 +259,7 @@ Config notes:
 - Use `.` for the repo root module.
 - Use a trailing slash like `apps/` or `packages/` to expand child directories.
 - Absolute module paths and `/` are rejected.
-- `windows` define reusable tmux window/pane layouts.
+- `windows` define reusable runtime window/pane layouts. Layout application currently targets tmux; Herdr layout support is still in progress.
 - Loading a layout creates missing configured windows and panes in the target session.
 - Existing configured windows are skipped, not duplicated.
 - Project-level `windows` can reference global window names or define inline windows.
@@ -268,7 +269,7 @@ Config notes:
 
 ## TUI Usage
 
-The TUI starts on the Active tab when possible. It can restore context from the current tmux session, then falls back to saved UI context in the Harbr database.
+The TUI starts on the Active tab when possible. It restores context from the focused runtime in the current tmux server or Herdr session, then falls back to saved UI context in the Harbr database.
 
 Core keys:
 
@@ -290,10 +291,10 @@ Core keys:
 Common flows:
 
 - Browse projects, workspaces, and modules from the Browse tab.
-- Press `Enter` on a leaf context to open an existing tmux session or create one.
-- Use the Active tab to switch between currently open Harbr tmux runtimes.
+- Press `Enter` on a leaf context to focus an existing runtime or create one in the current provider.
+- Use the Active tab to switch between currently open Harbr runtimes in the current tmux server or Herdr session.
 - Use `Ctrl+A` to open context actions such as open/start, workspace creation, or configured layout loading.
-- Create a workspace to create a Git worktree, then open/start that workspace as a tmux session.
+- Create a workspace to create a Git worktree, then open/start that workspace as a runtime.
 - Load configured layouts to create tmux windows and panes with optional startup commands.
 
 ## tmux Popup Setup
@@ -328,6 +329,24 @@ If your tmux does not support `-B`, remove it:
 bind-key -r H display-popup -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "$HOME/bin/harbr"
 ```
 
+## Herdr Popup Setup
+
+Harbr supports Herdr's custom-command popup binding. Add a binding like this to `~/.config/herdr/config.toml`; Harbr does not edit the file automatically:
+
+```toml
+[[keys.command]]
+key = "prefix+shift+h"
+type = "popup"
+command = "harbr"
+description = "open Harbr"
+width = "80%"
+height = "60%"
+```
+
+If `harbr` is not on the shell path Herdr receives, set `command` to the installed binary's absolute path, for example `"/opt/homebrew/bin/harbr"`. Restart Herdr or reload its configuration after saving the binding.
+
+When launched from this popup, Harbr scopes Active and Browse to the current Herdr session. Selecting a project, workspace, or module focuses its existing Herdr workspace by workspace ID, or creates and focuses a workspace rooted at that context's resolved working directory. The popup closes after a successful jump.
+
 ## tmux Runtime Names
 
 Harbr uses semantic tmux session names for created runtimes:
@@ -360,6 +379,8 @@ packages/
   domain/              shared domain types
   git/                 Git repository and workspace inspection
   reconciler/          sync/reconcile services
+  runtime/             provider-neutral runtime capabilities
+  runtime-herdr/       Herdr runtime adapter
   runtime-tmux/        tmux runtime adapter
   scanner/             project/workspace/module scanning
   test-utils/          shared test helpers
@@ -459,9 +480,9 @@ DatabaseClientOptions -> DatabaseClientLive -> ProjectServiceLive
 
 ```ts
 Effect.gen(function* () {
-  const runtimeTmux = yield* RuntimeTmuxService
+  const runtime = yield* RuntimeService
 
-  return yield* runtimeTmux.openOrCreateRuntime(target)
+  return yield* runtime.openOrCreateRuntime(target)
 })
 ```
 

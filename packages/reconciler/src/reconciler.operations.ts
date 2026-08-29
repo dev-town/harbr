@@ -68,6 +68,7 @@ function persistObservation(
       workspaces: observation.workspaces,
       runtimes: observation.runtimes,
       runtimeIssue: observation.runtimeIssue,
+      runtimeSource: observation.runtimeSource,
     })
 
     return {

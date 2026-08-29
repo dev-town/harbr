@@ -31,12 +31,18 @@ Use this doc to decide where new code belongs.
 - Expose read-only runtime discovery separately from mutation/lifecycle capabilities so scanners can observe tmux without being able to orchestrate it.
 - Do not let it persist state directly.
 
+### `runtime`
+
+- Owns provider-neutral Effect service boundaries for read-only discovery and lifecycle/layout capabilities.
+- Depends only on shared contracts from `domain`.
+- Concrete adapters such as `runtime-tmux` provide its layers; scanners and apps consume the neutral tags.
+
 ### `scanner`
 
 - Owns read-side observation and normalization.
 - Converts config, Git, and tmux reality into facts.
 - Facts stay read-only and mutation-free.
-- May import only read-only runtime discovery from `@harbr/runtime-tmux/discovery`, not the full runtime-tmux service.
+- May import only read-only runtime discovery from `@harbr/runtime/discovery`, not lifecycle capabilities or a concrete provider.
 - Expose scanner capabilities as services and live layers. Keep scanning helpers internal.
 
 ### `reconciler`
@@ -95,6 +101,7 @@ Depends on:
 @harbr/config
 @harbr/scanner
 @harbr/reconciler
+@harbr/runtime
 @harbr/runtime-tmux
 ```
 

@@ -1,4 +1,13 @@
-import type { RuntimeAttachment, RuntimeFact } from '@harbr/domain'
+import {
+  type CurrentRuntime,
+  isSameRuntimeIdentity,
+  type RuntimeAttachment,
+} from '@harbr/domain'
+
+import {
+  getCannotCloseCurrentRuntimeNotice,
+  getCloseRuntimeLabel,
+} from '~/helpers/runtime-terminology'
 
 import type {
   HarbourRow,
@@ -303,11 +312,11 @@ function makeCloseSessionActionRow(
   return [
     makeActionRow(
       browseActionIds.closeRuntimeSession,
-      'Close session',
-      'tmux runtime',
+      getCloseRuntimeLabel(runtime.identity),
+      `${runtime.identity.source.provider} runtime`,
       target,
       isCurrentActiveRuntime(state, runtime)
-        ? 'Cannot close current session'
+        ? getCannotCloseCurrentRuntimeNotice(runtime.identity)
         : undefined,
     ),
   ]
@@ -317,7 +326,9 @@ function isCurrentActiveRuntime(
   state: TuiStoreModel,
   runtime: RuntimeAttachment,
 ) {
-  return state.app.currentRuntime?.sessionName === runtime.sessionName
+  return state.app.currentRuntime
+    ? isSameRuntimeIdentity(state.app.currentRuntime.identity, runtime.identity)
+    : false
 }
 
 function makeActionRow(
@@ -407,9 +418,8 @@ function getBrowseRowScore(row: HarbourRow, query: string) {
   return -1
 }
 
-function isCurrentBrowseRow(
-  row: HarbourRow,
-  currentRuntime: RuntimeFact | null,
-) {
-  return row.runtime?.sessionName === currentRuntime?.sessionName
+function isCurrentBrowseRow(row: HarbourRow, currentRuntime: CurrentRuntime) {
+  return row.runtime && currentRuntime
+    ? isSameRuntimeIdentity(row.runtime.identity, currentRuntime.identity)
+    : false
 }

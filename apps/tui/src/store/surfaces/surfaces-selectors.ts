@@ -1,4 +1,8 @@
 import type { ActiveActionRow } from '~/types/rows'
+import {
+  getCannotCloseCurrentRuntimeNotice,
+  getCloseRuntimeLabel,
+} from '~/helpers/runtime-terminology'
 import { selectSelectedActiveRow } from '~/store/active/active-selectors'
 import { selectBrowseActionRows } from '~/store/browse/browse-selectors'
 import type { TuiStoreModel } from '~/store/types'
@@ -60,11 +64,15 @@ export function selectActiveActionRows(
     {
       actionId: activeActionIds.closeRuntimeSession,
       ...(target.isCurrent
-        ? { disabledNotice: 'Cannot close current session' }
+        ? {
+            disabledNotice: getCannotCloseCurrentRuntimeNotice(
+              target.runtime.identity,
+            ),
+          }
         : {}),
       id: `action.close:${target.id}`,
       kind: 'active-action',
-      label: 'Close session',
+      label: getCloseRuntimeLabel(target.runtime.identity),
       target,
     },
   ]

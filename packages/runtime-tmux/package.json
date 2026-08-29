@@ -8,7 +8,11 @@
   },
   "dependencies": {
     "@harbr/domain": "workspace:*",
+    "@harbr/runtime": "workspace:*",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@harbr/test-utils": "workspace:*"
   },
   "scripts": {
     "lint": "eslint src --max-warnings=0",

@@ -60,7 +60,9 @@ function formatProjectResult(result: SyncProjectResult) {
   }
 
   if (result.runtimeIssue) {
-    lines.push(`  runtime issue: ${result.runtimeIssue}`)
+    lines.push(
+      `  runtime issue: ${result.runtimeIssue.code} (${result.runtimeIssue.source.provider})`,
+    )
   }
 
   return lines.join('\n')

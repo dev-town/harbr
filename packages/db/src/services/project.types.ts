@@ -9,6 +9,7 @@ import type {
   ResolvedModule,
   RuntimeFact,
   RuntimeIssue,
+  RuntimeSource,
   WorkspaceKind,
   WorkspaceSummary,
 } from '@harbr/domain'
@@ -30,6 +31,7 @@ export type ReplaceProjectSnapshotInput = {
   workspaces: WorkspaceSnapshotInput[]
   runtimes: RuntimeFact[]
   runtimeIssue: RuntimeIssue | null
+  runtimeSource: RuntimeSource
 }
 
 export type ProjectRecord = {
@@ -67,9 +69,9 @@ export type RuntimeRecord = {
   createdAt: number
   id: string
   modulePath: string | null
+  identity: RuntimeFact['identity']
   projectId: string
   scope: RuntimeFact['scope']
-  sessionName: string
   status: RuntimeFact['status']
   updatedAt: number
   workspaceId: string | null
@@ -87,19 +89,19 @@ export type ProjectServiceApi = {
     projectName: string,
   ) => Effect.Effect<ProjectRecord | null, ProjectServiceError>
   readonly loadUiContext: Effect.Effect<HarbourContext, ProjectServiceError>
-  readonly listProjectSummaries: Effect.Effect<
-    readonly ProjectSummary[],
-    ProjectServiceError
-  >
-  readonly listActiveRuntimeSummaries: Effect.Effect<
-    readonly ActiveRuntimeSummary[],
-    ProjectServiceError
-  >
+  readonly listProjectSummaries: (
+    source: RuntimeSource,
+  ) => Effect.Effect<readonly ProjectSummary[], ProjectServiceError>
+  readonly listActiveRuntimeSummaries: (
+    source: RuntimeSource,
+  ) => Effect.Effect<readonly ActiveRuntimeSummary[], ProjectServiceError>
   readonly listWorkspaceSummaries: (
     projectId: string,
+    source: RuntimeSource,
   ) => Effect.Effect<readonly WorkspaceSummary[], ProjectServiceError>
   readonly listModuleSummaries: (
     workspaceId: string,
+    source: RuntimeSource,
   ) => Effect.Effect<readonly ModuleSummary[], ProjectServiceError>
   readonly saveUiContext: (
     context: HarbourContext,

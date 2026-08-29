@@ -1,9 +1,10 @@
-import type {
-  HarbourContext,
-  RuntimeAttachment,
-  RuntimeTarget,
+import {
+  isSameRuntimeIdentity,
+  type HarbourContext,
+  type RuntimeAttachment,
+  type RuntimeTarget,
 } from '@harbr/domain'
-import { RuntimeTmuxService } from '@harbr/runtime-tmux'
+import { RuntimeService } from '@harbr/runtime'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '~/app-context'
@@ -15,6 +16,7 @@ import type {
 } from '~/types/rows'
 import { saveUiContext } from '~/data'
 import { formatError } from '~/helpers/errors'
+import { getCannotCloseCurrentRuntimeNotice } from '~/helpers/runtime-terminology'
 import { loadProjects } from './refresh'
 
 export async function persistContext(
@@ -84,12 +86,21 @@ export async function closeActiveRuntime(
   services: TuiServices,
   store: TuiStore,
   row: HarbourRow & { runtime: RuntimeAttachment },
+  hooks: CloseRuntimeHooks = defaultCloseRuntimeHooks,
 ) {
+  const currentRuntime = store.getState().app.currentRuntime
+
   if (
     row.isCurrent ||
-    store.getState().app.currentRuntime?.sessionName === row.runtime.sessionName
+    (currentRuntime &&
+      isSameRuntimeIdentity(currentRuntime.identity, row.runtime.identity))
   ) {
-    store.getState().setNotice('Cannot close current session', 'warning')
+    store
+      .getState()
+      .setNotice(
+        getCannotCloseCurrentRuntimeNotice(row.runtime.identity),
+        'warning',
+      )
     return
   }
 
@@ -99,13 +110,13 @@ export async function closeActiveRuntime(
   try {
     await services.effectRuntime.runPromise(
       Effect.gen(function* () {
-        const runtimeTmux = yield* RuntimeTmuxService
+        const runtime = yield* RuntimeService
 
-        yield* runtimeTmux.closeRuntime(row.runtime.sessionName)
+        yield* runtime.closeRuntime(row.runtime.identity)
       }),
     )
     store.getState().closeActionsMenu()
-    await loadProjects(services, store)
+    await hooks.refresh(services, store)
   } catch (error) {
     store.getState().setNotice(formatError(error), 'error')
   } finally {
@@ -113,28 +124,49 @@ export async function closeActiveRuntime(
   }
 }
 
+type CloseRuntimeHooks = {
+  refresh: typeof loadProjects
+}
+
+const defaultCloseRuntimeHooks: CloseRuntimeHooks = {
+  refresh: loadProjects,
+}
+
 export async function openRuntimeForTarget(
   services: TuiServices,
   store: TuiStore,
   target: RuntimeTarget,
   nextContext: HarbourContext,
+  hooks: OpenRuntimeHooks = defaultOpenRuntimeHooks,
 ) {
   store.getState().setLoading(true)
   store.getState().clearNotice()
 
   try {
-    await persistContext(services, nextContext)
     await services.effectRuntime.runPromise(
       Effect.gen(function* () {
-        const runtimeTmux = yield* RuntimeTmuxService
+        const runtime = yield* RuntimeService
 
-        yield* runtimeTmux.openOrCreateRuntime(target)
+        yield* runtime.openOrCreateRuntime(target)
       }),
     )
+    await hooks.persistContext(services, nextContext)
+    await hooks.refresh(services, store)
+    store.getState().closeActionsMenu()
     await services.shutdown()
   } catch (error) {
     store.getState().setNotice(formatError(error), 'error')
   } finally {
     store.getState().setLoading(false)
   }
+}
+
+type OpenRuntimeHooks = {
+  persistContext: typeof persistContext
+  refresh: typeof loadProjects
+}
+
+const defaultOpenRuntimeHooks: OpenRuntimeHooks = {
+  persistContext,
+  refresh: loadProjects,
 }

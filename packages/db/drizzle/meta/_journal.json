@@ -43,6 +43,13 @@
       "when": 1780800000000,
       "tag": "0005_orange_project_issues",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787691007607,
+      "tag": "0006_common_ricochet",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { Effect, Layer } from 'effect'
 
 import { GitService } from '@harbr/git'
-import { RuntimeDiscoveryService } from '@harbr/runtime-tmux/discovery'
+import { RuntimeDiscoveryService } from '@harbr/runtime/discovery'
 import type { ProjectConfig } from '@harbr/domain'
 import {
   observeProjectsWithGit,

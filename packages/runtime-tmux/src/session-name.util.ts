@@ -1,18 +1,21 @@
-import type { RuntimeFact, RuntimeTarget } from '@harbr/domain'
+import type { RuntimeFact, RuntimeSource, RuntimeTarget } from '@harbr/domain'
 
 const encodedSeparator = '~~'
 
-export function parseSessionName(sessionName: string): RuntimeFact | null {
+export function parseSessionName(
+  sessionName: string,
+  source: RuntimeSource,
+): RuntimeFact | null {
   if (sessionName.length === 0) {
     return null
   }
 
   if (sessionName.includes(encodedSeparator)) {
-    return parseEncodedSessionName(sessionName)
+    return parseEncodedSessionName(sessionName, source)
   }
 
   return {
-    sessionName,
+    identity: runtimeIdentity(source, sessionName),
     scope: 'project',
     projectName: sessionName,
     workspaceName: null,
@@ -42,11 +45,11 @@ export function findMatchingRuntime(
   )
 }
 
-export function formatSessionTarget(sessionName: string) {
-  return `=${sessionName}`
+export function formatSessionTarget(externalId: string) {
+  return `=${externalId}`
 }
 
-function parseEncodedSessionName(sessionName: string) {
+function parseEncodedSessionName(sessionName: string, source: RuntimeSource) {
   if (sessionName.endsWith(encodedSeparator)) {
     return null
   }
@@ -63,15 +66,19 @@ function parseEncodedSessionName(sessionName: string) {
     return null
   }
 
-  return buildRuntimeFact(sessionName, decodedParts)
+  return buildRuntimeFact(source, sessionName, decodedParts)
 }
 
-function buildRuntimeFact(sessionName: string, parts: readonly string[]) {
+function buildRuntimeFact(
+  source: RuntimeSource,
+  sessionName: string,
+  parts: readonly string[],
+) {
   const projectName = parts[0]!
 
   if (parts.length === 1) {
     return {
-      sessionName,
+      identity: runtimeIdentity(source, sessionName),
       scope: 'project',
       projectName,
       workspaceName: null,
@@ -84,7 +91,7 @@ function buildRuntimeFact(sessionName: string, parts: readonly string[]) {
 
   if (parts.length === 2) {
     return {
-      sessionName,
+      identity: runtimeIdentity(source, sessionName),
       scope: 'workspace',
       projectName,
       workspaceName,
@@ -96,13 +103,21 @@ function buildRuntimeFact(sessionName: string, parts: readonly string[]) {
   const moduleName = parts[2]!
 
   return {
-    sessionName,
+    identity: runtimeIdentity(source, sessionName),
     scope: 'module',
     projectName,
     workspaceName,
     moduleName,
     status: 'open',
   } satisfies RuntimeFact
+}
+
+function runtimeIdentity(source: RuntimeSource, sessionName: string) {
+  return {
+    displayLabel: sessionName,
+    externalId: sessionName,
+    source,
+  }
 }
 
 function encodeSessionSegment(value: string) {

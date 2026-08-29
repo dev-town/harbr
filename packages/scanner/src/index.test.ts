@@ -9,7 +9,7 @@ import { GitService, GitServiceLive, type GitServiceApi } from '@harbr/git'
 import {
   RuntimeDiscoveryService,
   type RuntimeDiscoveryServiceApi,
-} from '@harbr/runtime-tmux/discovery'
+} from '@harbr/runtime/discovery'
 import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -22,6 +22,23 @@ import {
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
+const runtimeSource = { provider: 'tmux', sourceId: 'test' }
+
+function runtimeIdentity(externalId: string) {
+  return { displayLabel: externalId, externalId, source: runtimeSource }
+}
+
+function pathRuntime(
+  externalId: string,
+  contextPath: string,
+  source: { provider: string; sourceId: string },
+) {
+  return {
+    contextPath,
+    identity: { displayLabel: externalId, externalId, source },
+    status: 'open' as const,
+  }
+}
 
 afterEach(async () => {
   await Promise.all(
@@ -265,7 +282,9 @@ describe('observeProject', () => {
         },
       ],
     })
-    expect([null, 'tmux_not_found']).toContain(observation.runtimeIssue)
+    expect([null, 'provider_not_found']).toContain(
+      observation.runtimeIssue?.code ?? null,
+    )
   })
 
   it('can run against a provided git service layer', async () => {
@@ -292,7 +311,7 @@ describe('observeProject', () => {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
-            sessionName: 'alpha',
+            identity: runtimeIdentity('alpha'),
             scope: 'project',
             projectName: 'alpha',
             workspaceName: null,
@@ -300,7 +319,8 @@ describe('observeProject', () => {
             status: 'open',
           },
         ],
-        runtimeIssue: 'tmux_not_found',
+        runtimeIssue: { code: 'provider_not_found', source: runtimeSource },
+        source: runtimeSource,
       }),
     }
 
@@ -327,7 +347,7 @@ describe('observeProject', () => {
       workspaces: [],
       runtimes: [
         {
-          sessionName: 'alpha',
+          identity: runtimeIdentity('alpha'),
           scope: 'project',
           projectName: 'alpha',
           workspaceName: null,
@@ -335,7 +355,8 @@ describe('observeProject', () => {
           status: 'open',
         },
       ],
-      runtimeIssue: 'tmux_not_found',
+      runtimeIssue: { code: 'provider_not_found', source: runtimeSource },
+      runtimeSource,
     })
   })
 
@@ -371,7 +392,11 @@ describe('observeProject', () => {
       resolveWorkspacePath: () => Effect.succeed(null),
     }
     const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
-      listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+      listRuntimes: Effect.succeed({
+        runtimes: [],
+        runtimeIssue: null,
+        source: runtimeSource,
+      }),
     }
 
     const observations = await Effect.runPromise(
@@ -412,7 +437,7 @@ describe('observeProject', () => {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
-            sessionName: 'alpha',
+            identity: runtimeIdentity('alpha'),
             scope: 'project',
             projectName: 'alpha',
             workspaceName: null,
@@ -420,7 +445,7 @@ describe('observeProject', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main',
+            identity: runtimeIdentity('alpha__main'),
             scope: 'workspace',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -428,7 +453,7 @@ describe('observeProject', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main__apps/cli',
+            identity: runtimeIdentity('alpha__main__apps/cli'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -436,7 +461,7 @@ describe('observeProject', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha__main__apps/tui',
+            identity: runtimeIdentity('alpha__main__apps/tui'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -445,6 +470,7 @@ describe('observeProject', () => {
           },
         ],
         runtimeIssue: null,
+        source: runtimeSource,
       }),
     }
 
@@ -507,7 +533,7 @@ describe('observeProject', () => {
       ],
       runtimes: [
         {
-          sessionName: 'alpha',
+          identity: runtimeIdentity('alpha'),
           scope: 'project',
           projectName: 'alpha',
           workspaceName: null,
@@ -515,7 +541,7 @@ describe('observeProject', () => {
           status: 'open',
         },
         {
-          sessionName: 'alpha__main',
+          identity: runtimeIdentity('alpha__main'),
           scope: 'workspace',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -523,7 +549,7 @@ describe('observeProject', () => {
           status: 'open',
         },
         {
-          sessionName: 'alpha__main__apps/cli',
+          identity: runtimeIdentity('alpha__main__apps/cli'),
           scope: 'module',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -532,7 +558,94 @@ describe('observeProject', () => {
         },
       ],
       runtimeIssue: null,
+      runtimeSource,
     })
+  })
+
+  it('maps Herdr paths to project, worktree, and module contexts', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const featurePath = path.join(tempRoot, 'feature')
+    const modulePath = path.join(featurePath, 'apps', 'cli')
+
+    await mkdir(path.join(repoPath, 'apps', 'cli'), { recursive: true })
+    await mkdir(modulePath, { recursive: true })
+
+    const project: ProjectConfig = {
+      name: 'alpha',
+      repo: repoPath,
+      modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
+    }
+    const herdrSource = { provider: 'herdr', sourceId: '/tmp/herdr.sock' }
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
+      listRuntimes: Effect.succeed({
+        runtimes: [
+          pathRuntime('project', repoPath, herdrSource),
+          pathRuntime('workspace', featurePath, herdrSource),
+          pathRuntime('module', modulePath, herdrSource),
+          pathRuntime('unmapped', '/tmp/elsewhere', herdrSource),
+        ],
+        runtimeIssue: null,
+        source: herdrSource,
+      }),
+    }
+    const git: GitServiceApi = {
+      createWorktree: () => Effect.die('not used'),
+      getDefaultBranch: () => Effect.die('not used'),
+      getDefaultBranchIssue: () => Effect.succeed(null),
+      inspectRepo: () => Effect.succeed({ repoPath, kind: 'standard' }),
+      listWorkspaces: () =>
+        Effect.succeed([
+          {
+            branchName: 'main',
+            name: 'main',
+            path: repoPath,
+            kind: 'default',
+          },
+          {
+            branchName: 'feature',
+            name: 'feature',
+            path: featurePath,
+            kind: 'worktree',
+          },
+        ]),
+      resolveWorkspacePath: () => Effect.succeed(repoPath),
+    }
+
+    const observation = await Effect.runPromise(
+      Effect.flatMap(ScannerService, (service) =>
+        service.observeProject(project),
+      ).pipe(
+        Effect.provide(
+          ScannerServiceLive.pipe(
+            Layer.provide(
+              Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
+            ),
+            Layer.provide(Layer.succeed(GitService, git)),
+          ),
+        ),
+      ),
+    )
+
+    expect(observation.runtimes).toEqual([
+      expect.objectContaining({
+        projectName: 'alpha',
+        scope: 'project',
+        workspaceName: null,
+      }),
+      expect.objectContaining({
+        projectName: 'alpha',
+        scope: 'workspace',
+        workspaceName: 'feature',
+      }),
+      expect.objectContaining({
+        moduleName: 'apps/cli',
+        projectName: 'alpha',
+        scope: 'module',
+        workspaceName: 'feature',
+      }),
+    ])
+    expect(observation.runtimeSource).toEqual(herdrSource)
   })
 
   it('keeps root module runtimes when slash module exists', async () => {
@@ -551,7 +664,7 @@ describe('observeProject', () => {
       listRuntimes: Effect.succeed({
         runtimes: [
           {
-            sessionName: 'alpha~~main',
+            identity: runtimeIdentity('alpha~~main'),
             scope: 'workspace',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -559,7 +672,7 @@ describe('observeProject', () => {
             status: 'open',
           },
           {
-            sessionName: 'alpha~~main~~/',
+            identity: runtimeIdentity('alpha~~main~~/'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -568,6 +681,7 @@ describe('observeProject', () => {
           },
         ],
         runtimeIssue: null,
+        source: runtimeSource,
       }),
     }
 
@@ -630,7 +744,7 @@ describe('observeProject', () => {
       ],
       runtimes: [
         {
-          sessionName: 'alpha~~main',
+          identity: runtimeIdentity('alpha~~main'),
           scope: 'workspace',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -638,7 +752,7 @@ describe('observeProject', () => {
           status: 'open',
         },
         {
-          sessionName: 'alpha~~main~~/',
+          identity: runtimeIdentity('alpha~~main~~/'),
           scope: 'module',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -647,6 +761,7 @@ describe('observeProject', () => {
         },
       ],
       runtimeIssue: null,
+      runtimeSource,
     })
   })
 })
@@ -661,7 +776,11 @@ async function runScan(effect: ReturnType<typeof scanProject>) {
 
 async function runObservation(effect: ReturnType<typeof observeProject>) {
   const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
-    listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
+    listRuntimes: Effect.succeed({
+      runtimes: [],
+      runtimeIssue: null,
+      source: runtimeSource,
+    }),
   }
 
   return Effect.runPromise(

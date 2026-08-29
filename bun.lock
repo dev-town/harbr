@@ -19,7 +19,7 @@
     },
     "apps/tui": {
       "name": "@harbr/tui",
-      "version": "0.1.0-beta.1",
+      "version": "0.1.0-beta.3",
       "dependencies": {
         "@effect/opentelemetry": "0.63.0",
         "@effect/platform": "0.96.1",
@@ -28,6 +28,8 @@
         "@harbr/domain": "workspace:*",
         "@harbr/git": "workspace:*",
         "@harbr/reconciler": "workspace:*",
+        "@harbr/runtime": "workspace:*",
+        "@harbr/runtime-herdr": "workspace:*",
         "@harbr/runtime-tmux": "workspace:*",
         "@opentui/core": "^0.2.16",
         "@opentui/keymap": "^0.2.16",
@@ -37,6 +39,7 @@
         "zustand": "^5.0.14",
       },
       "devDependencies": {
+        "@harbr/test-utils": "workspace:*",
         "@types/react": "^19.2.17",
       },
     },
@@ -91,11 +94,36 @@
         "effect": "catalog:",
       },
     },
+    "packages/runtime": {
+      "name": "@harbr/runtime",
+      "dependencies": {
+        "@harbr/domain": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@harbr/test-utils": "workspace:*",
+      },
+    },
+    "packages/runtime-herdr": {
+      "name": "@harbr/runtime-herdr",
+      "dependencies": {
+        "@harbr/domain": "workspace:*",
+        "@harbr/runtime": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@harbr/test-utils": "workspace:*",
+      },
+    },
     "packages/runtime-tmux": {
       "name": "@harbr/runtime-tmux",
       "dependencies": {
         "@harbr/domain": "workspace:*",
+        "@harbr/runtime": "workspace:*",
         "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@harbr/test-utils": "workspace:*",
       },
     },
     "packages/scanner": {
@@ -103,12 +131,15 @@
       "dependencies": {
         "@harbr/domain": "workspace:*",
         "@harbr/git": "workspace:*",
-        "@harbr/runtime-tmux": "workspace:*",
+        "@harbr/runtime": "workspace:*",
         "effect": "catalog:",
       },
     },
     "packages/test-utils": {
       "name": "@harbr/test-utils",
+      "dependencies": {
+        "@harbr/domain": "workspace:*",
+      },
     },
   },
   "catalog": {
@@ -252,6 +283,10 @@
     "@harbr/git": ["@harbr/git@workspace:packages/git"],
 
     "@harbr/reconciler": ["@harbr/reconciler@workspace:packages/reconciler"],
+
+    "@harbr/runtime": ["@harbr/runtime@workspace:packages/runtime"],
+
+    "@harbr/runtime-herdr": ["@harbr/runtime-herdr@workspace:packages/runtime-herdr"],
 
     "@harbr/runtime-tmux": ["@harbr/runtime-tmux@workspace:packages/runtime-tmux"],
 

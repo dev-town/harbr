@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { Effect, Layer } from 'effect'
 import type { RuntimeTarget } from '@harbr/domain'
+import {
+  RuntimeDiscoveryService,
+  RuntimeService,
+  normalizeRuntimePaneCommands,
+  resolveRuntimePaneCwd,
+} from '@harbr/runtime'
+import {
+  runtimeLayoutTargetFixture,
+  runtimeLayoutWindowsFixture,
+} from '@harbr/test-utils'
 
 import type {
   CreateRuntimeWindowsResult,
@@ -14,12 +24,22 @@ import {
   parseSessionName,
 } from './session-name.util'
 import { classifyRuntimeDiscoveryIssue } from './runtime-tmux.discovery'
-import { RuntimeTmuxService, RuntimeTmuxServiceLive } from './index'
+import {
+  getTmuxRuntimeSource,
+  RuntimeDiscoveryServiceLive,
+  RuntimeServiceLive,
+} from './index'
+
+const source = { provider: 'tmux', sourceId: '/tmp/tmux/default' }
+
+function identity(externalId: string) {
+  return { displayLabel: externalId, externalId, source }
+}
 
 describe('parseSessionName', () => {
   it('parses project-only session names', () => {
-    expect(parseSessionName('alpha')).toEqual({
-      sessionName: 'alpha',
+    expect(parseSessionName('alpha', source)).toEqual({
+      identity: identity('alpha'),
       scope: 'project',
       projectName: 'alpha',
       workspaceName: null,
@@ -29,8 +49,8 @@ describe('parseSessionName', () => {
   })
 
   it('parses workspace and module names with canonical separators', () => {
-    expect(parseSessionName('alpha~~main~~apps/cli')).toEqual({
-      sessionName: 'alpha~~main~~apps/cli',
+    expect(parseSessionName('alpha~~main~~apps/cli', source)).toEqual({
+      identity: identity('alpha~~main~~apps/cli'),
       scope: 'module',
       projectName: 'alpha',
       workspaceName: 'main',
@@ -40,8 +60,8 @@ describe('parseSessionName', () => {
   })
 
   it('parses root module session names', () => {
-    expect(parseSessionName('alpha~~main~~/')).toEqual({
-      sessionName: 'alpha~~main~~/',
+    expect(parseSessionName('alpha~~main~~/', source)).toEqual({
+      identity: identity('alpha~~main~~/'),
       scope: 'module',
       projectName: 'alpha',
       workspaceName: 'main',
@@ -60,8 +80,8 @@ describe('parseSessionName', () => {
     expect(sessionName).toBe(
       'alpha~~feature/__fixtures~3amain~~apps/__generated~2etest~25ok',
     )
-    expect(parseSessionName(sessionName)).toEqual({
-      sessionName,
+    expect(parseSessionName(sessionName, source)).toEqual({
+      identity: identity(sessionName),
       scope: 'module',
       projectName: 'alpha',
       workspaceName: 'feature/__fixtures:main',
@@ -71,8 +91,28 @@ describe('parseSessionName', () => {
   })
 
   it('ignores invalid session names', () => {
-    expect(parseSessionName('alpha~~')).toBeNull()
-    expect(parseSessionName('')).toBeNull()
+    expect(parseSessionName('alpha~~', source)).toBeNull()
+    expect(parseSessionName('', source)).toBeNull()
+  })
+})
+
+describe('getTmuxRuntimeSource', () => {
+  it('uses the current tmux socket as the contextual source', () => {
+    expect(
+      getTmuxRuntimeSource({
+        TMUX: '/private/tmp/tmux-501/default,1234,0',
+      }),
+    ).toEqual({
+      provider: 'tmux',
+      sourceId: '/private/tmp/tmux-501/default',
+    })
+  })
+
+  it('uses the default tmux server outside a tmux client', () => {
+    expect(getTmuxRuntimeSource({})).toEqual({
+      provider: 'tmux',
+      sourceId: 'default',
+    })
   })
 })
 
@@ -82,7 +122,7 @@ describe('session helpers', () => {
       findMatchingRuntime(
         [
           {
-            sessionName: 'alpha~~main~~apps/cli',
+            identity: identity('alpha~~main~~apps/cli'),
             scope: 'module',
             projectName: 'alpha',
             workspaceName: 'main',
@@ -96,7 +136,7 @@ describe('session helpers', () => {
           moduleName: 'apps/cli',
         },
       ),
-    )?.toMatchObject({ sessionName: 'alpha~~main~~apps/cli' })
+    )?.toMatchObject({ identity: { externalId: 'alpha~~main~~apps/cli' } })
   })
 
   it('formats exact tmux targets', () => {
@@ -114,6 +154,47 @@ describe('session helpers', () => {
   })
 })
 
+describe('layout semantics', () => {
+  it('maps the shared logical fixture to tmux window and pane inputs', () => {
+    expect(
+      runtimeLayoutWindowsFixture.map((window) => ({
+        name: window.name,
+        panes: window.panes.map((pane) => ({
+          commands: normalizeRuntimePaneCommands(pane.command),
+          cwd: resolveRuntimePaneCwd(runtimeLayoutTargetFixture.cwd, pane.cwd),
+          name: pane.name,
+        })),
+      })),
+    ).toEqual([
+      {
+        name: 'Editor',
+        panes: [
+          {
+            commands: ['nvim .'],
+            cwd: '/work/alpha-feature',
+            name: 'Code',
+          },
+          {
+            commands: ['bun run test', 'bun run lint'],
+            cwd: '/work/alpha-feature/apps/cli',
+            name: 'Tests',
+          },
+        ],
+      },
+      {
+        name: 'Logs',
+        panes: [
+          {
+            commands: [],
+            cwd: '/var/log/alpha',
+            name: 'Server logs',
+          },
+        ],
+      },
+    ])
+  })
+})
+
 describe('listRuntimes', () => {
   it('classifies harmless tmux discovery failures', () => {
     expect(classifyRuntimeDiscoveryIssue('no server running')).toBeNull()
@@ -121,7 +202,7 @@ describe('listRuntimes', () => {
       classifyRuntimeDiscoveryIssue(
         'error connecting to /private/tmp/tmux-501/default (Operation not permitted)',
       ),
-    ).toBe('tmux_unavailable')
+    ).toBe('source_unavailable')
     expect(classifyRuntimeDiscoveryIssue('unexpected tmux failure')).toBe(
       undefined,
     )
@@ -131,7 +212,7 @@ describe('listRuntimes', () => {
     const discovery: RuntimeDiscovery = {
       runtimes: [
         {
-          sessionName: 'alpha~~main',
+          identity: identity('alpha~~main'),
           scope: 'workspace',
           projectName: 'alpha',
           workspaceName: 'main',
@@ -140,24 +221,17 @@ describe('listRuntimes', () => {
         },
       ],
       runtimeIssue: null,
+      source,
     }
 
-    const layer = Layer.succeed(RuntimeTmuxService, {
-      closeRuntime: (_sessionName: string) => Effect.void,
-      createRuntimeWindows: (_input) =>
-        Effect.succeed<CreateRuntimeWindowsResult>({
-          createdWindowNames: [],
-          skippedWindowNames: [],
-        }),
+    const layer = Layer.succeed(RuntimeDiscoveryService, {
       listRuntimes: Effect.succeed(discovery),
-      getCurrentRuntime: Effect.succeed(null),
-      openOrCreateRuntime: (_target: RuntimeTarget) => Effect.void,
     })
 
     await expect(
       Effect.runPromise(
         Effect.flatMap(
-          RuntimeTmuxService,
+          RuntimeDiscoveryService,
           (service) => service.listRuntimes,
         ).pipe(Effect.provide(layer)),
       ),
@@ -165,37 +239,33 @@ describe('listRuntimes', () => {
   })
 
   it('exports a usable live layer symbol', () => {
-    expect(RuntimeTmuxServiceLive).toBeDefined()
+    expect(RuntimeDiscoveryServiceLive).toBeDefined()
   })
 })
 
 describe('getCurrentRuntime', () => {
   it('returns provided current runtime from the service layer', async () => {
     const currentRuntime: CurrentRuntime = {
-      sessionName: 'alpha~~main~~apps/cli',
-      scope: 'module',
-      projectName: 'alpha',
-      workspaceName: 'main',
-      moduleName: 'apps/cli',
+      identity: identity('alpha~~main~~apps/cli'),
       status: 'open',
     }
 
-    const layer = Layer.succeed(RuntimeTmuxService, {
-      closeRuntime: (_sessionName: string) => Effect.void,
+    const layer = Layer.succeed(RuntimeService, {
+      closeRuntime: () => Effect.void,
       createRuntimeWindows: (_input) =>
         Effect.succeed<CreateRuntimeWindowsResult>({
           createdWindowNames: [],
           skippedWindowNames: [],
         }),
-      listRuntimes: Effect.succeed({ runtimes: [], runtimeIssue: null }),
       getCurrentRuntime: Effect.succeed(currentRuntime),
       openOrCreateRuntime: (_target: RuntimeTarget) => Effect.void,
+      source,
     })
 
     await expect(
       Effect.runPromise(
         Effect.flatMap(
-          RuntimeTmuxService,
+          RuntimeService,
           (service) => service.getCurrentRuntime,
         ).pipe(Effect.provide(layer)),
       ),
@@ -203,6 +273,6 @@ describe('getCurrentRuntime', () => {
   })
 
   it('exports a usable live service tag', () => {
-    expect(RuntimeTmuxService).toBeDefined()
+    expect(RuntimeServiceLive).toBeDefined()
   })
 })

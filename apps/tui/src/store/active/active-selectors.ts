@@ -1,4 +1,8 @@
-import type { RuntimeAttachment, RuntimeFact } from '@harbr/domain'
+import {
+  isSameRuntimeIdentity,
+  type CurrentRuntime,
+  type RuntimeAttachment,
+} from '@harbr/domain'
 
 import type { TuiStoreModel } from '~/store/types'
 import type { HarbourRow } from '~/types/rows'
@@ -46,7 +50,9 @@ function hasRuntime(
 
 function isCurrentActiveRow(
   row: HarbourRow & { runtime: RuntimeAttachment },
-  currentRuntime: RuntimeFact | null,
+  currentRuntime: CurrentRuntime,
 ) {
-  return currentRuntime?.sessionName === row.runtime.sessionName
+  return currentRuntime
+    ? isSameRuntimeIdentity(currentRuntime.identity, row.runtime.identity)
+    : false
 }

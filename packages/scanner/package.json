@@ -14,7 +14,7 @@
   "dependencies": {
     "@harbr/domain": "workspace:*",
     "@harbr/git": "workspace:*",
-    "@harbr/runtime-tmux": "workspace:*",
+    "@harbr/runtime": "workspace:*",
     "effect": "catalog:"
   }
 }

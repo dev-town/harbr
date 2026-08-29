@@ -1,8 +1,8 @@
-import type { RuntimeIssue } from '@harbr/domain'
+import type { RuntimeIssueCode } from '@harbr/domain'
 
 export function classifyRuntimeDiscoveryIssue(
   message: string,
-): RuntimeIssue | null | undefined {
+): RuntimeIssueCode | null | undefined {
   if (message.includes('no server running')) {
     return null
   }
@@ -11,7 +11,7 @@ export function classifyRuntimeDiscoveryIssue(
     message.includes('error connecting') ||
     message.includes('failed to connect')
   ) {
-    return 'tmux_unavailable'
+    return 'source_unavailable'
   }
 
   return undefined

@@ -12,5 +12,23 @@ export type RuntimeScope = z.infer<typeof RuntimeScopeSchema>
 export const RuntimeStatusSchema = z.enum(['open'])
 export type RuntimeStatus = z.infer<typeof RuntimeStatusSchema>
 
-export const RuntimeIssueSchema = z.enum(['tmux_not_found', 'tmux_unavailable'])
+export const RuntimeProviderSchema = z.string().min(1)
+export type RuntimeProvider = z.infer<typeof RuntimeProviderSchema>
+
+export const RuntimeSourceSchema = z.object({
+  provider: RuntimeProviderSchema,
+  sourceId: z.string().min(1),
+})
+export type RuntimeSource = z.infer<typeof RuntimeSourceSchema>
+
+export const RuntimeIssueCodeSchema = z.enum([
+  'provider_not_found',
+  'source_unavailable',
+])
+export type RuntimeIssueCode = z.infer<typeof RuntimeIssueCodeSchema>
+
+export const RuntimeIssueSchema = z.object({
+  code: RuntimeIssueCodeSchema,
+  source: RuntimeSourceSchema,
+})
 export type RuntimeIssue = z.infer<typeof RuntimeIssueSchema>

@@ -123,7 +123,7 @@ export function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
 export function mapActiveRuntimeSummaryToRow(
   summary: ActiveRuntimeSummary,
 ): HarbourRow {
-  const runtime = { sessionName: summary.sessionName, status: summary.status }
+  const runtime = summary.runtime
 
   if (summary.scope === 'project') {
     return {
@@ -133,7 +133,7 @@ export function mapActiveRuntimeSummaryToRow(
       projectId: summary.projectId,
       isActive: true,
       isCurrent: false,
-      metadata: summary.status,
+      metadata: summary.runtime.status,
       activeSessionCount: 1,
       hasModules: false,
       hasWorkspaces: false,
@@ -164,7 +164,7 @@ export function mapActiveRuntimeSummaryToRow(
       workspaceId: summary.workspaceId ?? '',
       isActive: true,
       isCurrent: false,
-      metadata: summary.status,
+      metadata: summary.runtime.status,
       activeSessionCount: 1,
       branchName: null,
       hasModules: false,
@@ -198,7 +198,7 @@ export function mapActiveRuntimeSummaryToRow(
     moduleId: summary.moduleId ?? '',
     isActive: true,
     isCurrent: false,
-    metadata: summary.status,
+    metadata: summary.runtime.status,
     hasSession: true,
     modulePath: summary.modulePath ?? '.',
     runtime,

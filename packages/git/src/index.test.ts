@@ -395,6 +395,47 @@ describe('listWorkspaces', () => {
       },
     ])
   })
+
+  it('ignores prunable worktree registrations', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'repo')
+    const staleWorktreePath = path.join(tempRoot, 'stale-worktree')
+
+    await execFileAsync('git', ['init', '-b', 'main', repoPath])
+    await execFileAsync('git', [
+      '-C',
+      repoPath,
+      '-c',
+      'user.name=Test',
+      '-c',
+      'user.email=test@example.com',
+      'commit',
+      '--allow-empty',
+      '-m',
+      'init',
+    ])
+    await execFileAsync('git', [
+      '-C',
+      repoPath,
+      'worktree',
+      'add',
+      '-b',
+      'stale',
+      staleWorktreePath,
+    ])
+    await rm(staleWorktreePath, { recursive: true })
+
+    await expect(
+      runWorkspacesSuccess(listWorkspaces({ repoPath, kind: 'standard' })),
+    ).resolves.toEqual([
+      {
+        branchName: 'main',
+        name: 'main',
+        path: repoPath,
+        kind: 'default',
+      },
+    ])
+  })
 })
 
 async function runEither(effect: ReturnType<typeof inspectRepo>) {

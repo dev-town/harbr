@@ -44,7 +44,10 @@ describe('formatCliOutput', () => {
           runtimeCount: 0,
           status: 'no_workspace',
           errorTag: null,
-          runtimeIssue: 'tmux_not_found',
+          runtimeIssue: {
+            code: 'provider_not_found',
+            source: { provider: 'tmux', sourceId: 'default' },
+          },
         },
       ],
     }
@@ -57,7 +60,7 @@ describe('formatCliOutput', () => {
         '  modules: 0',
         '  runtimes: 0',
         '  status: no workspace',
-        '  runtime issue: tmux_not_found',
+        '  runtime issue: provider_not_found (tmux)',
       ].join('\n'),
     )
   })

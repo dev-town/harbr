@@ -1,4 +1,5 @@
 import { ConfigService } from '@harbr/config'
+import { isSameRuntimeIdentity } from '@harbr/domain'
 import { ReconcilerService } from '@harbr/reconciler'
 import { Effect, Either } from 'effect'
 
@@ -76,6 +77,14 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
         configuredWindows.find((entry) => entry.projectName === summary.name)
           ?.windows ?? [],
     }))
+    const currentRuntimeSummary = currentRuntime
+      ? (activeRuntimeSummaries.find((summary) =>
+          isSameRuntimeIdentity(
+            summary.runtime.identity,
+            currentRuntime.identity,
+          ),
+        ) ?? null)
+      : null
 
     store.setState((state) => ({
       active: {
@@ -106,14 +115,14 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       },
     }))
 
-    const restoredFromTmux = await restoreCurrentRuntime(
+    const restoredFromRuntime = await restoreCurrentRuntime(
       services,
       store,
-      currentRuntime,
+      currentRuntimeSummary,
       summaries,
     )
 
-    if (!restoredFromTmux) {
+    if (!restoredFromRuntime) {
       await restoreUiContext(services, store, savedContext, summaries)
     }
 
@@ -158,14 +167,8 @@ function getActiveRuntimeRowId(
   }
 
   return (
-    rows.find((row) => row.sessionName === currentRuntime.sessionName)?.id ??
-    rows.find(
-      (row) =>
-        row.scope === currentRuntime.scope &&
-        row.projectName === currentRuntime.projectName &&
-        row.workspaceName === (currentRuntime.workspaceName ?? null) &&
-        row.moduleName === (currentRuntime.moduleName ?? null),
-    )?.id ??
-    null
+    rows.find((row) =>
+      isSameRuntimeIdentity(row.runtime.identity, currentRuntime.identity),
+    )?.id ?? null
   )
 }

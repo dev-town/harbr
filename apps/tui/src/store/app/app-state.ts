@@ -1,4 +1,4 @@
-import type { RuntimeFact } from '@harbr/domain'
+import type { CurrentRuntime } from '@harbr/domain'
 
 import type { AppRoute } from '~/types/navigation'
 import type { NoticeLevel } from '~/types/notice'
@@ -11,7 +11,7 @@ export type Notice = {
 
 export type AppState = {
   currentRoute: AppRoute
-  currentRuntime: RuntimeFact | null
+  currentRuntime: CurrentRuntime
   isLoading: boolean
   notice: Notice | null
   noticeSequence: number
