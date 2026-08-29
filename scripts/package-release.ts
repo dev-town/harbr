@@ -31,6 +31,7 @@ if (!version) {
 
 const releaseDir = join('dist', 'release')
 const manifestPath = join(releaseDir, 'manifest.json')
+const checksumsPath = join(releaseDir, 'SHA256SUMS')
 const requiredFiles = ['LICENSE', 'NOTICE', 'README.md'] as const
 const commandEnv = { ...Bun.env, LANG: 'C', LC_ALL: 'C' }
 
@@ -155,6 +156,13 @@ await Bun.write(
   `${JSON.stringify({ artifacts: createdArtifacts, version }, null, 2)}\n`,
 )
 
+await Bun.write(
+  checksumsPath,
+  `${createdArtifacts
+    .map((artifact) => `${artifact.sha256}  ${artifact.name}`)
+    .join('\n')}\n`,
+)
+
 console.log('Release artifacts:')
 for (const artifact of createdArtifacts) {
   console.log(`- ${artifact.path}`)
@@ -162,3 +170,4 @@ for (const artifact of createdArtifacts) {
 }
 console.log('')
 console.log(`Wrote ${manifestPath}`)
+console.log(`Wrote ${checksumsPath}`)
