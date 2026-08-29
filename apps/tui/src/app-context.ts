@@ -2,6 +2,7 @@ import type { createCliRenderer } from '@opentui/core'
 import { createContext } from 'react'
 
 import type { TuiOptions } from './types'
+import type { StartupTelemetry } from './observability/startup'
 import type { TuiEffectRuntime } from './services/effect-runtime'
 import type { tuiStore } from './store'
 
@@ -10,6 +11,7 @@ export type TuiServices = {
   options: TuiOptions
   renderer: Awaited<ReturnType<typeof createCliRenderer>>
   shutdown: () => Promise<void>
+  startupTelemetry: StartupTelemetry
 }
 
 export type TuiStore = typeof tuiStore
