@@ -1,5 +1,11 @@
 # @harbr/tui
 
+## 0.1.0-beta.6
+
+### Patch Changes
+
+- 8f4c98b: Add the official Herdr plugin for opening Harbr as a named popup.
+
 ## 0.1.0-beta.5
 
 ### Minor Changes
