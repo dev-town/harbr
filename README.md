@@ -74,7 +74,7 @@ Until the first stable release, install a specific beta by passing the version t
 
 ```sh
 curl -fsSL https://dev-town.com/labs/harbr/install.sh | \
-  HARBR_VERSION=0.1.0-beta.4 sh
+  HARBR_VERSION=0.1.0-beta.5 sh
 ```
 
 Override the installation directory if needed:
@@ -355,19 +355,35 @@ bind-key -r H display-popup -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C
 
 ## Herdr Popup Setup
 
-Harbr supports Herdr's custom-command popup binding. Add a binding like this to `~/.config/herdr/config.toml`; Harbr does not edit the file automatically:
+Install Harbr's Herdr plugin:
+
+```sh
+herdr plugin install dev-town/harbr/herdr-plugin
+```
+
+Then bind its open action in `~/.config/herdr/config.toml`:
+
+```toml
+[[keys.command]]
+key = "prefix+shift+h"
+type = "plugin_action"
+command = "dev-town.harbr.open"
+description = "Open Harbr"
+```
+
+Herdr plugins cannot install keybindings, so choose another key if `prefix+shift+h` conflicts with your configuration. Restart Herdr or reload its configuration after saving the binding. The plugin requires `harbr` on the shell path Herdr receives.
+
+For Herdr versions without plugin support, use the legacy custom-command popup:
 
 ```toml
 [[keys.command]]
 key = "prefix+shift+h"
 type = "popup"
 command = "harbr"
-description = "open Harbr"
+description = "Open Harbr"
 width = "80%"
 height = "60%"
 ```
-
-If `harbr` is not on the shell path Herdr receives, set `command` to the installed binary's absolute path, for example `"/opt/homebrew/bin/harbr"`. Restart Herdr or reload its configuration after saving the binding.
 
 When launched from this popup, Harbr scopes Active and Browse to the current Herdr session. Selecting a project, workspace, or module focuses its existing Herdr workspace by workspace ID, or creates and focuses a workspace rooted at that context's resolved working directory. The popup closes after a successful jump.
 
