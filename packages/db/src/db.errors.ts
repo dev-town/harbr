@@ -21,6 +21,7 @@ export class ProjectServiceError extends Data.TaggedError(
     | 'listModuleSummaries'
     | 'listProjectSummaries'
     | 'listWorkspaceSummaries'
+    | 'pruneRuntimeBindings'
     | 'saveUiContext'
     | 'syncSnapshot'
   message: string

@@ -57,15 +57,22 @@ describe('openRuntimeForTarget', () => {
         events,
       )
 
-      await openRuntimeForTarget(services, tuiStore, target, context, {
-        persistContext: async (_services, persistedContext) => {
-          expect(persistedContext).toEqual(context)
-          events.push('persist')
+      await openRuntimeForTarget(
+        services,
+        tuiStore,
+        target,
+        context,
+        undefined,
+        {
+          persistContext: async (_services, persistedContext) => {
+            expect(persistedContext).toEqual(context)
+            events.push('persist')
+          },
+          refresh: async () => {
+            events.push('refresh')
+          },
         },
-        refresh: async () => {
-          events.push('refresh')
-        },
-      })
+      )
 
       expect(events).toEqual([
         `open:${target.cwd}`,
@@ -103,6 +110,7 @@ describe('openRuntimeForTarget', () => {
       tuiStore,
       runtimeTarget('project'),
       { projectId: 'project-alpha' },
+      undefined,
       { persistContext: persist, refresh },
     )
 

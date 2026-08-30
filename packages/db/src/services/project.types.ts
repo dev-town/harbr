@@ -103,6 +103,10 @@ export type ProjectServiceApi = {
     workspaceId: string,
     source: RuntimeSource,
   ) => Effect.Effect<readonly ModuleSummary[], ProjectServiceError>
+  readonly pruneRuntimeBindings: (
+    source: RuntimeSource,
+    observedExternalIds: readonly string[],
+  ) => Effect.Effect<void, ProjectServiceError>
   readonly saveUiContext: (
     context: HarbourContext,
   ) => Effect.Effect<HarbourContext, ProjectServiceError>

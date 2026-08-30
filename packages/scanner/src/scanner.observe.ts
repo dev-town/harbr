@@ -78,6 +78,10 @@ function observeProjectWithDiscovery(
             Effect.map(
               (observedWorkspaces) =>
                 ({
+                  observedRuntimes: discovery.runtimes.map((runtime) => ({
+                    identity: runtime.identity,
+                    status: runtime.status,
+                  })),
                   projectIssue,
                   projectName: project.name,
                   repoPath: repo.repoPath,

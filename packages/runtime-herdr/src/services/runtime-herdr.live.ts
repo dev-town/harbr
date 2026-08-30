@@ -1,5 +1,3 @@
-import { normalize, resolve } from 'node:path'
-
 import {
   isSameRuntimeSource,
   type CurrentRuntime,
@@ -49,7 +47,8 @@ export const RuntimeServiceLayer = Layer.effect(
       createRuntimeWindows: (input) =>
         createHerdrRuntimeWindows(client, input, source),
       getCurrentRuntime: getCurrentRuntimeLive(client),
-      openOrCreateRuntime: (target) => openOrCreateRuntimeLive(client, target),
+      openOrCreateRuntime: (target, identity) =>
+        openOrCreateRuntimeLive(client, target, identity),
       source,
     } satisfies RuntimeServiceApi
   }),
@@ -131,13 +130,17 @@ function getCurrentRuntimeLive(client: HerdrClientApi) {
 function openOrCreateRuntimeLive(
   client: HerdrClientApi,
   target: Parameters<RuntimeServiceApi['openOrCreateRuntime']>[0],
+  identity?: RuntimeIdentity,
 ) {
   return Effect.gen(function* () {
     const snapshot = yield* readNormalizedSnapshot(client)
-    const existing = snapshot.runtimes.find(
-      (runtime) =>
-        canonicalPath(runtime.contextPath) === canonicalPath(target.cwd),
-    )
+    const existingByIdentity =
+      identity && isSameRuntimeSource(identity.source, source)
+        ? snapshot.runtimes.find(
+            (runtime) => runtime.identity.externalId === identity.externalId,
+          )
+        : undefined
+    const existing = existingByIdentity
 
     if (existing) {
       yield* client.execute([
@@ -194,10 +197,6 @@ function readNormalizedSnapshot(client: HerdrClientApi) {
       }),
     ),
   )
-}
-
-function canonicalPath(path: string) {
-  return normalize(resolve(path))
 }
 
 function getRuntimeTargetScope(

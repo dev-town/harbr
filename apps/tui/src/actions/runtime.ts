@@ -40,6 +40,7 @@ export async function openProjectRoot(
     store,
     row.target.runtimeTarget,
     row.target.context,
+    row.runtime?.identity,
   )
 }
 
@@ -53,6 +54,7 @@ export async function openWorkspaceRoot(
     store,
     row.target.runtimeTarget,
     row.target.context,
+    row.runtime?.identity,
   )
 }
 
@@ -66,6 +68,7 @@ export async function openModuleRuntime(
     store,
     row.target.runtimeTarget,
     row.target.context,
+    row.runtime?.identity,
   )
 }
 
@@ -79,6 +82,7 @@ export async function openActiveRuntime(
     store,
     row.target.runtimeTarget,
     row.target.context,
+    row.runtime.identity,
   )
 }
 
@@ -137,6 +141,7 @@ export async function openRuntimeForTarget(
   store: TuiStore,
   target: RuntimeTarget,
   nextContext: HarbourContext,
+  identity?: RuntimeAttachment['identity'],
   hooks: OpenRuntimeHooks = defaultOpenRuntimeHooks,
 ) {
   store.getState().setLoading(true)
@@ -147,7 +152,7 @@ export async function openRuntimeForTarget(
       Effect.gen(function* () {
         const runtime = yield* RuntimeService
 
-        yield* runtime.openOrCreateRuntime(target)
+        yield* runtime.openOrCreateRuntime(target, identity)
       }),
     )
     await hooks.persistContext(services, nextContext)

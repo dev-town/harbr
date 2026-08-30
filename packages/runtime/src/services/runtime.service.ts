@@ -25,6 +25,7 @@ export type RuntimeServiceApi = {
   >
   readonly openOrCreateRuntime: (
     target: RuntimeTarget,
+    identity?: RuntimeIdentity,
   ) => Effect.Effect<void, RuntimeProviderError>
   readonly source: RuntimeSource
 }
