@@ -52,6 +52,16 @@ describe('reconciler', () => {
 
     observation = {
       ...observation,
+      observedRuntimes: [
+        {
+          identity: {
+            displayLabel: 'alpha',
+            externalId: 'alpha',
+            source: runtimeSource,
+          },
+          status: 'open',
+        },
+      ],
       runtimes: [
         {
           identity: {
@@ -77,6 +87,16 @@ describe('reconciler', () => {
 
     observation = {
       ...observation,
+      observedRuntimes: [
+        {
+          identity: {
+            displayLabel: 'alpha-other',
+            externalId: 'alpha-other',
+            source: otherSource,
+          },
+          status: 'open',
+        },
+      ],
       runtimes: [
         {
           identity: {
@@ -252,6 +272,79 @@ describe('reconciler', () => {
     expect(summaries.tmuxActive).toEqual([])
   })
 
+  it('keeps a Herdr workspace binding stable until the workspace closes', async () => {
+    const tempRoot = await createTempRoot()
+    const alphaPath = path.join(tempRoot, 'alpha')
+    const betaPath = path.join(tempRoot, 'beta')
+    const elsewherePath = path.join(tempRoot, 'elsewhere')
+    const dbPath = path.join(tempRoot, 'harbour.db')
+    const herdrSource = { provider: 'herdr', sourceId: '/tmp/herdr.sock' }
+    const identity = {
+      displayLabel: 'the.file',
+      externalId: 'w1',
+      source: herdrSource,
+    }
+
+    await execFileAsync('git', ['init', alphaPath])
+    await execFileAsync('git', ['init', betaPath])
+    await mkdir(elsewherePath)
+
+    let contextPath: string | null = alphaPath
+    let runtimeIssue: {
+      code: 'source_unavailable'
+      source: typeof herdrSource
+    } | null = null
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
+      listRuntimes: Effect.sync(() => ({
+        runtimes: contextPath
+          ? [{ contextPath, identity, status: 'open' as const }]
+          : [],
+        runtimeIssue,
+        source: herdrSource,
+      })),
+    }
+    const scanner = ScannerServiceLive.pipe(
+      Layer.provide(GitServiceLive),
+      Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
+    )
+    const reconciler = ReconcilerServiceLive.pipe(
+      Layer.provide(makeTestProjectServiceLayer(dbPath)),
+      Layer.provide(scanner),
+    )
+    const projects = [
+      createProjectConfig('alpha', alphaPath),
+      createProjectConfig('beta', betaPath),
+    ]
+
+    await syncProjects(reconciler, projects)
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([
+      'alpha',
+    ])
+
+    contextPath = betaPath
+    await syncProjects(reconciler, projects)
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([
+      'alpha',
+    ])
+
+    contextPath = elsewherePath
+    await syncProjects(reconciler, projects)
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([
+      'alpha',
+    ])
+
+    contextPath = null
+    runtimeIssue = { code: 'source_unavailable', source: herdrSource }
+    await syncProjects(reconciler, projects)
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([
+      'alpha',
+    ])
+
+    runtimeIssue = null
+    await syncProjects(reconciler, projects)
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([])
+  })
+
   it('persists project only when bare repo has no linked workspace', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'repo.git')
@@ -355,10 +448,11 @@ describe('reconciler', () => {
         Layer.succeed(ProjectService, {
           findByName: () => Effect.succeed(null),
           loadUiContext: Effect.succeed({}),
-          listActiveRuntimeSummaries: () => Effect.die('not used'),
+          listActiveRuntimeSummaries: () => Effect.succeed([]),
           listModuleSummaries: () => Effect.die('not used'),
           listProjectSummaries: () => Effect.die('not used'),
           listWorkspaceSummaries: () => Effect.die('not used'),
+          pruneRuntimeBindings: () => Effect.void,
           saveUiContext: () => Effect.die('not used'),
           syncSnapshot: (input) => {
             persistedProjects.push(input.projectName)
@@ -481,8 +575,34 @@ function makeTestProjectServiceLayer(dbPath: string) {
   return ProjectServiceLive.pipe(Layer.provide(database))
 }
 
+async function syncProjects<E>(
+  layer: Layer.Layer<ReconcilerService, E>,
+  projects: readonly ProjectConfig[],
+) {
+  await Effect.runPromise(
+    Effect.flatMap(ReconcilerService, (service) =>
+      service.syncProjects(projects),
+    ).pipe(Effect.provide(layer)),
+  )
+}
+
+async function activeProjectNames(
+  dbPath: string,
+  source: { provider: string; sourceId: string },
+) {
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const projects = yield* ProjectService
+      const summaries = yield* projects.listActiveRuntimeSummaries(source)
+
+      return summaries.map((summary) => summary.projectName)
+    }).pipe(Effect.provide(makeTestProjectServiceLayer(dbPath))),
+  )
+}
+
 function createObservation(project: ProjectConfig): ProjectObservation {
   return {
+    observedRuntimes: [],
     projectName: project.name,
     repoPath: project.repo,
     repoKind: 'standard',

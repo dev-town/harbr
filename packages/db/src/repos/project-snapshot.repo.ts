@@ -9,7 +9,7 @@ import type {
   RuntimeSource,
   WorkspaceSummary,
 } from '@harbr/domain'
-import { eq } from 'drizzle-orm'
+import { and, eq, notInArray } from 'drizzle-orm'
 import type { HarbourDatabase } from '../db.types'
 import type {
   ModuleRecord,
@@ -40,6 +40,26 @@ export function getProjectByName(db: HarbourDatabase, projectName: string) {
     .get()
 
   return row ? mapProjectRow(projectRowSchema.parse(row)) : null
+}
+
+export function pruneRuntimeBindings(
+  db: HarbourDatabase,
+  source: RuntimeSource,
+  observedExternalIds: readonly string[],
+) {
+  const sourceFilter = and(
+    eq(runtimes.provider, source.provider),
+    eq(runtimes.sourceId, source.sourceId),
+  )
+  const uniqueExternalIds = [...new Set(observedExternalIds)]
+
+  db.delete(runtimes)
+    .where(
+      uniqueExternalIds.length === 0
+        ? sourceFilter
+        : and(sourceFilter, notInArray(runtimes.externalId, uniqueExternalIds)),
+    )
+    .run()
 }
 
 export function listProjectSummaries(

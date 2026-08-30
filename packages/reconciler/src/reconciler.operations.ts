@@ -12,6 +12,8 @@ import type {
   ScannerServiceApi,
 } from '@harbr/scanner'
 
+import { stabilizeRuntimeFacts } from './reconciler.runtimes'
+
 export function syncProjects(
   projects: readonly ProjectConfig[],
   scanner: ScannerServiceApi,
@@ -28,9 +30,19 @@ export function syncProjects(
         ),
       ),
     )
+    const runtimeObservation = observations.flatMap((observation) =>
+      Either.isRight(observation.result) ? [observation.result.right] : [],
+    )[0]
+    const reconciledObservations = runtimeObservation
+      ? yield* reconcileRuntimeFacts(
+          observations,
+          projectService,
+          runtimeObservation.runtimeSource,
+        )
+      : observations
 
     const results = yield* Effect.forEach(
-      observations,
+      reconciledObservations,
       ({ project, result }) =>
         Either.isLeft(result)
           ? Effect.succeed<SyncProjectResult>(
@@ -38,6 +50,15 @@ export function syncProjects(
             )
           : persistObservation(projectService, result.right),
     )
+
+    if (runtimeObservation && runtimeObservation.runtimeIssue === null) {
+      yield* projectService.pruneRuntimeBindings(
+        runtimeObservation.runtimeSource,
+        runtimeObservation.observedRuntimes.map(
+          (runtime) => runtime.identity.externalId,
+        ),
+      )
+    }
 
     return { projects: results } satisfies SyncResult
   })
@@ -50,9 +71,42 @@ export function refreshConfiguredProject(
 ) {
   return Effect.gen(function* () {
     const observation = yield* scanner.observeProject(project)
+    const reconciled = yield* reconcileRuntimeFacts(
+      [{ project, result: Either.right(observation) }],
+      projectService,
+      observation.runtimeSource,
+    )
+    const reconciledResult = reconciled[0]!.result
+    const reconciledObservation = Either.isRight(reconciledResult)
+      ? reconciledResult.right
+      : observation
+    const result = yield* persistObservation(
+      projectService,
+      reconciledObservation,
+    )
 
-    return yield* persistObservation(projectService, observation)
+    if (observation.runtimeIssue === null) {
+      yield* projectService.pruneRuntimeBindings(
+        observation.runtimeSource,
+        observation.observedRuntimes.map(
+          (runtime) => runtime.identity.externalId,
+        ),
+      )
+    }
+
+    return result
   })
+}
+
+function reconcileRuntimeFacts(
+  observations: readonly ProjectObservationResult[],
+  projectService: ProjectServiceApi,
+  source: ProjectObservation['runtimeSource'],
+) {
+  return Effect.map(
+    projectService.listActiveRuntimeSummaries(source),
+    (existing) => stabilizeRuntimeFacts(observations, existing),
+  )
 }
 
 function persistObservation(

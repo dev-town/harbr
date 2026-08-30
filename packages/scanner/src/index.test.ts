@@ -340,6 +340,12 @@ describe('observeProject', () => {
         ),
       ),
     ).resolves.toEqual({
+      observedRuntimes: [
+        {
+          identity: runtimeIdentity('alpha'),
+          status: 'open',
+        },
+      ],
       projectIssue: null,
       projectName: 'alpha',
       repoPath: '/tmp/alpha.git',
@@ -511,6 +517,24 @@ describe('observeProject', () => {
         ),
       ),
     ).resolves.toEqual({
+      observedRuntimes: [
+        {
+          identity: runtimeIdentity('alpha'),
+          status: 'open',
+        },
+        {
+          identity: runtimeIdentity('alpha__main'),
+          status: 'open',
+        },
+        {
+          identity: runtimeIdentity('alpha__main__apps/cli'),
+          status: 'open',
+        },
+        {
+          identity: runtimeIdentity('alpha__main__apps/tui'),
+          status: 'open',
+        },
+      ],
       projectIssue: null,
       projectName: 'alpha',
       repoPath,
@@ -722,6 +746,16 @@ describe('observeProject', () => {
         ),
       ),
     ).resolves.toEqual({
+      observedRuntimes: [
+        {
+          identity: runtimeIdentity('alpha~~main'),
+          status: 'open',
+        },
+        {
+          identity: runtimeIdentity('alpha~~main~~/'),
+          status: 'open',
+        },
+      ],
       projectIssue: null,
       projectName: 'alpha',
       repoPath,

@@ -27,6 +27,7 @@ export const ProjectScanSchema = z.object({
 export type ProjectScan = z.infer<typeof ProjectScanSchema>
 
 export const ProjectObservationSchema = z.object({
+  observedRuntimes: z.array(RuntimeAttachmentSchema),
   projectIssue: z.string().nullable().optional(),
   projectName: z.string(),
   repoKind: RepoKindSchema,

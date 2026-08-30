@@ -9,6 +9,7 @@ import {
   listModuleSummaries as listModuleSummariesRaw,
   listProjectSummaries as listProjectSummariesRaw,
   listWorkspaceSummaries as listWorkspaceSummariesRaw,
+  pruneRuntimeBindings as pruneRuntimeBindingsRaw,
   replaceProjectSnapshot as replaceProjectSnapshotRaw,
   saveUiContext as saveUiContextRaw,
 } from '../repos/project-snapshot.repo'
@@ -92,6 +93,16 @@ export const ProjectServiceLive = Layer.effect(
             },
           }),
         ),
+      pruneRuntimeBindings: (source, observedExternalIds) =>
+        Effect.try({
+          try: () =>
+            pruneRuntimeBindingsRaw(database.db, source, observedExternalIds),
+          catch: (error) =>
+            new ProjectServiceError({
+              operation: 'pruneRuntimeBindings',
+              message: error instanceof Error ? error.message : String(error),
+            }),
+        }).pipe(Effect.withSpan('db.project.pruneRuntimeBindings')),
       saveUiContext: (context) =>
         Effect.try({
           try: () => saveUiContextRaw(database.db, context),

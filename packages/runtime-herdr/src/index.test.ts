@@ -238,11 +238,48 @@ describe('RuntimeService', () => {
     }
     const layer = runtimeLayer(commands, snapshotFixture())
 
-    await openRuntime(layer, target)
+    await openRuntime(layer, target, identity('workspace-module'))
 
     expect(commands).toEqual([
       ['api', 'snapshot'],
       ['workspace', 'focus', 'workspace-module'],
+    ])
+  })
+
+  it('focuses a supplied workspace ID even when its pane cwd has changed', async () => {
+    const commands: string[][] = []
+    const target = runtimeTarget('project')
+    const layer = runtimeLayer(commands, snapshotFixture())
+
+    await openRuntime(layer, target, identity('workspace-module'))
+
+    expect(commands).toEqual([
+      ['api', 'snapshot'],
+      ['workspace', 'focus', 'workspace-module'],
+    ])
+  })
+
+  it('does not reuse a workspace by pane cwd without a bound identity', async () => {
+    const commands: string[][] = []
+    const target = {
+      ...runtimeTarget('module'),
+      cwd: '/work/alpha-main/apps/cli',
+    }
+    const layer = runtimeLayer(commands, snapshotFixture())
+
+    await openRuntime(layer, target)
+
+    expect(commands).toEqual([
+      ['api', 'snapshot'],
+      [
+        'workspace',
+        'create',
+        '--cwd',
+        '/work/alpha-main/apps/cli',
+        '--label',
+        'alpha › feature › cli',
+        '--focus',
+      ],
     ])
   })
 
@@ -303,11 +340,12 @@ describe('RuntimeService', () => {
 async function openRuntime(
   layer: Layer.Layer<RuntimeService>,
   target: RuntimeTarget,
+  targetIdentity?: RuntimeIdentity,
 ) {
   await Effect.runPromise(
     Effect.gen(function* () {
       const runtime = yield* RuntimeService
-      yield* runtime.openOrCreateRuntime(target)
+      yield* runtime.openOrCreateRuntime(target, targetIdentity)
     }).pipe(Effect.provide(layer)),
   )
 }
