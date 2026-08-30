@@ -1,5 +1,11 @@
 # @harbr/tui
 
+## 0.1.0-beta.7
+
+### Patch Changes
+
+- 94c5844: Keep Herdr workspaces attached to their original Harbr context when pane directories change.
+
 ## 0.1.0-beta.6
 
 ### Patch Changes
