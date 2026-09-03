@@ -109,6 +109,60 @@ describe('db', () => {
     }
   })
 
+  it('invalidates runtime bindings created before path identity was available', async () => {
+    const tempRoot = await createTempRoot()
+    const database = await openDatabase(path.join(tempRoot, 'legacy.db'))
+
+    try {
+      const migrations = getEmbeddedMigrations()
+      const sqlite = database.sqlite as unknown as {
+        exec(sql: string): unknown
+        prepare(sql: string): {
+          get(): unknown
+          run(...values: unknown[]): unknown
+        }
+      }
+
+      for (const migration of migrations.slice(0, 8)) {
+        for (const statement of migration.sql) {
+          sqlite.exec(statement)
+        }
+      }
+
+      sqlite
+        .prepare(
+          'INSERT INTO projects (id, name, repo_path, repo_kind, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+        )
+        .run('project', 'alpha', '/tmp/alpha.git', 'bare', 0, 0)
+      sqlite
+        .prepare(
+          'INSERT INTO runtimes (id, project_id, provider, source_id, external_id, display_label, scope, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        )
+        .run(
+          'runtime',
+          'project',
+          'herdr',
+          '/tmp/herdr.sock',
+          'w1',
+          'Alpha main',
+          'workspace',
+          'open',
+          0,
+          0,
+        )
+
+      for (const statement of migrations[8]?.sql ?? []) {
+        sqlite.exec(statement)
+      }
+
+      expect(
+        sqlite.prepare('SELECT count(*) AS count FROM runtimes').get(),
+      ).toEqual({ count: 0 })
+    } finally {
+      database.sqlite.close()
+    }
+  })
+
   it('reconciles runtime observations by source and preserves failed sources', async () => {
     const tempRoot = await createTempRoot()
     const database = await openDatabase(path.join(tempRoot, 'harbour.db'))
@@ -186,6 +240,7 @@ describe('db', () => {
             workspaceName: 'main',
             workspacePath: '/tmp/workspaces/alpha-main',
             kind: 'worktree',
+            workspaceProvider: 'external',
             modules: [
               {
                 name: 'apps/cli',
@@ -216,6 +271,7 @@ describe('db', () => {
           name: 'main',
           workspacePath: '/tmp/workspaces/alpha-main',
           kind: 'worktree',
+          workspaceProvider: 'external',
         }),
       ])
       expect(snapshot.modules).toHaveLength(1)
@@ -245,6 +301,7 @@ describe('db', () => {
             workspaceName: 'main',
             workspacePath: '/tmp/workspaces/alpha-main',
             kind: 'default',
+            workspaceProvider: 'local',
             modules: [
               {
                 name: 'apps/cli',
@@ -264,6 +321,7 @@ describe('db', () => {
             workspaceName: 'feature-auth',
             workspacePath: '/tmp/workspaces/alpha-feature-auth',
             kind: 'worktree',
+            workspaceProvider: 'external',
             modules: [
               {
                 name: 'apps/cli',
@@ -297,6 +355,7 @@ describe('db', () => {
             workspaceName: 'next',
             workspacePath: '/tmp/workspaces/alpha-next',
             kind: 'worktree',
+            workspaceProvider: 'external',
             modules: [
               {
                 name: 'apps/cli',
@@ -357,6 +416,7 @@ describe('db', () => {
             workspaceName: 'main',
             workspacePath: '/tmp/workspaces/alpha-main',
             kind: 'worktree',
+            workspaceProvider: 'external',
             modules: [
               {
                 name: 'docs',
@@ -443,6 +503,7 @@ describe('db', () => {
             workspaceName: 'main',
             workspacePath: '/tmp/alpha-main',
             kind: 'default',
+            workspaceProvider: 'local',
             modules: [
               {
                 name: 'apps/cli',
@@ -462,6 +523,7 @@ describe('db', () => {
             workspaceName: 'feature-auth',
             workspacePath: '/tmp/alpha-feature-auth',
             kind: 'worktree',
+            workspaceProvider: 'external',
             modules: [
               {
                 name: 'apps/cli',
@@ -566,6 +628,7 @@ describe('db', () => {
           id: mainWorkspaceId,
           projectId: alphaSnapshot.project.id,
           kind: 'default',
+          workspaceProvider: 'local',
           name: 'main',
           projectName: 'alpha',
           repoPath: '/tmp/alpha.git',
@@ -581,6 +644,7 @@ describe('db', () => {
           id: featureWorkspaceId,
           projectId: alphaSnapshot.project.id,
           kind: 'worktree',
+          workspaceProvider: 'external',
           name: 'feature-auth',
           projectName: 'alpha',
           repoPath: '/tmp/alpha.git',
@@ -595,36 +659,190 @@ describe('db', () => {
 
       expect(mainWorkspaceId).toBeDefined()
 
-      expect(listModuleSummaries(database.db, mainWorkspaceId ?? 'missing', runtimeSource)).toEqual(
-        [
+      expect(
+        listModuleSummaries(
+          database.db,
+          mainWorkspaceId ?? 'missing',
+          runtimeSource,
+        ),
+      ).toEqual([
+        {
+          id: expect.any(String),
+          projectId: alphaSnapshot.project.id,
+          workspaceId: mainWorkspaceId,
+          name: 'apps/cli',
+          path: 'apps/cli',
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          runtime: runtimeAttachment('alpha__main__apps/cli'),
+          workspaceName: 'main',
+          workspacePath: '/tmp/alpha-main',
+          workspaceProvider: 'local',
+          hasActiveSession: true,
+        },
+        {
+          id: expect.any(String),
+          projectId: alphaSnapshot.project.id,
+          workspaceId: mainWorkspaceId,
+          name: 'apps/tui',
+          path: 'apps/tui',
+          projectName: 'alpha',
+          repoPath: '/tmp/alpha.git',
+          runtime: null,
+          workspaceName: 'main',
+          workspacePath: '/tmp/alpha-main',
+          workspaceProvider: 'local',
+          hasActiveSession: false,
+        },
+      ])
+    } finally {
+      database.sqlite.close()
+    }
+  })
+
+  it('binds runtimes to workspace paths when workspace names collide', async () => {
+    const tempRoot = await createTempRoot()
+    const database = await openDatabase(path.join(tempRoot, 'harbour.db'))
+
+    try {
+      await migrateDatabase(database)
+
+      const snapshot = await replaceProjectSnapshot(database.db, {
+        projectName: 'alpha',
+        repoPath: '/tmp/alpha.git',
+        repoKind: 'bare',
+        workspaces: [
           {
-            id: expect.any(String),
-            projectId: alphaSnapshot.project.id,
-            workspaceId: mainWorkspaceId,
-            name: 'apps/cli',
-            path: 'apps/cli',
-            projectName: 'alpha',
-            repoPath: '/tmp/alpha.git',
-            runtime: runtimeAttachment('alpha__main__apps/cli'),
             workspaceName: 'main',
-            workspacePath: '/tmp/alpha-main',
-            hasActiveSession: true,
+            workspacePath: '/Users/tester/.codex/worktrees/a74b/main',
+            kind: 'worktree',
+            workspaceProvider: 'codex',
+            modules: [
+              {
+                name: 'codex-module',
+                path: 'codex-module',
+                workspacePath:
+                  '/Users/tester/.codex/worktrees/a74b/main/codex-module',
+                selector: {
+                  raw: 'codex-module',
+                  path: 'codex-module',
+                  mode: 'explicit',
+                },
+              },
+            ],
           },
           {
-            id: expect.any(String),
-            projectId: alphaSnapshot.project.id,
-            workspaceId: mainWorkspaceId,
-            name: 'apps/tui',
-            path: 'apps/tui',
-            projectName: 'alpha',
-            repoPath: '/tmp/alpha.git',
-            runtime: null,
             workspaceName: 'main',
-            workspacePath: '/tmp/alpha-main',
-            hasActiveSession: false,
+            workspacePath: '/Users/tester/Sites/alpha/main',
+            kind: 'worktree',
+            workspaceProvider: 'external',
+            modules: [
+              {
+                name: 'external-module',
+                path: 'external-module',
+                workspacePath: '/Users/tester/Sites/alpha/main/external-module',
+                selector: {
+                  raw: 'external-module',
+                  path: 'external-module',
+                  mode: 'explicit',
+                },
+              },
+            ],
           },
         ],
-      )
+        runtimes: [
+          {
+            identity: runtimeIdentity('codex-main'),
+            scope: 'workspace',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            workspacePath: '/Users/tester/.codex/worktrees/a74b/main',
+            moduleName: null,
+            status: 'open',
+          },
+          {
+            identity: runtimeIdentity('external-main'),
+            scope: 'workspace',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            workspacePath: '/Users/tester/Sites/alpha/main',
+            moduleName: null,
+            status: 'open',
+          },
+          {
+            identity: runtimeIdentity('ambiguous-main'),
+            scope: 'workspace',
+            projectName: 'alpha',
+            workspaceName: 'main',
+            moduleName: null,
+            status: 'open',
+          },
+        ],
+        runtimeIssue: null,
+        runtimeSource,
+      })
+
+      expect(
+        listWorkspaceSummaries(
+          database.db,
+          snapshot.project.id,
+          runtimeSource,
+        ).map((workspace) => ({
+          activeSessionCount: workspace.activeSessionCount,
+          workspacePath: workspace.workspacePath,
+          workspaceProvider: workspace.workspaceProvider,
+        })),
+      ).toEqual([
+        {
+          activeSessionCount: 1,
+          workspacePath: '/Users/tester/.codex/worktrees/a74b/main',
+          workspaceProvider: 'codex',
+        },
+        {
+          activeSessionCount: 1,
+          workspacePath: '/Users/tester/Sites/alpha/main',
+          workspaceProvider: 'external',
+        },
+      ])
+      expect(
+        listActiveRuntimeSummaries(database.db, runtimeSource).map(
+          (runtime) => ({
+            externalId: runtime.runtime.identity.externalId,
+            workspacePath: runtime.workspacePath,
+            workspaceProvider: runtime.workspaceProvider,
+          }),
+        ),
+      ).toEqual([
+        {
+          externalId: 'codex-main',
+          workspacePath: '/Users/tester/.codex/worktrees/a74b/main',
+          workspaceProvider: 'codex',
+        },
+        {
+          externalId: 'external-main',
+          workspacePath: '/Users/tester/Sites/alpha/main',
+          workspaceProvider: 'external',
+        },
+      ])
+      expect(
+        snapshot.workspaces.map((workspace) => ({
+          modules: listModuleSummaries(
+            database.db,
+            workspace.id,
+            runtimeSource,
+          ).map((module) => module.name),
+          workspacePath: workspace.workspacePath,
+        })),
+      ).toEqual([
+        {
+          modules: ['codex-module'],
+          workspacePath: '/Users/tester/.codex/worktrees/a74b/main',
+        },
+        {
+          modules: ['external-module'],
+          workspacePath: '/Users/tester/Sites/alpha/main',
+        },
+      ])
     } finally {
       database.sqlite.close()
     }
@@ -647,6 +865,7 @@ describe('db', () => {
             workspaceName: 'main',
             workspacePath: '/tmp/alpha-main',
             kind: 'default',
+            workspaceProvider: 'local',
             modules: [
               {
                 name: '/',
@@ -685,6 +904,7 @@ describe('db', () => {
           runtime: null,
           workspaceName: 'main',
           workspacePath: '/tmp/alpha-main',
+          workspaceProvider: 'local',
           hasActiveSession: true,
         },
       ])
@@ -710,6 +930,7 @@ describe('db', () => {
             workspaceName: 'main',
             workspacePath: '/tmp/alpha-main',
             kind: 'default',
+            workspaceProvider: 'local',
             modules: [
               {
                 name: '/',
@@ -750,6 +971,7 @@ describe('db', () => {
           runtime: runtimeAttachment('alpha~~main~~/'),
           workspaceName: 'main',
           workspacePath: '/tmp/alpha-main',
+          workspaceProvider: 'local',
           hasActiveSession: true,
         },
       ])
@@ -775,6 +997,7 @@ describe('db', () => {
             workspaceName: 'main',
             workspacePath: '/tmp/alpha-main',
             kind: 'default',
+            workspaceProvider: 'local',
             modules: [
               {
                 name: 'apps/tui',

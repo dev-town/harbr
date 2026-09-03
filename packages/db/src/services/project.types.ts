@@ -11,6 +11,7 @@ import type {
   RuntimeIssue,
   RuntimeSource,
   WorkspaceKind,
+  WorkspaceProvider,
   WorkspaceSummary,
 } from '@harbr/domain'
 import type { ProjectServiceError } from '../db.errors'
@@ -20,6 +21,7 @@ export type WorkspaceSnapshotInput = {
   workspaceName: string
   workspacePath: string
   kind: WorkspaceKind
+  workspaceProvider: WorkspaceProvider
   modules: ResolvedModule[]
 }
 
@@ -53,6 +55,7 @@ export type WorkspaceRecord = {
   projectId: string
   updatedAt: number
   workspacePath: string
+  workspaceProvider: WorkspaceProvider
 }
 
 export type ModuleRecord = {

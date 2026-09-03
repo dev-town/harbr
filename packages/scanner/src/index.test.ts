@@ -10,7 +10,13 @@ import { RuntimeDiscoveryService, type RuntimeDiscoveryServiceApi } from '@harbr
 import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { ScannerService, ScannerServiceLive, resolveProjectModules, scanProject } from './index'
+import {
+  detectWorkspaceProvider,
+  ScannerService,
+  ScannerServiceLive,
+  resolveProjectModules,
+  scanProject,
+} from './index'
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
@@ -151,6 +157,89 @@ describe('resolveProjectModules', () => {
   })
 })
 
+describe('detectWorkspaceProvider', () => {
+  const homePath = '/Users/tester'
+
+  it.each([
+    {
+      expected: 'harbr',
+      workspacePath:
+        '/Users/tester/.local/share/harbr/worktrees/devtown/feature-auth',
+    },
+    {
+      expected: 'codex',
+      workspacePath: '/Users/tester/.codex/worktrees/1918/main',
+    },
+    {
+      expected: 'claude',
+      workspacePath: '/Users/tester/.claude/worktrees/devtown/feature-auth',
+    },
+    {
+      expected: 'opencode',
+      workspacePath:
+        '/Users/tester/.local/share/opencode/worktree/project-id/feature-auth',
+    },
+    {
+      expected: 'amp',
+      workspacePath: '/Users/tester/projects/devtown-worktrees/feature-auth',
+    },
+    {
+      expected: 'amp',
+      workspacePath: '/Users/tester/projects/devtown-feature-auth',
+    },
+  ])('detects $expected managed worktrees', ({ expected, workspacePath }) => {
+    expect(
+      detectWorkspaceProvider({
+        branchName: 'feature/auth',
+        homePath,
+        kind: 'worktree',
+        repoPath: '/Users/tester/projects/devtown',
+        workspacePath,
+      }),
+    ).toBe(expected)
+  })
+
+  it('classifies the primary checkout as local', () => {
+    expect(
+      detectWorkspaceProvider({
+        branchName: 'main',
+        homePath,
+        kind: 'default',
+        repoPath: '/Users/tester/projects/devtown',
+        workspacePath: '/Users/tester/projects/devtown',
+      }),
+    ).toBe('local')
+  })
+
+  it.each([
+    '/Users/tester/worktrees/devtown/feature-auth',
+    '/Users/tester/projects/devtown-unrelated',
+    '/Users/tester/.local/share/unknown/worktree/devtown/feature-auth',
+  ])('falls back to external for %s', (workspacePath) => {
+    expect(
+      detectWorkspaceProvider({
+        branchName: 'feature/auth',
+        homePath,
+        kind: 'worktree',
+        repoPath: '/Users/tester/projects/devtown',
+        workspacePath,
+      }),
+    ).toBe('external')
+  })
+
+  it('does not classify an Amp-style directory without matching branch context', () => {
+    expect(
+      detectWorkspaceProvider({
+        branchName: 'fix/payments',
+        homePath,
+        kind: 'worktree',
+        repoPath: '/Users/tester/projects/devtown.git',
+        workspacePath: '/Users/tester/projects/devtown-feature-auth',
+      }),
+    ).toBe('external')
+  })
+})
+
 describe('scanProject', () => {
   it('wires project metadata and resolved modules into one scan result', async () => {
     const tempRoot = await createTempRoot()
@@ -236,6 +325,7 @@ describe('observeProject', () => {
           branchName: 'main',
           workspaceName: 'main',
           workspacePath: repoPath,
+          workspaceProvider: 'local',
           kind: 'default',
           modules: [
             {
@@ -495,6 +585,7 @@ describe('observeProject', () => {
           branchName: 'main',
           workspaceName: 'main',
           workspacePath: repoPath,
+          workspaceProvider: 'local',
           kind: 'default',
           modules: [
             {
@@ -535,6 +626,88 @@ describe('observeProject', () => {
       runtimeIssue: null,
       runtimeSource,
     })
+  })
+
+  it('preserves workspace paths when runtime workspace names collide', async () => {
+    const tempRoot = await createTempRoot()
+    const repoPath = path.join(tempRoot, 'alpha.git')
+    const firstWorkspacePath = path.join(tempRoot, 'first', 'main')
+    const secondWorkspacePath = path.join(tempRoot, 'second', 'main')
+
+    await mkdir(firstWorkspacePath, { recursive: true })
+    await mkdir(secondWorkspacePath, { recursive: true })
+
+    const project: ProjectConfig = {
+      name: 'alpha',
+      repo: repoPath,
+      modules: [],
+    }
+    const git: GitServiceApi = {
+      createWorktree: () => Effect.die('not used'),
+      getDefaultBranch: () => Effect.die('not used'),
+      getDefaultBranchIssue: () => Effect.succeed(null),
+      inspectRepo: () => Effect.succeed({ repoPath, kind: 'bare' }),
+      listWorkspaces: () =>
+        Effect.succeed([
+          {
+            branchName: null,
+            kind: 'worktree',
+            name: 'main',
+            path: firstWorkspacePath,
+          },
+          {
+            branchName: null,
+            kind: 'worktree',
+            name: 'main',
+            path: secondWorkspacePath,
+          },
+        ]),
+      resolveWorkspacePath: () => Effect.succeed(null),
+    }
+    const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
+      listRuntimes: Effect.succeed({
+        runtimes: [
+          pathRuntime('first-main', firstWorkspacePath, runtimeSource),
+          pathRuntime('second-main', secondWorkspacePath, runtimeSource),
+        ],
+        runtimeIssue: null,
+        source: runtimeSource,
+      }),
+    }
+
+    const observation = await Effect.runPromise(
+      Effect.flatMap(ScannerService, (service) =>
+        service.observeProject(project),
+      ).pipe(
+        Effect.provide(
+          ScannerServiceLive.pipe(
+            Layer.provide(
+              Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
+            ),
+            Layer.provide(Layer.succeed(GitService, git)),
+          ),
+        ),
+      ),
+    )
+
+    expect(
+      observation.runtimes.map((runtime) => ({
+        externalId: runtime.identity.externalId,
+        workspaceName: runtime.workspaceName,
+        workspacePath: runtime.workspacePath,
+      })),
+    ).toEqual([
+      {
+        externalId: 'first-main',
+        workspaceName: 'main',
+        workspacePath: firstWorkspacePath,
+      },
+      {
+        externalId: 'second-main',
+        workspaceName: 'main',
+        workspacePath: secondWorkspacePath,
+      },
+    ])
   })
 
   it('maps Herdr paths to project, worktree, and module contexts', async () => {
@@ -708,6 +881,7 @@ describe('observeProject', () => {
           branchName: 'main',
           workspaceName: 'main',
           workspacePath: repoPath,
+          workspaceProvider: 'local',
           kind: 'default',
           modules: [
             {

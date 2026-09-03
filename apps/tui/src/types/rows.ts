@@ -1,4 +1,8 @@
-import type { ResolvedContextTarget, RuntimeAttachment } from '@harbr/domain'
+import type {
+  ResolvedContextTarget,
+  RuntimeAttachment,
+  WorkspaceProvider,
+} from '@harbr/domain'
 
 export type RowKind = 'action' | 'active-action' | 'module' | 'project' | 'workspace'
 
@@ -34,9 +38,11 @@ export type WorkspaceRow = BaseRow & {
   runtime: RuntimeAttachment | null
   target: ResolvedContextTarget
   workspacePath: string
+  workspaceProvider: WorkspaceProvider
 }
 
 export type ModuleRow = BaseRow & {
+  branchName?: string | null
   kind: 'module'
   projectId: string
   workspaceId: string
@@ -45,6 +51,7 @@ export type ModuleRow = BaseRow & {
   modulePath: string
   runtime: RuntimeAttachment | null
   target: ResolvedContextTarget
+  workspaceProvider?: WorkspaceProvider
 }
 
 export type ActionRow = BaseRow & {

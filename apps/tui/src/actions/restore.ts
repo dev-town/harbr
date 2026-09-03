@@ -85,7 +85,9 @@ export async function restoreCurrentRuntime(
     return false
   }
 
-  const project = projects.find((candidate) => candidate.name === currentRuntime.projectName)
+  const project = projects.find(
+    (candidate) => candidate.id === currentRuntime.projectId,
+  )
 
   if (!project) {
     return false
@@ -103,8 +105,10 @@ export async function restoreCurrentRuntime(
   }
 
   const workspaces = await listWorkspaceSummaries(services, project.id)
-  const workspace = currentRuntime.workspaceName
-    ? workspaces.find((candidate) => candidate.name === currentRuntime.workspaceName)
+  const workspace = currentRuntime.workspaceId
+    ? workspaces.find(
+        (candidate) => candidate.id === currentRuntime.workspaceId,
+      )
     : undefined
 
   if (!workspace) {
@@ -136,7 +140,9 @@ export async function restoreCurrentRuntime(
   })
 
   const moduleRows = store.getState().data.moduleRows
-  const moduleRow = moduleRows.find((row) => row.label === currentRuntime.moduleName)
+  const moduleRow = currentRuntime.moduleId
+    ? moduleRows.find((row) => row.moduleId === currentRuntime.moduleId)
+    : undefined
 
   if (moduleRow) {
     store.setState((state) => ({

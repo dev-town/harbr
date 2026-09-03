@@ -1,9 +1,10 @@
-import type { ScrollBoxRenderable } from '@opentui/core'
 import type { ReactNode } from 'react'
-import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { theme } from '~/config/theme'
 import { StatusLine } from '~/components/status-line'
+import { useResultsLoading } from './hooks/use-results-loading'
+import { useResultsScrollbox } from './hooks/use-results-scrollbox'
+import { useSelectedRowVisibility } from './hooks/use-selected-row-visibility'
 
 type ResultsListProps<TRow extends { id: string }> = {
   emptyLabel?: string
@@ -22,48 +23,14 @@ export function ResultsList<TRow extends { id: string }>({
   rows,
   selectedId,
 }: ResultsListProps<TRow>) {
-  const scrollboxRef = useRef<ScrollBoxRenderable | null>(null)
-  const [showLoading, setShowLoading] = useState(false)
-  const setScrollboxRef = useCallback((scrollbox: ScrollBoxRenderable | null) => {
-    scrollboxRef.current = scrollbox
-
-    if (!scrollbox) {
-      return
-    }
-
-    // OpenTUI measures a new scrollbox with a zero-height viewport, which
-    // makes its automatic scrollbar visible for one frame. Keep it hidden
-    // until the deferred layout recalculation has the real viewport size.
-    scrollbox.verticalScrollBar.visible = false
-    process.nextTick(() => {
-      if (scrollboxRef.current === scrollbox) {
-        scrollbox.verticalScrollBar.resetVisibilityControl()
-      }
-    })
-  }, [])
-
-  useEffect(() => {
-    if (!forceLoading) {
-      setShowLoading(false)
-      return
-    }
-
-    const timeout = setTimeout(() => {
-      setShowLoading(true)
-    }, 500)
-
-    return () => {
-      clearTimeout(timeout)
-    }
-  }, [forceLoading])
-
-  useEffect(() => {
-    if (!selectedId) {
-      return
-    }
-
-    scrollboxRef.current?.scrollChildIntoView?.(`row:${selectedId}`)
-  }, [selectedId])
+  const showLoading = useResultsLoading(forceLoading)
+  const { scrollboxRef, setScrollboxRef } = useResultsScrollbox()
+  useSelectedRowVisibility({
+    rows,
+    rowsVisible: !showLoading,
+    scrollboxRef,
+    selectedId,
+  })
 
   return (
     <scrollbox

@@ -15,7 +15,9 @@ type ListRowProps = {
   onRowClick: () => void
   onRowHover: (rowId: string | null) => void
   rowId: string
+  showWorkspaceProviderColumn?: boolean
   variant: RowVariant
+  workspaceProvider?: string
 }
 
 export function ListRow({
@@ -28,18 +30,26 @@ export function ListRow({
   onRowClick,
   onRowHover,
   rowId,
+  showWorkspaceProviderColumn = false,
   variant,
+  workspaceProvider,
 }: ListRowProps) {
   const selectedColor = isSelected ? theme.selection : isHovered ? theme.panelSoft : theme.panel
   const nameWidth = 34
+  const workspaceProviderWidth = 14
   const metaWidth = 52
   const gutterWidth = 4
   const notice = meta?.notice
   const noticeText = notice ? `${noticeIcon(notice.level)} ${notice.message}` : ''
   const inlineMeta = meta && !notice && variant !== 'stacked' ? getInlineMeta(meta, variant) : ''
   const stackedMeta = meta && !notice ? getStackedMeta(meta) : ''
+  const visibleInlineMeta = truncateLeft(inlineMeta, metaWidth)
+  const visibleStackedMeta = truncate(stackedMeta, 72)
   const topTextColor = isSelected ? theme.activeText : theme.text
   const stackedRowHeight = stackedMeta || notice ? 2 : 1
+  const workspaceProviderLabel = workspaceProvider
+    ? ` ${truncate(workspaceProvider, workspaceProviderWidth - 2)}`
+    : ''
 
   return (
     <box
@@ -61,8 +71,13 @@ export function ListRow({
             </text>
           </box>
           <box flexDirection="column" flexGrow={1} width="100%">
-            <text fg={topTextColor}>
-              <strong>{name}</strong>
+            <text>
+              <span fg={topTextColor}>
+                <strong>{name}</strong>
+              </span>
+              {workspaceProviderLabel ? (
+                <span fg={theme.idle}> {workspaceProviderLabel}</span>
+              ) : null}
             </text>
             {notice ? (
               <text>
@@ -70,7 +85,7 @@ export function ListRow({
               </text>
             ) : stackedMeta ? (
               <text>
-                <span fg={theme.muted}>{truncate(stackedMeta, 72)}</span>
+                <span fg={theme.muted}>{visibleStackedMeta}</span>
               </text>
             ) : null}
           </box>
@@ -97,12 +112,22 @@ export function ListRow({
           ) : inlineMeta ? (
             <box flexGrow={1} style={{ justifyContent: 'flex-end' }}>
               <text>
-                <span fg={theme.muted}>{truncateLeft(inlineMeta, metaWidth)}</span>
+                <span fg={theme.muted}>{visibleInlineMeta}</span>
               </text>
             </box>
           ) : (
             <box flexGrow={1} />
           )}
+          {showWorkspaceProviderColumn ? (
+            <>
+              <box width={gutterWidth} />
+              <box width={workspaceProviderWidth}>
+                <text fg={theme.idle}>
+                  {padCell(workspaceProviderLabel, workspaceProviderWidth)}
+                </text>
+              </box>
+            </>
+          ) : null}
         </box>
       )}
     </box>

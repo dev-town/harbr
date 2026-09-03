@@ -6,7 +6,13 @@ import type {
 } from '@harbr/domain'
 import { join } from 'node:path'
 
-import type { HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
+import type {
+  HarbourRow,
+  ModuleRow,
+  ProjectRow,
+  WorkspaceRow,
+} from '~/types/rows'
+import { formatWorkspaceProvider } from '~/helpers/workspace-provider'
 
 export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
   const projectIssue = summary.projectIssue ?? null
@@ -51,7 +57,11 @@ export function mapWorkspaceSummaryToRow(summary: WorkspaceSummary): WorkspaceRo
     workspaceId: summary.id,
     isActive: summary.activeSessionCount > 0,
     isCurrent: false,
-    metadata: formatWorkspaceMetadata(branchName, summary.activeSessionCount),
+    metadata: formatWorkspaceMetadata(
+      formatWorkspaceProvider(summary.workspaceProvider),
+      branchName,
+      summary.activeSessionCount,
+    ),
     activeSessionCount: summary.activeSessionCount,
     branchName,
     hasModules: summary.hasModules,
@@ -70,6 +80,7 @@ export function mapWorkspaceSummaryToRow(summary: WorkspaceSummary): WorkspaceRo
       scope: 'workspace',
     },
     workspacePath: summary.workspacePath,
+    workspaceProvider: summary.workspaceProvider,
   }
 }
 
@@ -87,6 +98,7 @@ export function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
     hasSession: summary.hasActiveSession,
     modulePath: summary.path,
     runtime: summary.runtime,
+    workspaceProvider: summary.workspaceProvider,
     target: {
       breadcrumb: [summary.projectName, summary.workspaceName, summary.name].join(' › '),
       context: {
@@ -151,7 +163,7 @@ export function mapActiveRuntimeSummaryToRow(summary: ActiveRuntimeSummary): Har
       isCurrent: false,
       metadata: summary.runtime.status,
       activeSessionCount: 1,
-      branchName: null,
+      branchName: summary.branchName,
       hasModules: false,
       isDefault: false,
       runtime,
@@ -171,10 +183,12 @@ export function mapActiveRuntimeSummaryToRow(summary: ActiveRuntimeSummary): Har
         scope: 'workspace',
       },
       workspacePath: summary.workspacePath ?? summary.repoPath,
+      workspaceProvider: summary.workspaceProvider ?? 'external',
     }
   }
 
   return {
+    branchName: summary.branchName,
     id: summary.id,
     kind: 'module',
     label: summary.moduleName ?? summary.workspaceName ?? summary.projectName,
@@ -187,6 +201,9 @@ export function mapActiveRuntimeSummaryToRow(summary: ActiveRuntimeSummary): Har
     hasSession: true,
     modulePath: summary.modulePath ?? '.',
     runtime,
+    ...(summary.workspaceProvider
+      ? { workspaceProvider: summary.workspaceProvider }
+      : {}),
     target: {
       breadcrumb: getActiveRuntimeContextLabel(summary),
       context: {
@@ -223,14 +240,18 @@ function formatSessionMetadata(activeSessionCount: number) {
   return `${activeSessionCount} sessions`
 }
 
-function formatWorkspaceMetadata(branchName: string | null, activeSessionCount: number) {
+function formatWorkspaceMetadata(
+  workspaceProvider: string,
+  branchName: string | null,
+  activeSessionCount: number,
+) {
   const sessionMetadata = formatSessionMetadata(activeSessionCount)
 
   if (!branchName) {
-    return sessionMetadata
+    return `detached · ${workspaceProvider} · ${sessionMetadata}`
   }
 
-  return `${branchName} · ${sessionMetadata}`
+  return `${branchName} · ${workspaceProvider} · ${sessionMetadata}`
 }
 
 function getActiveRuntimeContextLabel(summary: ActiveRuntimeSummary) {

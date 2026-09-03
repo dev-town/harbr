@@ -13,8 +13,12 @@ export function getInlineMeta(meta: ListRowMeta, variant: Exclude<RowVariant, 's
 
   if (meta.breadcrumb) {
     parts.push(meta.breadcrumb)
-  } else if (meta.branch) {
+  }
+
+  if (meta.branch) {
     parts.push(` ${meta.branch}`)
+  } else if (meta.detached) {
+    parts.push('detached')
   }
 
   if (meta.sessions && (variant === 'default' || (!meta.breadcrumb && !meta.branch))) {
@@ -33,6 +37,8 @@ export function getStackedMeta(meta: ListRowMeta) {
 
   if (meta.branch) {
     parts.push(` ${meta.branch}`)
+  } else if (meta.detached) {
+    parts.push('detached')
   }
 
   if (meta.sessions) {
