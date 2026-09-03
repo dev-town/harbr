@@ -471,6 +471,7 @@ describe('reconciler', () => {
                 kind: workspace.kind,
                 name: workspace.workspaceName,
                 workspacePath: workspace.workspacePath,
+                workspaceProvider: workspace.workspaceProvider,
                 createdAt: 0,
                 updatedAt: 0,
               })),
@@ -611,6 +612,7 @@ function createObservation(project: ProjectConfig): ProjectObservation {
         workspaceName: 'main',
         workspacePath: `/tmp/${project.name}-main`,
         kind: 'default',
+        workspaceProvider: 'local',
         modules: [
           {
             name: 'apps/cli',

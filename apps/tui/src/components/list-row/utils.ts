@@ -16,8 +16,12 @@ export function getInlineMeta(
 
   if (meta.breadcrumb) {
     parts.push(meta.breadcrumb)
-  } else if (meta.branch) {
+  }
+
+  if (meta.branch) {
     parts.push(` ${meta.branch}`)
+  } else if (meta.detached) {
+    parts.push('detached')
   }
 
   if (
@@ -39,6 +43,8 @@ export function getStackedMeta(meta: ListRowMeta) {
 
   if (meta.branch) {
     parts.push(` ${meta.branch}`)
+  } else if (meta.detached) {
+    parts.push('detached')
   }
 
   if (meta.sessions) {

@@ -6,6 +6,9 @@ export type RepoKind = z.infer<typeof RepoKindSchema>
 export const WorkspaceKindSchema = z.enum(['default', 'worktree'])
 export type WorkspaceKind = z.infer<typeof WorkspaceKindSchema>
 
+export const WorkspaceProviderSchema = z.string().regex(/^[a-z][a-z0-9-]*$/)
+export type WorkspaceProvider = z.infer<typeof WorkspaceProviderSchema>
+
 export const RuntimeScopeSchema = z.enum(['module', 'project', 'workspace'])
 export type RuntimeScope = z.infer<typeof RuntimeScopeSchema>
 

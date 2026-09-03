@@ -89,9 +89,13 @@ function runtimeTargetExists(
     return true
   }
 
-  const workspace = observation.workspaces.find(
-    (candidate) => candidate.workspaceName === runtime.workspaceName,
-  )
+  const workspace = runtime.workspacePath
+    ? observation.workspaces.find(
+        (candidate) => candidate.workspacePath === runtime.workspacePath,
+      )
+    : observation.workspaces.find(
+        (candidate) => candidate.workspaceName === runtime.workspaceName,
+      )
 
   if (!workspace) {
     return false
@@ -114,11 +118,14 @@ function runtimeSummaryToFact(
     scope: runtime.scope,
     status: observed.status,
     workspaceName: runtime.workspaceName,
+    ...(runtime.workspacePath ? { workspacePath: runtime.workspacePath } : {}),
   }
 }
 
 function runtimeTargetKey(runtime: RuntimeFact) {
-  return [runtime.projectName, runtime.workspaceName, runtime.moduleName].join(
-    '\u0000',
-  )
+  return [
+    runtime.projectName,
+    runtime.workspacePath ?? runtime.workspaceName,
+    runtime.moduleName,
+  ].join('\u0000')
 }

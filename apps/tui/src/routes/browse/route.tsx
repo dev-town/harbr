@@ -14,6 +14,9 @@ export function BrowseRoute() {
   const browseRoute = useBrowseRoute()
   const { width } = useTerminalDimensions()
   const rowVariant = getRowVariant(width)
+  const showWorkspaceProviderColumn = browseRoute.rows.some(
+    (row) => row.kind !== 'project' && Boolean(row.workspaceProvider),
+  )
 
   return (
     <BrowseRouteLayout
@@ -42,6 +45,7 @@ export function BrowseRoute() {
             onRowHover={browseRoute.onHoverRow}
             row={row}
             scopeBreadcrumb={browseRoute.breadcrumb}
+            showWorkspaceProviderColumn={showWorkspaceProviderColumn}
             variant={rowVariant}
           />
         )}

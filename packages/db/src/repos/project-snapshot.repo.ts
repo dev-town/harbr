@@ -179,6 +179,7 @@ export function listActiveRuntimeSummaries(
       }
 
       return {
+        branchName: workspace?.branchName ?? null,
         id: runtime.id,
         moduleId: module?.id ?? null,
         moduleName: module?.name ?? null,
@@ -191,6 +192,7 @@ export function listActiveRuntimeSummaries(
         workspaceId: workspace?.id ?? null,
         workspaceName: workspace?.name ?? null,
         workspacePath: workspace?.workspacePath ?? null,
+        workspaceProvider: workspace?.workspaceProvider ?? null,
       } satisfies ActiveRuntimeSummary
     })
     .filter((runtime): runtime is ActiveRuntimeSummary => runtime !== null)
@@ -301,6 +303,7 @@ export function listWorkspaceSummaries(
           ) ?? null,
         ),
         workspacePath: workspace.workspacePath,
+        workspaceProvider: workspace.workspaceProvider,
         activeSessionCount: runtimeRows.filter(
           (runtime) => runtime.workspaceId === workspace.id,
         ).length,
@@ -384,6 +387,7 @@ export function listModuleSummaries(
       ),
       workspaceName: workspace.name,
       workspacePath: workspace.workspacePath,
+      workspaceProvider: workspace.workspaceProvider,
     }))
     .sort((left, right) => left.path.localeCompare(right.path))
 }
@@ -471,8 +475,11 @@ export function replaceProjectSnapshot(
       .where(eq(workspaces.projectId, project.id))
       .all()
       .map((row) => workspaceRowSchema.parse(row))
-    const workspaceNamesById = new Map(
-      existingWorkspaces.map((workspace) => [workspace.id, workspace.name]),
+    const workspaceRefsById = new Map(
+      existingWorkspaces.map((workspace) => [
+        workspace.id,
+        { name: workspace.name, path: workspace.workspacePath },
+      ]),
     )
     const preservedRuntimes = tx
       .select()
@@ -487,8 +494,8 @@ export function replaceProjectSnapshot(
       )
       .map((runtime) => ({
         runtime,
-        workspaceName: runtime.workspaceId
-          ? (workspaceNamesById.get(runtime.workspaceId) ?? null)
+        workspaceRef: runtime.workspaceId
+          ? (workspaceRefsById.get(runtime.workspaceId) ?? null)
           : null,
       }))
 
@@ -496,11 +503,11 @@ export function replaceProjectSnapshot(
     tx.delete(runtimes).where(eq(runtimes.projectId, project.id)).run()
 
     if (input.workspaces.length === 0) {
-      restoreRuntimes(tx, project.id, new Map(), preservedRuntimes)
+      restoreRuntimes(tx, project.id, [], preservedRuntimes)
       const runtimeRecords = insertRuntimes(
         tx,
         project.id,
-        new Map(),
+        [],
         input.runtimeIssue === null ? input.runtimes : [],
         now(),
       )
@@ -520,14 +527,11 @@ export function replaceProjectSnapshot(
       input.workspaces,
       createdAt,
     )
-    const workspacesByName = new Map(
-      workspaceRecords.map((workspace) => [workspace.name, workspace]),
-    )
-    restoreRuntimes(tx, project.id, workspacesByName, preservedRuntimes)
+    restoreRuntimes(tx, project.id, workspaceRecords, preservedRuntimes)
 
     const moduleRecords = workspaceRecords.flatMap((workspace) => {
       const source = input.workspaces.find(
-        (candidate) => candidate.workspaceName === workspace.name,
+        (candidate) => candidate.workspacePath === workspace.workspacePath,
       )
 
       if (!source || source.modules.length === 0) {
@@ -540,7 +544,7 @@ export function replaceProjectSnapshot(
     const runtimeRecords = insertRuntimes(
       tx,
       project.id,
-      workspacesByName,
+      workspaceRecords,
       input.runtimeIssue === null ? input.runtimes : [],
       createdAt,
     )
@@ -585,6 +589,7 @@ function insertWorkspaces(
         kind: workspace.kind,
         name: workspace.workspaceName,
         workspacePath: workspace.workspacePath,
+        workspaceProvider: workspace.workspaceProvider,
         createdAt,
         updatedAt: createdAt,
       })
@@ -634,7 +639,7 @@ function insertModules(
 function insertRuntimes(
   db: HarbourDatabase,
   projectId: string,
-  workspacesByName: Map<string, WorkspaceRecord>,
+  workspaceRecords: readonly WorkspaceRecord[],
   runtimeFacts: RuntimeFact[],
   createdAt: number,
 ) {
@@ -645,10 +650,10 @@ function insertRuntimes(
     ) {
       throw new Error('runtime source identity must not be empty')
     }
-    const workspace =
-      runtime.workspaceName === null
-        ? null
-        : (workspacesByName.get(runtime.workspaceName) ?? null)
+    const workspace = resolveWorkspaceRecord(workspaceRecords, {
+      workspaceName: runtime.workspaceName,
+      workspacePath: runtime.workspacePath ?? null,
+    })
 
     db.insert(runtimes)
       .values({
@@ -686,16 +691,17 @@ function insertRuntimes(
 function restoreRuntimes(
   db: HarbourDatabase,
   projectId: string,
-  workspacesByName: Map<string, WorkspaceRecord>,
+  workspaceRecords: readonly WorkspaceRecord[],
   preserved: ReadonlyArray<{
     runtime: ReturnType<typeof runtimeRowSchema.parse>
-    workspaceName: string | null
+    workspaceRef: { name: string; path: string } | null
   }>,
 ) {
-  for (const { runtime, workspaceName } of preserved) {
-    const workspace = workspaceName
-      ? (workspacesByName.get(workspaceName) ?? null)
-      : null
+  for (const { runtime, workspaceRef } of preserved) {
+    const workspace = resolveWorkspaceRecord(workspaceRecords, {
+      workspaceName: workspaceRef?.name ?? null,
+      workspacePath: workspaceRef?.path ?? null,
+    })
 
     if (runtime.scope !== 'project' && !workspace) {
       continue
@@ -710,6 +716,32 @@ function restoreRuntimes(
       })
       .run()
   }
+}
+
+function resolveWorkspaceRecord(
+  workspaceRecords: readonly WorkspaceRecord[],
+  reference: {
+    workspaceName: string | null
+    workspacePath: string | null
+  },
+) {
+  if (reference.workspacePath) {
+    return (
+      workspaceRecords.find(
+        (workspace) => workspace.workspacePath === reference.workspacePath,
+      ) ?? null
+    )
+  }
+
+  if (!reference.workspaceName) {
+    return null
+  }
+
+  const nameMatches = workspaceRecords.filter(
+    (workspace) => workspace.name === reference.workspaceName,
+  )
+
+  return nameMatches.length === 1 ? nameMatches[0]! : null
 }
 
 function mapProjectRow(
@@ -736,6 +768,7 @@ function mapWorkspaceRow(
     kind: row.kind,
     name: row.name,
     workspacePath: row.workspacePath,
+    workspaceProvider: row.workspaceProvider,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }

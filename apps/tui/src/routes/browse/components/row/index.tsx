@@ -1,6 +1,7 @@
 import { ListRow } from '~/components/list-row'
 import type { ListRowMeta, RowVariant } from '~/components/list-row/types'
 import { theme } from '~/config/theme'
+import { formatWorkspaceProvider } from '~/helpers/workspace-provider'
 import type { HarbourRow } from '~/types/rows'
 
 type BrowseRouteRowProps = {
@@ -10,6 +11,7 @@ type BrowseRouteRowProps = {
   onRowHover: (rowId: string | null) => void
   row: HarbourRow
   scopeBreadcrumb: string
+  showWorkspaceProviderColumn: boolean
   variant: RowVariant
 }
 
@@ -20,6 +22,7 @@ export function BrowseRouteRow({
   onRowHover,
   row,
   scopeBreadcrumb,
+  showWorkspaceProviderColumn,
   variant,
 }: BrowseRouteRowProps) {
   const meta = getBrowseRowMeta(row, scopeBreadcrumb)
@@ -29,6 +32,7 @@ export function BrowseRouteRow({
     : row.isActive
       ? theme.accent
       : theme.idle
+  const workspaceProvider = getWorkspaceProviderLabel(row)
 
   return (
     <ListRow
@@ -41,7 +45,9 @@ export function BrowseRouteRow({
       onRowClick={onRowClick}
       onRowHover={onRowHover}
       rowId={row.id}
+      showWorkspaceProviderColumn={showWorkspaceProviderColumn}
       variant={variant}
+      {...(workspaceProvider ? { workspaceProvider } : {})}
     />
   )
 }
@@ -60,9 +66,13 @@ function getBrowseRowMeta(
   }
 
   if (row.kind === 'workspace') {
+    const distinctBranchName =
+      row.branchName && row.branchName !== row.label ? row.branchName : null
+
     return {
       active: row.isActive,
-      ...(row.branchName ? { branch: row.branchName } : {}),
+      detached: !row.isDefault && !row.branchName,
+      ...(distinctBranchName ? { branch: distinctBranchName } : {}),
       sessions: row.activeSessionCount,
     }
   }
@@ -70,9 +80,15 @@ function getBrowseRowMeta(
   if (row.kind === 'module') {
     return {
       active: row.hasSession,
-      breadcrumb: [scopeBreadcrumb, row.label].filter(Boolean).join(' › '),
+      breadcrumb: scopeBreadcrumb,
     }
   }
 
   return {}
+}
+
+function getWorkspaceProviderLabel(row: HarbourRow) {
+  return row.kind !== 'project' && row.workspaceProvider
+    ? formatWorkspaceProvider(row.workspaceProvider)
+    : undefined
 }

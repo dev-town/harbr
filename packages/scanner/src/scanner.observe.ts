@@ -14,6 +14,7 @@ import type {
 import { Effect } from 'effect'
 
 import { scanProject } from './scanner.scan'
+import { detectWorkspaceProvider } from './workspace-provider'
 import type { ProjectObservationResult } from './services/scanner.service'
 
 const scannerConcurrency = 'unbounded' as const
@@ -142,6 +143,7 @@ function normalizeRuntimeObservation(
         scope: 'module',
         status: runtime.status,
         workspaceName: workspace.workspaceName,
+        workspacePath: workspace.workspacePath,
       }
     }
   }
@@ -158,6 +160,7 @@ function normalizeRuntimeObservation(
       scope: 'workspace',
       status: runtime.status,
       workspaceName: workspace.workspaceName,
+      workspacePath: workspace.workspacePath,
     }
   }
 
@@ -189,6 +192,12 @@ function scanWorkspace(
       branchName: workspace.branchName,
       workspaceName: workspace.name,
       workspacePath: scan.workspacePath,
+      workspaceProvider: detectWorkspaceProvider({
+        branchName: workspace.branchName ?? null,
+        kind: workspace.kind,
+        repoPath: project.repo,
+        workspacePath: scan.workspacePath,
+      }),
       kind: workspace.kind,
       modules: scan.modules,
     })),

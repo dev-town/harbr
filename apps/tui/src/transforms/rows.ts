@@ -12,6 +12,7 @@ import type {
   ProjectRow,
   WorkspaceRow,
 } from '~/types/rows'
+import { formatWorkspaceProvider } from '~/helpers/workspace-provider'
 
 export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
   const projectIssue = summary.projectIssue ?? null
@@ -58,7 +59,11 @@ export function mapWorkspaceSummaryToRow(
     workspaceId: summary.id,
     isActive: summary.activeSessionCount > 0,
     isCurrent: false,
-    metadata: formatWorkspaceMetadata(branchName, summary.activeSessionCount),
+    metadata: formatWorkspaceMetadata(
+      formatWorkspaceProvider(summary.workspaceProvider),
+      branchName,
+      summary.activeSessionCount,
+    ),
     activeSessionCount: summary.activeSessionCount,
     branchName,
     hasModules: summary.hasModules,
@@ -77,6 +82,7 @@ export function mapWorkspaceSummaryToRow(
       scope: 'workspace',
     },
     workspacePath: summary.workspacePath,
+    workspaceProvider: summary.workspaceProvider,
   }
 }
 
@@ -94,6 +100,7 @@ export function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
     hasSession: summary.hasActiveSession,
     modulePath: summary.path,
     runtime: summary.runtime,
+    workspaceProvider: summary.workspaceProvider,
     target: {
       breadcrumb: [
         summary.projectName,
@@ -166,7 +173,7 @@ export function mapActiveRuntimeSummaryToRow(
       isCurrent: false,
       metadata: summary.runtime.status,
       activeSessionCount: 1,
-      branchName: null,
+      branchName: summary.branchName,
       hasModules: false,
       isDefault: false,
       runtime,
@@ -186,10 +193,12 @@ export function mapActiveRuntimeSummaryToRow(
         scope: 'workspace',
       },
       workspacePath: summary.workspacePath ?? summary.repoPath,
+      workspaceProvider: summary.workspaceProvider ?? 'external',
     }
   }
 
   return {
+    branchName: summary.branchName,
     id: summary.id,
     kind: 'module',
     label: summary.moduleName ?? summary.workspaceName ?? summary.projectName,
@@ -202,6 +211,9 @@ export function mapActiveRuntimeSummaryToRow(
     hasSession: true,
     modulePath: summary.modulePath ?? '.',
     runtime,
+    ...(summary.workspaceProvider
+      ? { workspaceProvider: summary.workspaceProvider }
+      : {}),
     target: {
       breadcrumb: getActiveRuntimeContextLabel(summary),
       context: {
@@ -239,16 +251,17 @@ function formatSessionMetadata(activeSessionCount: number) {
 }
 
 function formatWorkspaceMetadata(
+  workspaceProvider: string,
   branchName: string | null,
   activeSessionCount: number,
 ) {
   const sessionMetadata = formatSessionMetadata(activeSessionCount)
 
   if (!branchName) {
-    return sessionMetadata
+    return `detached · ${workspaceProvider} · ${sessionMetadata}`
   }
 
-  return `${branchName} · ${sessionMetadata}`
+  return `${branchName} · ${workspaceProvider} · ${sessionMetadata}`
 }
 
 function getActiveRuntimeContextLabel(summary: ActiveRuntimeSummary) {

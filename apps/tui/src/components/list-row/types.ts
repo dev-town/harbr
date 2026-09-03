@@ -11,6 +11,7 @@ export type ListRowMeta = {
   active?: boolean
   breadcrumb?: string
   branch?: string | null
+  detached?: boolean
   notice?: ListRowMetaNotice
   sessions?: number
 }

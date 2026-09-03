@@ -13,6 +13,9 @@ export function ActiveRoute() {
   const activeRoute = useActiveRoute()
   const { width } = useTerminalDimensions()
   const rowVariant = getRowVariant(width)
+  const showWorkspaceProviderColumn = activeRoute.rows.some(
+    (row) => row.kind !== 'project' && Boolean(row.workspaceProvider),
+  )
 
   return (
     <ActiveRouteLayout
@@ -41,6 +44,7 @@ export function ActiveRoute() {
             onRowClick={() => activeRoute.onOpenRow(row)}
             onRowHover={activeRoute.onHoverRow}
             row={row}
+            showWorkspaceProviderColumn={showWorkspaceProviderColumn}
             variant={rowVariant}
           />
         )}

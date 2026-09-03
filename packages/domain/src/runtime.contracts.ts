@@ -6,6 +6,7 @@ import {
   RuntimeScopeSchema,
   RuntimeSourceSchema,
   RuntimeStatusSchema,
+  WorkspaceProviderSchema,
   type RuntimeSource,
 } from './shared.contracts'
 
@@ -50,6 +51,7 @@ export const RuntimeFactSchema = z.object({
   scope: RuntimeScopeSchema,
   status: RuntimeStatusSchema,
   workspaceName: z.string().nullable(),
+  workspacePath: z.string().optional(),
 })
 
 export type RuntimeFact = z.infer<typeof RuntimeFactSchema>
@@ -72,6 +74,7 @@ export const RuntimeObservationSchema = z.union([
 export type RuntimeObservation = z.infer<typeof RuntimeObservationSchema>
 
 export const ActiveRuntimeSummarySchema = z.object({
+  branchName: z.string().nullable(),
   id: z.string(),
   moduleId: z.string().nullable(),
   moduleName: z.string().nullable(),
@@ -84,6 +87,7 @@ export const ActiveRuntimeSummarySchema = z.object({
   workspaceId: z.string().nullable(),
   workspaceName: z.string().nullable(),
   workspacePath: z.string().nullable(),
+  workspaceProvider: WorkspaceProviderSchema.nullable(),
 })
 
 export type ActiveRuntimeSummary = z.infer<typeof ActiveRuntimeSummarySchema>

@@ -16,7 +16,13 @@ import { StartupShell } from '../src/components/startup-shell'
 import { Tab, Tabs } from '../src/components/tabs'
 import { createTuiKeymap } from '../src/keymap/create-keymap'
 
-type Stage = 'loading' | 'overflow' | 'populated'
+type Stage =
+  | 'loading'
+  | 'overflow'
+  | 'populated'
+  | 'selected'
+  | 'selected-empty'
+  | 'selected-visible'
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
@@ -29,23 +35,77 @@ try {
     <StartupShell onCommit={() => undefined} onQuit={() => undefined} />,
   )
   const loading = await capture(<ResultsShell stage="loading" />)
-  const populated = await capture(<ResultsShell stage="populated" />)
-  const overflowInitial = await capture(<ResultsShell stage="overflow" />)
-
-  await new Promise<void>((resolve) => process.nextTick(resolve))
   await setup.renderOnce()
+  const loadingScrollbarVisible = findScrollbox(
+    setup.renderer.root,
+  )?.verticalScrollBar.visible
 
-  const overflowSettled = findScrollbox(setup.renderer.root)
+  const populated = await capture(<ResultsShell stage="populated" />)
+  await setup.renderOnce()
+  const populatedScrollbarVisible = findScrollbox(
+    setup.renderer.root,
+  )?.verticalScrollBar.visible
+
+  await capture(<ResultsShell stage="overflow" />)
+  await setup.renderOnce()
+  const overflowScrollbarVisible = findScrollbox(
+    setup.renderer.root,
+  )?.verticalScrollBar.visible
 
   assert.equal(loading.tabsRow, bootstrap.tabsRow)
   assert.equal(populated.tabsRow, bootstrap.tabsRow)
-  assert.equal(loading.scrollbarVisible, false)
-  assert.equal(populated.scrollbarVisible, false)
-  assert.equal(overflowInitial.scrollbarVisible, false)
-  assert.equal(overflowSettled?.verticalScrollBar.visible, true)
+  assert.equal(loadingScrollbarVisible, false)
+  assert.equal(populatedScrollbarVisible, false)
+  assert.equal(overflowScrollbarVisible, true)
+
+  await capture(<ResultsShell stage="selected-empty" />)
+
+  act(() =>
+    root.render(
+      <KeymapProvider keymap={keymap}>
+        <ResultsShell stage="selected" />
+      </KeymapProvider>,
+    ),
+  )
+  await setup.renderOnce()
+  await setup.renderOnce()
+
+  const selectedScrollbox = findScrollbox(setup.renderer.root)
+  const selectedRow = selectedScrollbox?.content.findDescendantById('row:75')
+
+  assert.ok(selectedScrollbox)
+  assert.ok(selectedRow)
+  assert.ok(selectedScrollbox.scrollTop > 0)
+  assert.ok(selectedRow.y >= selectedScrollbox.viewport.y)
+  assert.ok(
+    selectedRow.y + selectedRow.height <=
+      selectedScrollbox.viewport.y + selectedScrollbox.viewport.height,
+  )
+
+  const visibleRow = selectedScrollbox.content.findDescendantById('row:74')
+  assert.ok(visibleRow)
+  assert.ok(visibleRow.y >= selectedScrollbox.viewport.y)
+  const selectedScrollTop = selectedScrollbox.scrollTop
+
+  act(() =>
+    root.render(
+      <KeymapProvider keymap={keymap}>
+        <ResultsShell stage="selected-visible" />
+      </KeymapProvider>,
+    ),
+  )
+  await setup.renderOnce()
+  await setup.renderOnce()
+
+  const visibleSelectionScrollbox = findScrollbox(setup.renderer.root)
+  assert.ok(visibleSelectionScrollbox)
+  assert.ok(
+    Math.abs(visibleSelectionScrollbox.scrollTop - selectedScrollTop) <=
+      visibleRow.height,
+  )
 
   console.log(
-    'Validated stable startup header geometry and deferred scrollbar visibility.',
+    'Validated startup layout, scrollbar visibility, and selected-row reveal.',
   )
 } finally {
   act(() => root.unmount())
@@ -64,11 +124,7 @@ async function capture(node: ReactNode) {
 
   assert.notEqual(tabsRow, -1)
 
-  return {
-    scrollbarVisible: findScrollbox(setup.renderer.root)?.verticalScrollBar
-      .visible,
-    tabsRow,
-  }
+  return { tabsRow }
 }
 
 function findScrollbox(
@@ -84,7 +140,9 @@ function findScrollbox(
 
 function ResultsShell({ stage }: { stage: Stage }) {
   const rows =
-    stage === 'overflow'
+    stage === 'overflow' ||
+    stage === 'selected' ||
+    stage === 'selected-visible'
       ? Array.from({ length: 100 }, (_, index) => ({ id: String(index) }))
       : stage === 'populated'
         ? [{ id: 'one' }, { id: 'two' }]
@@ -117,7 +175,14 @@ function ResultsShell({ stage }: { stage: Stage }) {
             isLoading={stage === 'loading'}
             renderRow={(row) => <text>{row.id}</text>}
             rows={rows}
-            selectedId={rows[0]?.id ?? null}
+            selectedId={
+              stage === 'selected'
+                ? '75'
+                : stage === 'selected-visible'
+                  ? '74'
+                  : (rows[0]?.id ?? null)
+            }
+            key={stage.startsWith('selected') ? 'selection' : 'layout'}
           />
         </box>
       </Layout.Content>

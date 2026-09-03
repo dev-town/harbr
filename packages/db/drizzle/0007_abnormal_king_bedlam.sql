@@ -1,0 +1,1 @@
+ALTER TABLE `workspaces` ADD `workspace_provider` text DEFAULT 'external' NOT NULL;

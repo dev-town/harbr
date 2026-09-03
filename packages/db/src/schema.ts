@@ -26,6 +26,7 @@ export const workspaces = sqliteTable('workspaces', {
   kind: text('kind', { enum: ['default', 'worktree'] }).notNull(),
   name: text('name').notNull(),
   workspacePath: text('workspace_path').notNull().unique(),
+  workspaceProvider: text('workspace_provider').notNull().default('external'),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
 })
