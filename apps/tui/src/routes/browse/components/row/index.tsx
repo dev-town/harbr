@@ -27,11 +27,7 @@ export function BrowseRouteRow({
 }: BrowseRouteRowProps) {
   const meta = getBrowseRowMeta(row, scopeBreadcrumb)
   const marker = row.isCurrent ? '◉' : row.isActive ? '●' : '○'
-  const markerColor = row.isCurrent
-    ? theme.active
-    : row.isActive
-      ? theme.accent
-      : theme.idle
+  const markerColor = row.isCurrent ? theme.active : row.isActive ? theme.accent : theme.idle
   const workspaceProvider = getWorkspaceProviderLabel(row)
 
   return (

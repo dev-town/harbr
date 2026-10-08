@@ -15,7 +15,6 @@ export type ReconcilerServiceApi = {
   ) => Effect.Effect<SyncProjectResult, ReconcilerError>
 }
 
-export class ReconcilerService extends Context.Tag('@harbr/reconciler/ReconcilerService')<
-  ReconcilerService,
-  ReconcilerServiceApi
->() {}
+export class ReconcilerService extends Context.Service<ReconcilerService, ReconcilerServiceApi>()(
+  '@harbr/reconciler/ReconcilerService',
+) {}

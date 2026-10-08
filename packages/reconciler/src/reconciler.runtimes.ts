@@ -5,14 +5,14 @@ import type {
   RuntimeFact,
 } from '@harbr/domain'
 import type { ProjectObservationResult } from '@harbr/scanner'
-import { Either } from 'effect'
+import { Result } from 'effect'
 
 export function stabilizeRuntimeFacts(
   observations: readonly ProjectObservationResult[],
   existing: readonly ActiveRuntimeSummary[],
 ): readonly ProjectObservationResult[] {
   const successful = observations.flatMap((observation) =>
-    Either.isRight(observation.result) ? [{ value: observation.result.right }] : [],
+    Result.isSuccess(observation.result) ? [{ value: observation.result.success }] : [],
   )
   const first = successful[0]?.value
 
@@ -43,11 +43,11 @@ export function stabilizeRuntimeFacts(
   }
 
   return observations.map((observation) => {
-    if (Either.isLeft(observation.result)) {
+    if (Result.isFailure(observation.result)) {
       return observation
     }
 
-    const value = observation.result.right
+    const value = observation.result.success
     const newRuntimes = value.runtimes.filter((runtime) => {
       const externalId = runtime.identity.externalId
 
@@ -65,7 +65,7 @@ export function stabilizeRuntimeFacts(
 
     return {
       ...observation,
-      result: Either.right({
+      result: Result.succeed({
         ...value,
         runtimes: [...newRuntimes, ...preservedRuntimes],
       }),
@@ -79,12 +79,8 @@ function runtimeTargetExists(runtime: ActiveRuntimeSummary, observation: Project
   }
 
   const workspace = runtime.workspacePath
-    ? observation.workspaces.find(
-        (candidate) => candidate.workspacePath === runtime.workspacePath,
-      )
-    : observation.workspaces.find(
-        (candidate) => candidate.workspaceName === runtime.workspaceName,
-      )
+    ? observation.workspaces.find((candidate) => candidate.workspacePath === runtime.workspacePath)
+    : observation.workspaces.find((candidate) => candidate.workspaceName === runtime.workspaceName)
 
   if (!workspace) {
     return false

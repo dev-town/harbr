@@ -1,4 +1,4 @@
-import { Context, type Effect, type Either } from 'effect'
+import { Context, type Effect, type Result } from 'effect'
 
 import type { ProjectConfig, ProjectObservation } from '@harbr/domain'
 import type { RepoInspectionError, RepoNotGitError } from '@harbr/git'
@@ -8,7 +8,7 @@ export type ScannerError = RepoInspectionError | RepoNotGitError | RuntimeProvid
 
 export type ProjectObservationResult = {
   readonly project: ProjectConfig
-  readonly result: Either.Either<ProjectObservation, ScannerError>
+  readonly result: Result.Result<ProjectObservation, ScannerError>
 }
 
 export type ScannerServiceApi = {
@@ -20,7 +20,6 @@ export type ScannerServiceApi = {
   ) => Effect.Effect<ProjectObservation, ScannerError>
 }
 
-export class ScannerService extends Context.Tag('@harbr/scanner/ScannerService')<
-  ScannerService,
-  ScannerServiceApi
->() {}
+export class ScannerService extends Context.Service<ScannerService, ScannerServiceApi>()(
+  '@harbr/scanner/ScannerService',
+) {}

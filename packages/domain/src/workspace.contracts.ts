@@ -2,10 +2,7 @@ import { z } from 'zod'
 
 import { ResolvedModuleSchema } from './module.contracts'
 import { RuntimeAttachmentSchema } from './runtime.contracts'
-import {
-  WorkspaceKindSchema,
-  WorkspaceProviderSchema,
-} from './shared.contracts'
+import { WorkspaceKindSchema, WorkspaceProviderSchema } from './shared.contracts'
 
 export const WorkspaceObservationSchema = z.object({
   branchName: z.string().nullable().optional(),

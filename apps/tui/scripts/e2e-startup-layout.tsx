@@ -36,21 +36,15 @@ try {
   )
   const loading = await capture(<ResultsShell stage="loading" />)
   await setup.renderOnce()
-  const loadingScrollbarVisible = findScrollbox(
-    setup.renderer.root,
-  )?.verticalScrollBar.visible
+  const loadingScrollbarVisible = findScrollbox(setup.renderer.root)?.verticalScrollBar.visible
 
   const populated = await capture(<ResultsShell stage="populated" />)
   await setup.renderOnce()
-  const populatedScrollbarVisible = findScrollbox(
-    setup.renderer.root,
-  )?.verticalScrollBar.visible
+  const populatedScrollbarVisible = findScrollbox(setup.renderer.root)?.verticalScrollBar.visible
 
   await capture(<ResultsShell stage="overflow" />)
   await setup.renderOnce()
-  const overflowScrollbarVisible = findScrollbox(
-    setup.renderer.root,
-  )?.verticalScrollBar.visible
+  const overflowScrollbarVisible = findScrollbox(setup.renderer.root)?.verticalScrollBar.visible
 
   assert.equal(loading.tabsRow, bootstrap.tabsRow)
   assert.equal(populated.tabsRow, bootstrap.tabsRow)
@@ -99,10 +93,7 @@ try {
 
   const visibleSelectionScrollbox = findScrollbox(setup.renderer.root)
   assert.ok(visibleSelectionScrollbox)
-  assert.ok(
-    Math.abs(visibleSelectionScrollbox.scrollTop - selectedScrollTop) <=
-      visibleRow.height,
-  )
+  assert.ok(Math.abs(visibleSelectionScrollbox.scrollTop - selectedScrollTop) <= visibleRow.height)
 
   console.log('Validated stable startup header geometry and deferred scrollbar visibility.')
 } finally {
@@ -137,9 +128,7 @@ function findScrollbox(rootRenderable: Renderable): ScrollBoxRenderable | undefi
 
 function ResultsShell({ stage }: { stage: Stage }) {
   const rows =
-    stage === 'overflow' ||
-    stage === 'selected' ||
-    stage === 'selected-visible'
+    stage === 'overflow' || stage === 'selected' || stage === 'selected-visible'
       ? Array.from({ length: 100 }, (_, index) => ({ id: String(index) }))
       : stage === 'populated'
         ? [{ id: 'one' }, { id: 'two' }]

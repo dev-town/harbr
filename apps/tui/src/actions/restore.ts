@@ -85,9 +85,7 @@ export async function restoreCurrentRuntime(
     return false
   }
 
-  const project = projects.find(
-    (candidate) => candidate.id === currentRuntime.projectId,
-  )
+  const project = projects.find((candidate) => candidate.id === currentRuntime.projectId)
 
   if (!project) {
     return false
@@ -106,9 +104,7 @@ export async function restoreCurrentRuntime(
 
   const workspaces = await listWorkspaceSummaries(services, project.id)
   const workspace = currentRuntime.workspaceId
-    ? workspaces.find(
-        (candidate) => candidate.id === currentRuntime.workspaceId,
-      )
+    ? workspaces.find((candidate) => candidate.id === currentRuntime.workspaceId)
     : undefined
 
   if (!workspace) {

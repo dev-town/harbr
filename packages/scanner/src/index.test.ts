@@ -163,8 +163,7 @@ describe('detectWorkspaceProvider', () => {
   it.each([
     {
       expected: 'harbr',
-      workspacePath:
-        '/Users/tester/.local/share/harbr/worktrees/devtown/feature-auth',
+      workspacePath: '/Users/tester/.local/share/harbr/worktrees/devtown/feature-auth',
     },
     {
       expected: 'codex',
@@ -176,8 +175,7 @@ describe('detectWorkspaceProvider', () => {
     },
     {
       expected: 'opencode',
-      workspacePath:
-        '/Users/tester/.local/share/opencode/worktree/project-id/feature-auth',
+      workspacePath: '/Users/tester/.local/share/opencode/worktree/project-id/feature-auth',
     },
     {
       expected: 'amp',
@@ -676,14 +674,10 @@ describe('observeProject', () => {
     }
 
     const observation = await Effect.runPromise(
-      Effect.flatMap(ScannerService, (service) =>
-        service.observeProject(project),
-      ).pipe(
+      Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
         Effect.provide(
           ScannerServiceLive.pipe(
-            Layer.provide(
-              Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
-            ),
+            Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
             Layer.provide(Layer.succeed(GitService, git)),
           ),
         ),

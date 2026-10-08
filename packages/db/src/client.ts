@@ -8,28 +8,38 @@ import type { HarbourDatabaseConnection } from './db.types'
 export async function openDatabase(dbPath: string) {
   await mkdir(path.dirname(dbPath), { recursive: true })
 
+  const bunSqlite = await importBunSqlite().catch(() => null)
+
+  if (bunSqlite) {
+    const { drizzle } = await import('drizzle-orm/bun-sqlite')
+    const sqlite = new bunSqlite.Database(dbPath, {
+      create: true,
+      strict: true,
+    })
+
+    try {
+      sqlite.exec('PRAGMA foreign_keys = ON;')
+      sqlite.exec('PRAGMA journal_mode = WAL;')
+
+      return {
+        driver: 'bun-sqlite',
+        sqlite,
+        db: drizzle(sqlite, { schema }),
+      } satisfies HarbourDatabaseConnection
+    } catch (error) {
+      sqlite.close()
+      throw error
+    }
+  }
+
+  const [{ default: Database }, { drizzle }] = await Promise.all([
+    importBetterSqlite3(),
+    import('drizzle-orm/better-sqlite3'),
+  ])
+
+  const sqlite = new Database(dbPath)
+
   try {
-    const [{ Database }, { drizzle }] = await Promise.all([
-      importBunSqlite(),
-      import('drizzle-orm/bun-sqlite'),
-    ])
-
-    const sqlite = new Database(dbPath, { create: true, strict: true })
-    sqlite.exec('PRAGMA foreign_keys = ON;')
-    sqlite.exec('PRAGMA journal_mode = WAL;')
-
-    return {
-      driver: 'bun-sqlite',
-      sqlite,
-      db: drizzle(sqlite, { schema }),
-    } satisfies HarbourDatabaseConnection
-  } catch {
-    const [{ default: Database }, { drizzle }] = await Promise.all([
-      importBetterSqlite3(),
-      import('drizzle-orm/better-sqlite3'),
-    ])
-
-    const sqlite = new Database(dbPath)
     sqlite.pragma('foreign_keys = ON')
     sqlite.pragma('journal_mode = WAL')
 
@@ -38,6 +48,9 @@ export async function openDatabase(dbPath: string) {
       sqlite,
       db: drizzle(sqlite, { schema }),
     } satisfies HarbourDatabaseConnection
+  } catch (error) {
+    sqlite.close()
+    throw error
   }
 }
 

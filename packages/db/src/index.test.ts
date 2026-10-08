@@ -155,9 +155,7 @@ describe('db', () => {
         sqlite.exec(statement)
       }
 
-      expect(
-        sqlite.prepare('SELECT count(*) AS count FROM runtimes').get(),
-      ).toEqual({ count: 0 })
+      expect(sqlite.prepare('SELECT count(*) AS count FROM runtimes').get()).toEqual({ count: 0 })
     } finally {
       database.sqlite.close()
     }
@@ -659,42 +657,38 @@ describe('db', () => {
 
       expect(mainWorkspaceId).toBeDefined()
 
-      expect(
-        listModuleSummaries(
-          database.db,
-          mainWorkspaceId ?? 'missing',
-          runtimeSource,
-        ),
-      ).toEqual([
-        {
-          id: expect.any(String),
-          projectId: alphaSnapshot.project.id,
-          workspaceId: mainWorkspaceId,
-          name: 'apps/cli',
-          path: 'apps/cli',
-          projectName: 'alpha',
-          repoPath: '/tmp/alpha.git',
-          runtime: runtimeAttachment('alpha__main__apps/cli'),
-          workspaceName: 'main',
-          workspacePath: '/tmp/alpha-main',
-          workspaceProvider: 'local',
-          hasActiveSession: true,
-        },
-        {
-          id: expect.any(String),
-          projectId: alphaSnapshot.project.id,
-          workspaceId: mainWorkspaceId,
-          name: 'apps/tui',
-          path: 'apps/tui',
-          projectName: 'alpha',
-          repoPath: '/tmp/alpha.git',
-          runtime: null,
-          workspaceName: 'main',
-          workspacePath: '/tmp/alpha-main',
-          workspaceProvider: 'local',
-          hasActiveSession: false,
-        },
-      ])
+      expect(listModuleSummaries(database.db, mainWorkspaceId ?? 'missing', runtimeSource)).toEqual(
+        [
+          {
+            id: expect.any(String),
+            projectId: alphaSnapshot.project.id,
+            workspaceId: mainWorkspaceId,
+            name: 'apps/cli',
+            path: 'apps/cli',
+            projectName: 'alpha',
+            repoPath: '/tmp/alpha.git',
+            runtime: runtimeAttachment('alpha__main__apps/cli'),
+            workspaceName: 'main',
+            workspacePath: '/tmp/alpha-main',
+            workspaceProvider: 'local',
+            hasActiveSession: true,
+          },
+          {
+            id: expect.any(String),
+            projectId: alphaSnapshot.project.id,
+            workspaceId: mainWorkspaceId,
+            name: 'apps/tui',
+            path: 'apps/tui',
+            projectName: 'alpha',
+            repoPath: '/tmp/alpha.git',
+            runtime: null,
+            workspaceName: 'main',
+            workspacePath: '/tmp/alpha-main',
+            workspaceProvider: 'local',
+            hasActiveSession: false,
+          },
+        ],
+      )
     } finally {
       database.sqlite.close()
     }
@@ -721,8 +715,7 @@ describe('db', () => {
               {
                 name: 'codex-module',
                 path: 'codex-module',
-                workspacePath:
-                  '/Users/tester/.codex/worktrees/a74b/main/codex-module',
+                workspacePath: '/Users/tester/.codex/worktrees/a74b/main/codex-module',
                 selector: {
                   raw: 'codex-module',
                   path: 'codex-module',
@@ -783,15 +776,13 @@ describe('db', () => {
       })
 
       expect(
-        listWorkspaceSummaries(
-          database.db,
-          snapshot.project.id,
-          runtimeSource,
-        ).map((workspace) => ({
-          activeSessionCount: workspace.activeSessionCount,
-          workspacePath: workspace.workspacePath,
-          workspaceProvider: workspace.workspaceProvider,
-        })),
+        listWorkspaceSummaries(database.db, snapshot.project.id, runtimeSource).map(
+          (workspace) => ({
+            activeSessionCount: workspace.activeSessionCount,
+            workspacePath: workspace.workspacePath,
+            workspaceProvider: workspace.workspaceProvider,
+          }),
+        ),
       ).toEqual([
         {
           activeSessionCount: 1,
@@ -805,13 +796,11 @@ describe('db', () => {
         },
       ])
       expect(
-        listActiveRuntimeSummaries(database.db, runtimeSource).map(
-          (runtime) => ({
-            externalId: runtime.runtime.identity.externalId,
-            workspacePath: runtime.workspacePath,
-            workspaceProvider: runtime.workspaceProvider,
-          }),
-        ),
+        listActiveRuntimeSummaries(database.db, runtimeSource).map((runtime) => ({
+          externalId: runtime.runtime.identity.externalId,
+          workspacePath: runtime.workspacePath,
+          workspaceProvider: runtime.workspaceProvider,
+        })),
       ).toEqual([
         {
           externalId: 'codex-main',
@@ -826,11 +815,9 @@ describe('db', () => {
       ])
       expect(
         snapshot.workspaces.map((workspace) => ({
-          modules: listModuleSummaries(
-            database.db,
-            workspace.id,
-            runtimeSource,
-          ).map((module) => module.name),
+          modules: listModuleSummaries(database.db, workspace.id, runtimeSource).map(
+            (module) => module.name,
+          ),
           workspacePath: workspace.workspacePath,
         })),
       ).toEqual([

@@ -1,6 +1,6 @@
 import { ConfigService } from '@harbr/config'
 import { ReconcilerService } from '@harbr/reconciler'
-import { Effect } from 'effect'
+import { Cause, Effect, Exit } from 'effect'
 
 import { formatCliError, formatCliOutput } from '~/cli/format'
 import { formatSyncHelp, isHelpRequest } from '~/cli/help'
@@ -11,7 +11,8 @@ import {
   getProfileMissingValueFlag,
   readProfileOptions,
 } from '~/observability/profile-options'
-import { makeTuiEffectRuntime } from '~/services/effect-runtime'
+import { makeSyncEffectRuntime } from '~/services/effect-runtime'
+import { makeConfigLayer, makeSyncLayer } from '~/services/layer'
 
 export async function runSyncCommand(args: string[]) {
   if (isHelpRequest(args)) {
@@ -40,20 +41,22 @@ export async function runSyncCommand(args: string[]) {
     return
   }
 
-  const runtime = makeTuiEffectRuntime({
-    ...(configPath ? { configPath } : {}),
-    ...(dbPath ? { dbPath } : {}),
+  const runtime = makeSyncEffectRuntime({
     ...(profile ? { profile } : {}),
   })
 
   const result = await runtime
-    .runPromise(
+    .runPromiseExit(
       Effect.gen(function* () {
-        const configService = yield* ConfigService
-        const config = yield* configService.load
-        const reconciler = yield* ReconcilerService
+        const config = yield* Effect.gen(function* () {
+          const configService = yield* ConfigService
+          return yield* configService.load
+        }).pipe(Effect.provide(makeConfigLayer(configPath ? { configPath } : {})))
 
-        return yield* reconciler.syncProjects(config.projects)
+        return yield* Effect.gen(function* () {
+          const reconciler = yield* ReconcilerService
+          return yield* reconciler.syncProjects(config.projects)
+        }).pipe(Effect.provide(makeSyncLayer(dbPath ? { dbPath } : {})))
       }).pipe(
         Effect.withSpan('harbr.sync', {
           attributes: profile
@@ -62,29 +65,30 @@ export async function runSyncCommand(args: string[]) {
               }
             : {},
         }),
-        Effect.match({
-          onFailure: (error) => ({
-            exitCode: 1,
-            output: jsonMode ? JSON.stringify(error, null, 2) : formatCliError(error),
-            stream: 'stderr' as const,
-          }),
-          onSuccess: (output) => ({
-            exitCode: 0,
-            output: jsonMode ? JSON.stringify(output, null, 2) : formatCliOutput(output),
-            stream: 'stdout' as const,
-          }),
-        }),
       ),
     )
     .finally(() => runtime.dispose())
 
-  if (result.stream === 'stderr') {
-    console.error(result.output)
-  } else {
-    console.log(result.output)
+  if (Exit.isFailure(result)) {
+    console.error(formatSyncError(Cause.squash(result.cause), jsonMode))
+    process.exitCode = 1
+    return
   }
 
-  process.exitCode = result.exitCode
+  console.log(jsonMode ? JSON.stringify(result.value, null, 2) : formatCliOutput(result.value))
+  process.exitCode = 0
+}
+
+function formatSyncError(error: unknown, jsonMode: boolean) {
+  const cliError =
+    error !== null && typeof error === 'object' && '_tag' in error
+      ? (error as Parameters<typeof formatCliError>[0])
+      : {
+          _tag: 'UnexpectedError',
+          message: error instanceof Error ? error.message : String(error),
+        }
+
+  return jsonMode ? JSON.stringify(cliError, null, 2) : formatCliError(cliError)
 }
 
 function getMissingValueFlag(args: string[], flags: string[]) {

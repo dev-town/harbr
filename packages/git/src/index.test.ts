@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import { Either, Effect } from 'effect'
+import { Result, Effect } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
@@ -65,18 +65,18 @@ describe('inspectRepo', () => {
 
     await mkdir(repoPath, { recursive: true })
 
-    const result = await runEither(inspectRepo(repoPath))
+    const result = await runResult(inspectRepo(repoPath))
 
-    expectLeft(result, RepoNotGitError, { repoPath })
+    expectFailure(result, RepoNotGitError, { repoPath })
   })
 
   it('returns repo_not_found for missing directories', async () => {
     const tempRoot = await createTempRoot()
     const repoPath = path.join(tempRoot, 'missing')
 
-    const result = await runEither(inspectRepo(repoPath))
+    const result = await runResult(inspectRepo(repoPath))
 
-    expectLeft(result, RepoNotFoundError, { repoPath })
+    expectFailure(result, RepoNotFoundError, { repoPath })
   })
 
   it('returns repo_not_supported for linked worktree roots', async () => {
@@ -109,9 +109,9 @@ describe('inspectRepo', () => {
     ])
     await execFileAsync('git', ['-C', repoPath, 'worktree', 'add', worktreePath])
 
-    const result = await runEither(inspectRepo(worktreePath))
+    const result = await runResult(inspectRepo(worktreePath))
 
-    expectLeft(result, RepoNotSupportedError, { repoPath: worktreePath })
+    expectFailure(result, RepoNotSupportedError, { repoPath: worktreePath })
   })
 })
 
@@ -203,12 +203,12 @@ describe('getDefaultBranch', () => {
     await execFileAsync('git', ['-C', repoPath, 'checkout', 'HEAD~0'])
 
     const result = await Effect.runPromise(
-      Effect.either(getDefaultBranch({ repoPath, kind: 'standard' })).pipe(
+      Effect.result(getDefaultBranch({ repoPath, kind: 'standard' })).pipe(
         Effect.provide(GitServiceLive),
       ),
     )
 
-    expectLeft(result, DefaultBranchNotFoundError, { repoPath })
+    expectFailure(result, DefaultBranchNotFoundError, { repoPath })
   })
 
   it('fails when bare repo head points at a missing branch', async () => {
@@ -218,12 +218,12 @@ describe('getDefaultBranch', () => {
     await execFileAsync('git', ['init', '--bare', repoPath])
 
     const result = await Effect.runPromise(
-      Effect.either(getDefaultBranch({ repoPath, kind: 'bare' })).pipe(
+      Effect.result(getDefaultBranch({ repoPath, kind: 'bare' })).pipe(
         Effect.provide(GitServiceLive),
       ),
     )
 
-    expectLeft(result, DefaultBranchNotFoundError, {
+    expectFailure(result, DefaultBranchNotFoundError, {
       message: `Repo HEAD points to missing branch refs/heads/master`,
       repoPath,
     })
@@ -419,8 +419,8 @@ describe('listWorkspaces', () => {
   })
 })
 
-async function runEither(effect: ReturnType<typeof inspectRepo>) {
-  return Effect.runPromise(Effect.either(effect).pipe(Effect.provide(GitServiceLive)))
+async function runResult(effect: ReturnType<typeof inspectRepo>) {
+  return Effect.runPromise(Effect.result(effect).pipe(Effect.provide(GitServiceLive)))
 }
 
 function inspectRepo(repoPath: string) {
@@ -455,18 +455,18 @@ async function runWorkspacesSuccess(effect: ReturnType<typeof listWorkspaces>) {
   return Effect.runPromise(effect.pipe(Effect.provide(GitServiceLive)))
 }
 
-function expectLeft<TLeft extends Error, TRight>(
-  result: Either.Either<TRight, TLeft>,
+function expectFailure<TFailure extends Error, TSuccess>(
+  result: Result.Result<TSuccess, TFailure>,
   ErrorType: abstract new (...args: never[]) => Error,
   shape: Record<string, unknown>,
 ) {
-  expect(Either.isLeft(result)).toBe(true)
-  if (!Either.isLeft(result)) {
+  expect(Result.isFailure(result)).toBe(true)
+  if (!Result.isFailure(result)) {
     return
   }
 
-  expect(result.left).toBeInstanceOf(ErrorType)
-  expect(result.left).toMatchObject(shape)
+  expect(result.failure).toBeInstanceOf(ErrorType)
+  expect(result.failure).toMatchObject(shape)
 }
 
 async function createTempRoot() {

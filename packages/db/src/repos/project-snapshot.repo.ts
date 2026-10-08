@@ -277,9 +277,8 @@ export function listWorkspaceSummaries(
         ),
         workspacePath: workspace.workspacePath,
         workspaceProvider: workspace.workspaceProvider,
-        activeSessionCount: runtimeRows.filter(
-          (runtime) => runtime.workspaceId === workspace.id,
-        ).length,
+        activeSessionCount: runtimeRows.filter((runtime) => runtime.workspaceId === workspace.id)
+          .length,
         moduleCount: workspaceModules.length,
         hasModules: workspaceModules.length > 0,
         isDefault: workspace.kind === 'default',
@@ -471,12 +470,7 @@ export function replaceProjectSnapshot(db: HarbourDatabase, input: ReplaceProjec
     }
 
     const createdAt = now()
-    const workspaceRecords = insertWorkspaces(
-      tx,
-      project.id,
-      input.workspaces,
-      createdAt,
-    )
+    const workspaceRecords = insertWorkspaces(tx, project.id, input.workspaces, createdAt)
     restoreRuntimes(tx, project.id, workspaceRecords, preservedRuntimes)
 
     const moduleRecords = workspaceRecords.flatMap((workspace) => {
@@ -663,9 +657,8 @@ function resolveWorkspaceRecord(
 ) {
   if (reference.workspacePath) {
     return (
-      workspaceRecords.find(
-        (workspace) => workspace.workspacePath === reference.workspacePath,
-      ) ?? null
+      workspaceRecords.find((workspace) => workspace.workspacePath === reference.workspacePath) ??
+      null
     )
   }
 
@@ -680,9 +673,7 @@ function resolveWorkspaceRecord(
   return nameMatches.length === 1 ? nameMatches[0]! : null
 }
 
-function mapProjectRow(
-  row: ReturnType<typeof projectRowSchema.parse>,
-): ProjectRecord {
+function mapProjectRow(row: ReturnType<typeof projectRowSchema.parse>): ProjectRecord {
   return {
     id: row.id,
     projectIssue: row.projectIssue ?? null,

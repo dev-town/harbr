@@ -40,9 +40,7 @@ export function ActiveRouteRow({
       rowId={row.id}
       showWorkspaceProviderColumn={showWorkspaceProviderColumn}
       variant={variant}
-      {...(workspaceProviderLabel
-        ? { workspaceProvider: workspaceProviderLabel }
-        : {})}
+      {...(workspaceProviderLabel ? { workspaceProvider: workspaceProviderLabel } : {})}
     />
   )
 }
@@ -57,8 +55,7 @@ function getActiveRowMeta(row: HarbourRow & { runtime: RuntimeAttachment }) {
     row.kind === 'workspace'
       ? projectName
       : [projectName, workspaceName].filter(Boolean).join(' › ')
-  const distinctBranchName =
-    row.branchName && row.branchName !== row.label ? row.branchName : null
+  const distinctBranchName = row.branchName && row.branchName !== row.label ? row.branchName : null
 
   return {
     breadcrumb,
@@ -67,9 +64,7 @@ function getActiveRowMeta(row: HarbourRow & { runtime: RuntimeAttachment }) {
   }
 }
 
-function getWorkspaceProviderLabel(
-  row: HarbourRow & { runtime: RuntimeAttachment },
-) {
+function getWorkspaceProviderLabel(row: HarbourRow & { runtime: RuntimeAttachment }) {
   return row.kind !== 'project' && row.workspaceProvider
     ? formatWorkspaceProvider(row.workspaceProvider)
     : undefined

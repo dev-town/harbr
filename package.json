@@ -10,7 +10,7 @@
       "packages/*"
     ],
     "catalog": {
-      "effect": "3.21.3"
+      "effect": "4.0.2"
     }
   },
   "scripts": {

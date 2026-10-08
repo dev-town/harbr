@@ -18,18 +18,12 @@ export function useSelectedRowVisibility({
   const renderer = useRenderer()
 
   useEffect(() => {
-    if (
-      !rowsVisible ||
-      !selectedId ||
-      !rows.some((row) => row.id === selectedId)
-    ) {
+    if (!rowsVisible || !selectedId || !rows.some((row) => row.id === selectedId)) {
       return
     }
 
     const revealSelection = () => {
-      const selectedRow = scrollboxRef.current?.content.findDescendantById(
-        `row:${selectedId}`,
-      )
+      const selectedRow = scrollboxRef.current?.content.findDescendantById(`row:${selectedId}`)
 
       if (!selectedRow) {
         return

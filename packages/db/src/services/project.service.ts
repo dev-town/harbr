@@ -2,7 +2,6 @@ import { Context } from 'effect'
 
 import type { ProjectServiceApi } from './project.types'
 
-export class ProjectService extends Context.Tag('@harbr/db/ProjectService')<
-  ProjectService,
-  ProjectServiceApi
->() {}
+export class ProjectService extends Context.Service<ProjectService, ProjectServiceApi>()(
+  '@harbr/db/ProjectService',
+) {}

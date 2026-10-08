@@ -1,8 +1,4 @@
-import type {
-  ResolvedContextTarget,
-  RuntimeAttachment,
-  WorkspaceProvider,
-} from '@harbr/domain'
+import type { ResolvedContextTarget, RuntimeAttachment, WorkspaceProvider } from '@harbr/domain'
 
 export type RowKind = 'action' | 'active-action' | 'module' | 'project' | 'workspace'
 

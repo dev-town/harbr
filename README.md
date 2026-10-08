@@ -533,7 +533,7 @@ packages/db/src/migrations.gen.ts
 
 ### Effect Runtime Shape
 
-Harbr packages expose Effect service tags, API types, and live layers. Packages should not export convenience helper functions that secretly provide live implementations.
+Harbr packages expose Effect v4 `Context.Service` keys, API types, and live layers. Packages should not export convenience helper functions that secretly provide live implementations.
 
 Runtime choices such as config and database paths are represented as option services:
 

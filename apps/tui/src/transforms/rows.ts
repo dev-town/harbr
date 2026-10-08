@@ -6,12 +6,7 @@ import type {
 } from '@harbr/domain'
 import { join } from 'node:path'
 
-import type {
-  HarbourRow,
-  ModuleRow,
-  ProjectRow,
-  WorkspaceRow,
-} from '~/types/rows'
+import type { HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
 import { formatWorkspaceProvider } from '~/helpers/workspace-provider'
 
 export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
@@ -201,9 +196,7 @@ export function mapActiveRuntimeSummaryToRow(summary: ActiveRuntimeSummary): Har
     hasSession: true,
     modulePath: summary.modulePath ?? '.',
     runtime,
-    ...(summary.workspaceProvider
-      ? { workspaceProvider: summary.workspaceProvider }
-      : {}),
+    ...(summary.workspaceProvider ? { workspaceProvider: summary.workspaceProvider } : {}),
     target: {
       breadcrumb: getActiveRuntimeContextLabel(summary),
       context: {

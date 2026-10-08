@@ -27,7 +27,7 @@ export function observeProjectsWithGit(
         projects,
         (project) =>
           observeProjectWithDiscovery(git, discovery, project).pipe(
-            Effect.either,
+            Effect.result,
             Effect.map(
               (result) =>
                 ({

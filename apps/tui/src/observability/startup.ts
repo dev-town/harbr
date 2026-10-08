@@ -42,19 +42,16 @@ export async function makeStartupTelemetry({
     Effect.gen(function* () {
       const tracer = yield* Effect.tracer
 
-      return tracer.span(
-        'harbr.startup',
-        Option.none(),
-        Context.empty(),
-        [],
-        timeline.timing.processStartedAtUnixNanos,
-        'internal',
-        {
-          attributes: {
-            'harbr.profile.session_id': profile.sessionId,
-          },
-        },
-      )
+      return tracer.span({
+        name: 'harbr.startup',
+        parent: Option.none(),
+        annotations: Context.empty(),
+        links: [],
+        startTime: timeline.timing.processStartedAtUnixNanos,
+        kind: 'internal',
+        root: true,
+        sampled: true,
+      })
     }),
   )
   span.attribute('harbr.profile.session_id', profile.sessionId)

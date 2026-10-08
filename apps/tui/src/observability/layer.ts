@@ -1,6 +1,6 @@
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient'
-import * as Otlp from '@effect/opentelemetry/Otlp'
 import { Layer } from 'effect'
+import * as FetchHttpClient from 'effect/http/FetchHttpClient'
+import * as Otlp from 'effect/observability/Otlp'
 
 import packageJson from '../../package.json'
 import type { TuiProfileOptions } from '~/types'

@@ -26,10 +26,7 @@ export function detectWorkspaceProvider({
     ['harbr', path.join(homePath, '.local', 'share', 'harbr', 'worktrees')],
     ['codex', path.join(homePath, '.codex', 'worktrees')],
     ['claude', path.join(homePath, '.claude', 'worktrees')],
-    [
-      'opencode',
-      path.join(homePath, '.local', 'share', 'opencode', 'worktree'),
-    ],
+    ['opencode', path.join(homePath, '.local', 'share', 'opencode', 'worktree')],
   ] as const
 
   for (const [provider, root] of managedRoots) {
@@ -65,16 +62,11 @@ function isAmpWorkspace(input: {
 
   const branchSegment = input.branchName.replaceAll('/', '-')
   return (
-    path.resolve(input.workspacePath) ===
-    path.join(projectsRoot, `${repoName}-${branchSegment}`)
+    path.resolve(input.workspacePath) === path.join(projectsRoot, `${repoName}-${branchSegment}`)
   )
 }
 
 function isWithin(root: string, target: string) {
   const relative = path.relative(path.resolve(root), path.resolve(target))
-  return (
-    relative.length > 0 &&
-    !relative.startsWith('..') &&
-    !path.isAbsolute(relative)
-  )
+  return relative.length > 0 && !relative.startsWith('..') && !path.isAbsolute(relative)
 }
