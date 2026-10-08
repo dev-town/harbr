@@ -29,6 +29,7 @@
     "test:e2e:tui-themes": "bun run --cwd apps/tui test:e2e:tui-themes",
     "test:e2e:terminal-control": "bun run --cwd apps/tui test:e2e:terminal-control",
     "record:walkthrough": "bun run --cwd apps/tui record:walkthrough",
+    "render:walkthrough": "bun run --cwd apps/tui render:walkthrough",
     "typecheck": "turbo run typecheck",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
