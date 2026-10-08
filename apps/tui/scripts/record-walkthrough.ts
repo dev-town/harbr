@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { execFileSync } from 'node:child_process'
-import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
@@ -29,6 +29,7 @@ const atlasPath = path.join(fixtureRoot, 'atlas')
 const atlasWorktreePath = path.join(fixtureRoot, 'atlas-launch')
 const studioPath = path.join(fixtureRoot, 'studio')
 const lumenPath = path.join(fixtureRoot, 'lumen')
+const lumenWorktreePath = path.join(fixtureRoot, 'lumen-launch')
 const relayPath = path.join(fixtureRoot, 'relay')
 const beaconPath = path.join(fixtureRoot, 'beacon')
 const docsPath = path.join(fixtureRoot, 'docs')
@@ -88,11 +89,10 @@ try {
   runTmux([
     'send-keys',
     '-t',
-    'Atlas',
-    `nvim -u ${nvimConfigPath} -i NONE -n apps/web/src/index.ts`,
+    'Studio',
+    `nvim -u ${nvimConfigPath} -i NONE -n README.md`,
     'Enter',
   ])
-  runTmux(['send-keys', '-t', 'Studio', 'eza --icons --tree -L 2', 'Enter'])
   runTmux(['send-keys', '-t', 'Relay', 'git log --oneline -3', 'Enter'])
   runTmux([
     'send-keys',
@@ -127,111 +127,160 @@ try {
   try {
     waitFor('Atlas')
     mark('start')
-    await hold(700)
+    await hold(1_050)
+    mark('before-open-end')
 
     openHarbr()
     waitFor('Filter active sessions')
-    await hold(350)
-    mark('active')
-    await hold()
+    await hold(450)
+    for (let step = 0; step < 6; step++) {
+      send('up')
+      await hold(170)
+    }
+    mark('active-ready')
+    await hold(550)
 
-    send('text:Studio')
-    await hold(650)
+    for (let step = 0; step < 3; step++) {
+      send('down')
+      await hold(500)
+    }
     send('enter')
-    waitFor('Studio')
-    mark('studio')
-    await hold(900)
+    waitFor('README.md')
+    await hold(1_300)
+    mark('studio-end')
 
     openHarbr()
     waitFor('Filter active sessions')
-    await hold(350)
+    await hold(450)
     send('tab')
     waitFor('Filter projects')
-    await hold(350)
-    mark('browse')
-    await hold()
-
-    send('text:Atlas')
     await hold(550)
+    for (let step = 0; step < 8; step++) {
+      send('up')
+      await hold(170)
+    }
+    mark('browse-ready')
+    await hold(500)
+
+    for (let step = 0; step < 3; step++) {
+      send('down')
+      await hold(500)
+      mark(`browse-step-${step + 1}`)
+    }
     send('enter')
     waitFor('Filter workspaces')
-    await hold(350)
-    mark('workspaces')
-    await hold()
+    await hold(700)
 
     send('down')
-    await hold(350)
+    await hold(650)
     send('enter')
     waitFor('Filter modules')
-    await hold(350)
+    await hold(500)
     mark('modules')
-    await hold()
+    await hold(1_250)
+    mark('modules-end')
 
     send('text:?')
     waitFor('Keyboard Help')
-    await hold(350)
+    await hold(500)
     mark('help')
-    await hold(1_100)
-    mark('help-end')
+    await hold(2_150)
     send('escape')
-    await hold(350)
+    await hold(750)
+    mark('help-end')
 
     send('ctrl-a')
     waitFor('Create module windows')
-    await hold(400)
+    await hold(750)
     send('down')
-    await hold(350)
+    await hold(600)
     send('enter')
     waitFor('2 panes')
-    await hold(350)
+    await hold(650)
     mark('layout')
-    await hold(1_100)
+    await hold(1_650)
 
     send('enter')
     await hold(950)
     if (agentCommand) {
-      runTmux(['select-window', '-t', '=Atlas~~atlas-launch~~apps/web:Agent'])
+      runTmux(['select-window', '-t', '=Lumen~~lumen-launch~~apps/api:Agent'])
       await hold(1_800)
     }
-    runTmux(['select-window', '-t', '=Atlas~~atlas-launch~~apps/web:Run'])
+    runTmux(['select-window', '-t', '=Lumen~~lumen-launch~~apps/api:Run'])
     runTmux([
       'send-keys',
       '-t',
-      '=Atlas~~atlas-launch~~apps/web:Run.0',
+      '=Lumen~~lumen-launch~~apps/api:Run.0',
       `nvim -u ${nvimConfigPath} -i NONE -n src/index.ts`,
       'Enter',
     ])
     runTmux([
       'send-keys',
       '-t',
-      '=Atlas~~atlas-launch~~apps/web:Run.1',
+      '=Lumen~~lumen-launch~~apps/api:Run.1',
       'git status -sb',
       'Enter',
     ])
-    await hold(700)
+    await hold(1_600)
     mark('created')
-    await hold(800)
+    await hold(650)
     mark('end')
+
+    runTmux(['switch-client', '-t', 'Atlas'])
+    await hold(450)
+    openHarbr()
+    waitFor('Filter active sessions')
+    await hold(550)
+    mark('mouse-ready')
+    await hold(500)
+    mouse('click', 37, 10)
+    waitFor('Filter projects')
+    await hold(750)
+    mouse('move', 35, 17)
+    await hold(650)
+    mouse('move', 35, 26)
+    await hold(650)
+    mouse('click', 35, 26)
+    waitFor('Filter workspaces')
+    await hold(1_300)
+    mark('mouse-end')
   } finally {
     run(termctrl, ['stop', sessionName], repoRoot, { allowFailure: true })
   }
 
   const features = [
-    { file: '01-switch-live-sessions.mp4', from: 'active', to: 'studio' },
-    { file: '02-find-repos-and-packages.mp4', from: 'studio', to: 'modules' },
-    { file: '03-keyboard-help.mp4', from: 'modules', to: 'help-end' },
-    { file: '04-create-a-layout.mp4', from: 'help-end', to: 'end' },
+    {
+      file: '01-switch-live-sessions.mp4',
+      clips: [
+        { from: 'start', to: 'before-open-end' },
+        { from: 'active-ready', to: 'studio-end' },
+      ],
+    },
+    {
+      file: '02-find-repos-and-packages.mp4',
+      clips: [{ from: 'browse-ready', to: 'modules-end' }],
+    },
+    {
+      file: '03-keyboard-help.mp4',
+      clips: [{ from: 'modules-end', to: 'help-end' }],
+    },
+    {
+      file: '04-create-a-layout.mp4',
+      clips: [{ from: 'help-end', to: 'end' }],
+    },
+    {
+      file: '05-mouse-support-if-you-really-need-it.mp4',
+      clips: [{ from: 'mouse-ready', to: 'mouse-end' }],
+    },
   ]
+  for (const file of await readdir(clipsPath)) {
+    if (/^(?:0[1-9]|[1-8]\d)-.*\.mp4$/.test(file)) {
+      await rm(path.join(clipsPath, file))
+    }
+  }
   for (const feature of features) {
     const editPath = path.join(outputRoot, `${feature.file}.json`)
-    await writeFile(
-      editPath,
-      JSON.stringify(
-        { clips: [{ from: feature.from, to: feature.to }] },
-        null,
-        2,
-      ),
-    )
+    await writeFile(editPath, JSON.stringify({ clips: feature.clips }, null, 2))
     run(termctrl, [
       'video',
       recordingPath,
@@ -250,7 +299,13 @@ try {
       path.join(clipsPath, feature.file),
     ])
   }
-  for (const marker of ['active', 'browse', 'layout', 'created']) {
+  for (const marker of [
+    'active-ready',
+    'browse-ready',
+    'layout',
+    'created',
+    'mouse-end',
+  ]) {
     run(termctrl, [
       'save',
       '--recording',
@@ -286,6 +341,15 @@ async function setupFixture() {
   ])
   await createRepo(studioPath, [])
   await createRepo(lumenPath, ['apps/api', 'packages/ui'])
+  run('git', [
+    '-C',
+    lumenPath,
+    'worktree',
+    'add',
+    '-b',
+    'feature/api',
+    lumenWorktreePath,
+  ])
   await createRepo(relayPath, [])
   await createRepo(beaconPath, [])
   await createRepo(docsPath, [])
@@ -365,6 +429,18 @@ async function setupFixture() {
           name: 'Lumen',
           repo: lumenPath,
           modules: ['apps/api', 'packages/ui'],
+          windows: [
+            {
+              name: 'Agent',
+              panes: [
+                {
+                  name: 'OpenCode',
+                  ...(agentCommand ? { command: agentCommand } : {}),
+                },
+              ],
+            },
+            { name: 'Run', panes: [{ name: 'Server' }, { name: 'Shell' }] },
+          ],
         },
         { name: 'Relay', repo: relayPath },
         { name: 'Beacon', repo: beaconPath },
@@ -396,7 +472,7 @@ async function setupFixture() {
       'set -g window-status-current-format " #[bg=#313244,fg=#cdd6f4,bold]#I:#W "',
       'set -g default-shell /bin/zsh',
       'set -g default-command "exec zsh -i"',
-      'set -g mouse off',
+      'set -g mouse on',
       'set -g pane-border-lines double',
       `bind-key -r s display-popup -B -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "${popupScriptPath}"`,
       '',
@@ -461,6 +537,10 @@ function waitFor(text: string) {
 
 function send(...keys: string[]) {
   run(termctrl, ['send', sessionName, ...keys])
+}
+
+function mouse(action: 'move' | 'click', column: number, row: number) {
+  run(termctrl, ['mouse', sessionName, action, String(column), String(row)])
 }
 
 function mark(name: string) {

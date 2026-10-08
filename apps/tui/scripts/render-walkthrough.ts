@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { execFileSync, spawnSync } from 'node:child_process'
-import { readdir, writeFile } from 'node:fs/promises'
+import { copyFile, readdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import ffmpeg from '@ffmpeg-installer/ffmpeg'
@@ -15,6 +15,13 @@ const outputRoot = path.resolve(
     path.join(repoRoot, '.artifacts', 'terminal-control', 'walkthrough'),
 )
 const clipsPath = path.join(outputRoot, 'clips')
+const introPath = process.env.HARBR_DEMO_INTRO
+if (introPath) {
+  await copyFile(
+    path.resolve(introPath),
+    path.join(clipsPath, '00-devtown-intro.mp4'),
+  )
+}
 const clipFiles = (await readdir(clipsPath))
   .filter((file) => /^(?:0\d|[1-9]\d)-[\w-]+\.mp4$/.test(file))
   .sort()
@@ -26,11 +33,14 @@ if (clipFiles.length === 0) {
 const clips: Clip[] = clipFiles.map((file) => {
   const number = file.slice(0, 2)
   const kind = number === '00' ? 'intro' : number === '99' ? 'outro' : 'feature'
-  const title = file
-    .replace(/^\d\d-/, '')
-    .replace(/\.mp4$/, '')
-    .replaceAll('-', ' ')
-    .replace(/^./, (letter) => letter.toUpperCase())
+  const title =
+    number === '05'
+      ? 'Mouse support (if you really need it)'
+      : file
+          .replace(/^\d\d-/, '')
+          .replace(/\.mp4$/, '')
+          .replaceAll('-', ' ')
+          .replace(/^./, (letter) => letter.toUpperCase())
   return {
     file,
     kind,

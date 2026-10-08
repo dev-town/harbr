@@ -3,13 +3,17 @@ import {
   interpolate,
   OffthreadVideo,
   Series,
-  spring,
   staticFile,
   useCurrentFrame,
-  useVideoConfig,
 } from 'remotion'
+import { tildePath } from './tilde-path'
 
-const splashFrames = 48
+const background = '#111111'
+const cream = '#F9F7F3'
+const gold = '#C89D65'
+const muted = '#6F6862'
+const splashFrames = 66
+const endFrames = 120
 
 export type Clip = {
   file: string
@@ -27,20 +31,22 @@ export function totalFrames(clips: Clip[]) {
     clips.reduce(
       (total, clip) =>
         total + clip.frames + (clip.kind === 'feature' ? splashFrames : 0),
-      0,
+      endFrames,
     ),
   )
 }
 
 function Splash({ clip }: { clip: Clip }) {
   const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
-  const progress = spring({
-    frame,
-    fps,
-    config: { damping: 22, stiffness: 110 },
+  const tildeOpacity = interpolate(frame, [0, 8, 18, 26], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
   })
-  const opacity = interpolate(frame, [0, 10, 37, 47], [0, 1, 1, 0], {
+  const titleOpacity = interpolate(frame, [27, 38, 56, 65], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+  const titleOffset = interpolate(frame, [27, 40], [12, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -48,85 +54,109 @@ function Splash({ clip }: { clip: Clip }) {
   return (
     <AbsoluteFill
       style={{
-        background:
-          'linear-gradient(130deg, #11111b 0%, #181825 58%, #1e1e2e 100%)',
-        color: '#cdd6f4',
-        fontFamily: 'JetBrains Mono, Menlo, monospace',
-        overflow: 'hidden',
+        backgroundColor: background,
+        color: cream,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <svg
+        width="330"
+        height="80"
+        viewBox="100 125 255 60"
+        style={{
+          position: 'absolute',
+          opacity: tildeOpacity,
+        }}
+      >
+        <path d={tildePath} fill={gold} />
+      </svg>
+      <div
+        style={{
+          textAlign: 'center',
+          opacity: titleOpacity,
+          transform: `translateY(${titleOffset}px)`,
+        }}
+      >
+        <div
+          style={{
+            color: muted,
+            fontFamily: 'JetBrains Mono, Menlo, monospace',
+            fontSize: 22,
+            fontWeight: 500,
+            letterSpacing: 5,
+            marginBottom: 20,
+          }}
+        >
+          {clip.number} / 05
+        </div>
+        <div
+          style={{
+            fontFamily: 'Cormorant Garamond, Georgia, serif',
+            fontSize: clip.number === '05' ? 100 : 122,
+            fontWeight: 500,
+            lineHeight: 1.05,
+            maxWidth: 1680,
+          }}
+        >
+          {clip.title}
+        </div>
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+function EndScene() {
+  const frame = useCurrentFrame()
+  const headingOpacity = interpolate(frame, [0, 18, 103, 119], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+  const urlOpacity = interpolate(frame, [35, 51, 103, 119], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundColor: background,
+        color: cream,
+        justifyContent: 'center',
+        alignItems: 'center',
+        textAlign: 'center',
       }}
     >
       <div
         style={{
-          position: 'absolute',
-          top: 92,
-          left: 112,
-          fontSize: 27,
-          fontWeight: 800,
-          letterSpacing: 5,
-          color: '#89b4fa',
-          opacity,
+          fontFamily: 'Cormorant Garamond, Georgia, serif',
+          fontSize: 148,
+          fontWeight: 500,
+          lineHeight: 1,
+          opacity: headingOpacity,
         }}
       >
-        HARBR
+        Try Harbr
       </div>
       <div
         style={{
-          position: 'absolute',
-          left: 112,
-          right: 112,
-          top: 217,
-          height: 2,
-          background: '#45475a',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          left: 112,
-          top: 262,
-          fontSize: 30,
-          fontWeight: 700,
-          color: '#a6adc8',
-          opacity,
+          color: muted,
+          fontFamily: 'JetBrains Mono, Menlo, monospace',
+          fontSize: 32,
+          fontWeight: 500,
+          marginTop: 35,
+          opacity: urlOpacity,
         }}
       >
-        {clip.number} / FEATURE
+        github.com/dev-town/harbr
       </div>
-      <div
-        style={{
-          position: 'absolute',
-          left: 104,
-          top: 360,
-          maxWidth: 1450,
-          fontFamily: 'Inter, Helvetica, sans-serif',
-          fontSize: 112,
-          fontWeight: 750,
-          letterSpacing: -5,
-          lineHeight: 1.05,
-          transform: `translateY(${(1 - progress) * 70}px)`,
-          opacity,
-        }}
-      >
-        {clip.title}
-      </div>
-      <div
-        style={{
-          position: 'absolute',
-          left: 112,
-          bottom: 140,
-          width: 330 * progress,
-          height: 8,
-          background: '#a6e3a1',
-          opacity,
-        }}
-      />
     </AbsoluteFill>
   )
 }
 
 function ClipVideo({ clip }: { clip: Clip }) {
   return (
-    <AbsoluteFill style={{ backgroundColor: '#0b0f19' }}>
+    <AbsoluteFill style={{ backgroundColor: background }}>
       <OffthreadVideo
         src={staticFile(clip.file)}
         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
@@ -136,9 +166,12 @@ function ClipVideo({ clip }: { clip: Clip }) {
 }
 
 export function Walkthrough({ clips }: WalkthroughProps) {
+  const introAndFeatures = clips.filter((clip) => clip.kind !== 'outro')
+  const outros = clips.filter((clip) => clip.kind === 'outro')
+
   return (
     <Series>
-      {clips.flatMap((clip) => [
+      {introAndFeatures.flatMap((clip) => [
         ...(clip.kind === 'feature'
           ? [
               <Series.Sequence
@@ -153,6 +186,14 @@ export function Walkthrough({ clips }: WalkthroughProps) {
           <ClipVideo clip={clip} />
         </Series.Sequence>,
       ])}
+      <Series.Sequence durationInFrames={endFrames}>
+        <EndScene />
+      </Series.Sequence>
+      {outros.map((clip) => (
+        <Series.Sequence key={clip.file} durationInFrames={clip.frames}>
+          <ClipVideo clip={clip} />
+        </Series.Sequence>
+      ))}
     </Series>
   )
 }

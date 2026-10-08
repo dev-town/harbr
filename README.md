@@ -490,17 +490,17 @@ Record a draft product walkthrough (requires `tmux`):
 bun run record:walkthrough
 ```
 
-The recorder builds Harbr, creates disposable Git repositories and tmux sessions, then captures the outer tmux window as Harbr switches active sessions, browses a monorepo, shows keyboard help, and creates a configured layout. The demo starts real Neovim and isolated Zsh shells using your Starship theme when available. It writes an editable terminal-control recording, review frames, and four ordered MP4 feature clips to `.artifacts/terminal-control/walkthrough/`. The private tmux server uses a small Catppuccin-style status configuration and does not load your full tmux or Zsh plugin setup.
+The recorder builds Harbr, creates disposable Git repositories and tmux sessions, then captures the outer tmux window as Harbr switches active sessions with arrow keys, browses a monorepo, shows keyboard help, creates a configured layout, and demonstrates mouse support. The demo starts real Neovim and isolated Zsh shells using your Starship theme when available. It writes an editable terminal-control recording, review frames, and five ordered MP4 feature clips to `.artifacts/terminal-control/walkthrough/`. The private tmux server uses a small Catppuccin-style status configuration and does not load your full tmux or Zsh plugin setup.
 
 To show a live agent in the created `Agent` window, set `HARBR_DEMO_AGENT_COMMAND` to its launch command before recording. For example, `HARBR_DEMO_AGENT_COMMAND=opencode bun run record:walkthrough`. This is optional: a live agent may depend on local credentials or network access, while the default recording remains repeatable.
 
-Render the launch cut with Remotion:
+Render the launch cut with Remotion, optionally including a supplied DevTown welcome video:
 
 ```sh
-bun run render:walkthrough
+HARBR_DEMO_INTRO=/absolute/path/to/TildeToLabs.mp4 bun run render:walkthrough
 ```
 
-The renderer reads numbered MP4 files from `.artifacts/terminal-control/walkthrough/clips/` in filename order. Add an optional `00-intro.mp4` and `99-outro.mp4` there, then rerun the renderer; the intro and outro play as supplied. Each feature clip gets its own animated title card derived from its filename. The result is `launch-cut-1080p.mp4`. To edit a feature without re-recording, replace its numbered MP4 and rerender.
+The renderer copies `HARBR_DEMO_INTRO` into the clips directory as `00-devtown-intro.mp4`, then reads numbered MP4 files in filename order. You can also add a `00-*.mp4` intro or `99-*.mp4` outro manually. Each feature gets a DevTown-styled title card, and the cut closes with “Try Harbr” and the GitHub URL. The result is `launch-cut-1080p.mp4`. To edit a feature without re-recording, replace its numbered MP4 and rerender. The supplied welcome video stays outside Git; only the rendering workflow and generated clips are local artifacts.
 
 Individual checks:
 
