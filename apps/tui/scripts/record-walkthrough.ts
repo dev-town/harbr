@@ -6,6 +6,7 @@ import {
   copyFile,
   mkdir,
   mkdtemp,
+  readFile,
   readdir,
   rm,
   writeFile,
@@ -31,6 +32,8 @@ const tmuxSocketPath = path.join(fixtureRoot, 'tmux.sock')
 const tmuxConfigPath = path.join(fixtureRoot, 'tmux.conf')
 const popupScriptPath = path.join(fixtureRoot, 'open-harbr.sh')
 const appScriptPath = path.join(fixtureRoot, 'open-demo-app.sh')
+const attachScriptPath = path.join(fixtureRoot, 'attach-tmux.sh')
+const terminalPalettePath = path.join(fixtureRoot, 'terminal-palette.ansi')
 const lazygitConfigPath = path.join(fixtureRoot, 'lazygit-config.yml')
 const nvimConfigPath = path.join(fixtureRoot, 'nvim.lua')
 const configPath = path.join(fixtureRoot, 'config.json')
@@ -56,6 +59,10 @@ const lazygitSourceConfigPath = path.resolve(
   process.env.HARBR_DEMO_LAZYGIT_CONFIG ??
     path.join(process.env.HOME ?? '', '.config', 'lazygit', 'config.yml'),
 )
+const ghosttyThemePath = path.resolve(
+  process.env.HARBR_DEMO_GHOSTTY_THEME ??
+    path.join(process.env.HOME ?? '', '.config', 'ghostty', 'ghostty-theme'),
+)
 const environment = { ...process.env }
 
 delete environment.TMUX
@@ -73,7 +80,7 @@ await mkdir(zdotDir, { recursive: true })
 await chmod(runtimeDir, 0o700)
 
 try {
-  await setupFixture()
+  const terminalTheme = await setupFixture()
   run('bun', ['run', 'build'], appRoot)
   runTmux([
     '-f',
@@ -119,15 +126,37 @@ try {
     recordingPath,
     sessionName,
     '--',
-    'tmux',
-    '-S',
-    tmuxSocketPath,
-    'attach-session',
-    '-t',
-    'Atlas',
+    '/bin/sh',
+    attachScriptPath,
   ])
 
   try {
+    if (terminalTheme) {
+      const statePath = path.join(fixtureRoot, 'terminal-state.json')
+      run(termctrl, [
+        'save',
+        sessionName,
+        '--format',
+        'json',
+        '--out',
+        statePath,
+      ])
+      const state = JSON.parse(await readFile(statePath, 'utf8')) as {
+        foreground: { r: number; g: number; b: number }
+        background: { r: number; g: number; b: number }
+      }
+      for (const key of ['foreground', 'background'] as const) {
+        const actual = Object.values(state[key])
+          .map((channel) => channel.toString(16).padStart(2, '0'))
+          .join('')
+        if (actual !== terminalTheme[key]) {
+          throw new Error(
+            `Terminal ${key} is #${actual}, expected #${terminalTheme[key]} from ${ghosttyThemePath}`,
+          )
+        }
+      }
+    }
+
     waitFor('Atlas')
     if (demoAppCommand) {
       runTmux(['send-keys', '-t', 'Atlas', `clear; ${appScriptPath}`, 'Enter'])
@@ -306,6 +335,25 @@ try {
 }
 
 async function setupFixture() {
+  const terminalTheme = (await Bun.file(ghosttyThemePath).exists())
+    ? parseGhosttyTheme(await readFile(ghosttyThemePath, 'utf8'))
+    : undefined
+  if (!terminalTheme && process.env.HARBR_DEMO_GHOSTTY_THEME) {
+    throw new Error(`Ghostty theme not found: ${ghosttyThemePath}`)
+  }
+  if (terminalTheme) {
+    await writeFile(terminalPalettePath, terminalTheme.ansi)
+    console.log(`Terminal palette: ${ghosttyThemePath}`)
+  }
+  await writeFile(
+    attachScriptPath,
+    [
+      '#!/bin/sh',
+      ...(terminalTheme ? [`cat "${terminalPalettePath}"`] : []),
+      `exec tmux -S "${tmuxSocketPath}" attach-session -t Atlas`,
+      '',
+    ].join('\n'),
+  )
   await createRepo(atlasPath, ['apps/web', 'packages/core'])
   run('git', [
     '-C',
@@ -535,6 +583,36 @@ async function setupFixture() {
       '',
     ].join('\n'),
   )
+  return terminalTheme
+}
+
+function parseGhosttyTheme(theme: string) {
+  function color(key: string) {
+    const value = theme.match(
+      new RegExp(`^\\s*${key}\\s*=\\s*#?([0-9a-fA-F]{6})\\s*$`, 'm'),
+    )?.[1]
+    if (!value) throw new Error(`Ghostty theme is missing ${key}`)
+    return value.toLowerCase()
+  }
+
+  const foreground = color('foreground')
+  const background = color('background')
+  const palette = new Map(
+    [
+      ...theme.matchAll(
+        /^\s*palette\s*=\s*(\d{1,2})\s*=\s*#?([0-9a-fA-F]{6})\s*$/gm,
+      ),
+    ].map(([, index, hex]) => [Number(index), hex.toLowerCase()]),
+  )
+  const osc = (code: number | string, hex: string) =>
+    `\x1b]${code};rgb:${hex.slice(0, 2)}/${hex.slice(2, 4)}/${hex.slice(4)}\x07`
+  const ansi = [osc(10, foreground), osc(11, background)]
+  for (let index = 0; index < 16; index++) {
+    const hex = palette.get(index)
+    if (!hex) throw new Error(`Ghostty theme is missing palette ${index}`)
+    ansi.push(osc(`4;${index}`, hex))
+  }
+  return { foreground, background, ansi: ansi.join('') }
 }
 
 async function createHerdrRepo() {
