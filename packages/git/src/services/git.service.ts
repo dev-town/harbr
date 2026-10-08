@@ -29,7 +29,6 @@ export type GitServiceApi = {
   ) => Effect.Effect<string | null, RepoNotGitError>
 }
 
-export class GitService extends Context.Tag('@harbr/git/GitService')<
-  GitService,
-  GitServiceApi
->() {}
+export class GitService extends Context.Service<GitService, GitServiceApi>()(
+  '@harbr/git/GitService',
+) {}

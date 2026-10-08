@@ -1,4 +1,4 @@
-import { Effect, Either } from 'effect'
+import { Effect, Result } from 'effect'
 import { RuntimeService } from '@harbr/runtime'
 
 import type { TuiServices } from '~/app-context'
@@ -6,7 +6,7 @@ import type { TuiServices } from '~/app-context'
 export async function loadCurrentRuntime(services: TuiServices) {
   return services.effectRuntime
     .runPromise(
-      Effect.either(
+      Effect.result(
         Effect.gen(function* () {
           const runtime = yield* RuntimeService
 
@@ -14,5 +14,5 @@ export async function loadCurrentRuntime(services: TuiServices) {
         }),
       ),
     )
-    .then((result) => (Either.isRight(result) ? result.right : null))
+    .then((result) => (Result.isSuccess(result) ? result.success : null))
 }

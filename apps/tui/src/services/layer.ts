@@ -28,42 +28,48 @@ import type { TuiOptions } from '~/types'
 
 export function makeTuiLayer(options: TuiOptions) {
   const isHerdr = resolveRuntimeProvider() === 'herdr'
-  const runtimeDiscovery = isHerdr
-    ? HerdrRuntimeDiscoveryServiceLive
-    : TmuxRuntimeDiscoveryServiceLive
   const runtime = isHerdr ? HerdrRuntimeServiceLive : TmuxRuntimeServiceLive
+  const appLayer = Layer.mergeAll(
+    makeConfigLayer(options),
+    runtime,
+    makeReconcilerLayer(options, isHerdr),
+  )
+
+  return options.profile
+    ? Layer.mergeAll(appLayer, makeObservabilityLayer(options.profile))
+    : appLayer
+}
+
+export function makeSyncLayer(options: TuiOptions) {
+  return makeReconcilerLayer(options, resolveRuntimeProvider() === 'herdr')
+}
+
+export function makeConfigLayer(options: Pick<TuiOptions, 'configPath'>) {
   const configOptions = options.configPath
     ? Layer.succeed(ConfigServiceOptions, {
         defaultConfigPath: options.configPath,
       })
     : ConfigServiceOptionsLive
 
+  return ConfigServiceLive.pipe(Layer.provide(configOptions))
+}
+
+function makeReconcilerLayer(options: TuiOptions, isHerdr: boolean) {
+  const runtimeDiscovery = isHerdr
+    ? HerdrRuntimeDiscoveryServiceLive
+    : TmuxRuntimeDiscoveryServiceLive
+
   const databaseOptions = options.dbPath
     ? Layer.succeed(DatabaseClientOptions, { dbPath: options.dbPath })
     : DatabaseClientOptionsLive
 
-  const config = ConfigServiceLive.pipe(Layer.provide(configOptions))
   const database = DatabaseClientLive.pipe(Layer.provide(databaseOptions))
-  const projectService = ProjectServiceLive.pipe(Layer.provide(database))
+  const projectService = ProjectServiceLive.pipe(Layer.provideMerge(database))
   const scanner = ScannerServiceLive.pipe(
-    Layer.provide(Layer.mergeAll(GitServiceLive, runtimeDiscovery)),
-  )
-  const reconciler = ReconcilerServiceLive.pipe(
-    Layer.provide(Layer.mergeAll(projectService, scanner)),
+    Layer.provideMerge(Layer.mergeAll(GitServiceLive, runtimeDiscovery)),
   )
 
-  const appLayer = Layer.mergeAll(
-    config,
-    database,
-    GitServiceLive,
-    runtimeDiscovery,
-    runtime,
-    projectService,
-    scanner,
-    reconciler,
+  return ReconcilerServiceLive.pipe(
+    Layer.provideMerge(Layer.mergeAll(projectService, scanner)),
   )
-
-  return options.profile
-    ? Layer.mergeAll(appLayer, makeObservabilityLayer(options.profile))
-    : appLayer
 }

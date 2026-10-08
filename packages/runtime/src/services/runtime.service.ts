@@ -30,6 +30,7 @@ export type RuntimeServiceApi = {
   readonly source: RuntimeSource
 }
 
-export class RuntimeService extends Context.Tag(
-  '@harbr/runtime/RuntimeService',
-)<RuntimeService, RuntimeServiceApi>() {}
+export class RuntimeService extends Context.Service<
+  RuntimeService,
+  RuntimeServiceApi
+>()('@harbr/runtime/RuntimeService') {}

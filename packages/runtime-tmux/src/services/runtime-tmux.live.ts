@@ -127,38 +127,47 @@ function listRuntimesLive() {
 }
 
 function openOrCreateRuntimeLive(target: RuntimeTarget) {
-  return Effect.tryPromise({
-    try: async () => {
-      const discovery = await listRuntimeDiscoverySafe()
-      const client = await getCurrentClient()
-      const existingRuntime = findMatchingRuntime(
-        runtimeFacts(discovery.runtimes),
-        target,
-      )
+  return listRuntimesLive().pipe(
+    Effect.flatMap((discovery) =>
+      Effect.tryPromise({
+        try: async () => {
+          const client = await getCurrentClient()
+          const existingRuntime = findMatchingRuntime(
+            runtimeFacts(discovery.runtimes),
+            target,
+          )
 
-      if (existingRuntime) {
-        await execTmux([
-          'switch-client',
-          '-c',
-          client,
-          '-t',
-          formatSessionTarget(existingRuntime.identity.externalId),
-        ])
-        return
-      }
+          if (existingRuntime) {
+            await execTmux([
+              'switch-client',
+              '-c',
+              client,
+              '-t',
+              formatSessionTarget(existingRuntime.identity.externalId),
+            ])
+            return
+          }
 
-      const sessionName = formatSessionName(target)
-      await execTmux(['new-session', '-d', '-s', sessionName, '-c', target.cwd])
-      await execTmux([
-        'switch-client',
-        '-c',
-        client,
-        '-t',
-        formatSessionTarget(sessionName),
-      ])
-    },
-    catch: (error) => mapTmuxError(error),
-  }).pipe(
+          const sessionName = formatSessionName(target)
+          await execTmux([
+            'new-session',
+            '-d',
+            '-s',
+            sessionName,
+            '-c',
+            target.cwd,
+          ])
+          await execTmux([
+            'switch-client',
+            '-c',
+            client,
+            '-t',
+            formatSessionTarget(sessionName),
+          ])
+        },
+        catch: (error) => mapTmuxError(error),
+      }),
+    ),
     Effect.mapError((error) =>
       toRuntimeProviderError('openOrCreateRuntime', error),
     ),
@@ -193,72 +202,75 @@ function closeRuntimeLive(identity: RuntimeIdentity) {
 }
 
 function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
-  return Effect.tryPromise({
-    try: async () => {
-      const discovery = await listRuntimeDiscoverySafe()
-      const existingRuntime = findMatchingRuntime(
-        runtimeFacts(discovery.runtimes),
-        input.target,
-      )
-      const firstWindow = input.windows[0]
-      const sessionName =
-        existingRuntime?.identity.externalId ?? formatSessionName(input.target)
-      let existingWindowNames = new Set<string>()
-      let windowsToCreate = input.windows
-      const createdWindowNames: string[] = []
-      const skippedWindowNames: string[] = []
+  return listRuntimesLive().pipe(
+    Effect.flatMap((discovery) =>
+      Effect.tryPromise({
+        try: async () => {
+          const existingRuntime = findMatchingRuntime(
+            runtimeFacts(discovery.runtimes),
+            input.target,
+          )
+          const firstWindow = input.windows[0]
+          const sessionName =
+            existingRuntime?.identity.externalId ??
+            formatSessionName(input.target)
+          let existingWindowNames = new Set<string>()
+          let windowsToCreate = input.windows
+          const createdWindowNames: string[] = []
+          const skippedWindowNames: string[] = []
 
-      if (existingRuntime) {
-        existingWindowNames = await listWindowNames(sessionName)
-      } else if (firstWindow) {
-        await createSessionWindowLayout(
-          sessionName,
-          input.target.cwd,
-          firstWindow,
-        )
-        existingWindowNames.add(firstWindow.name)
-        createdWindowNames.push(firstWindow.name)
-        windowsToCreate = input.windows.slice(1)
-      } else {
-        await execTmux([
-          'new-session',
-          '-d',
-          '-s',
-          sessionName,
-          '-c',
-          input.target.cwd,
-        ])
-      }
+          if (existingRuntime) {
+            existingWindowNames = await listWindowNames(sessionName)
+          } else if (firstWindow) {
+            await createSessionWindowLayout(
+              sessionName,
+              input.target.cwd,
+              firstWindow,
+            )
+            existingWindowNames.add(firstWindow.name)
+            createdWindowNames.push(firstWindow.name)
+            windowsToCreate = input.windows.slice(1)
+          } else {
+            await execTmux([
+              'new-session',
+              '-d',
+              '-s',
+              sessionName,
+              '-c',
+              input.target.cwd,
+            ])
+          }
 
-      for (const window of windowsToCreate) {
-        if (existingWindowNames.has(window.name)) {
-          skippedWindowNames.push(window.name)
-          continue
-        }
+          for (const window of windowsToCreate) {
+            if (existingWindowNames.has(window.name)) {
+              skippedWindowNames.push(window.name)
+              continue
+            }
 
-        await createWindowLayout(sessionName, input.target.cwd, window)
-        existingWindowNames.add(window.name)
-        createdWindowNames.push(window.name)
-      }
+            await createWindowLayout(sessionName, input.target.cwd, window)
+            existingWindowNames.add(window.name)
+            createdWindowNames.push(window.name)
+          }
 
-      if (createdWindowNames.length > 0) {
-        const client = await getCurrentClient()
-        await execTmux([
-          'switch-client',
-          '-c',
-          client,
-          '-t',
-          formatSessionTarget(sessionName),
-        ])
-      }
+          if (createdWindowNames.length > 0) {
+            const client = await getCurrentClient()
+            await execTmux([
+              'switch-client',
+              '-c',
+              client,
+              '-t',
+              formatSessionTarget(sessionName),
+            ])
+          }
 
-      return {
-        createdWindowNames,
-        skippedWindowNames,
-      } satisfies CreateRuntimeWindowsResult
-    },
-    catch: (error) => mapTmuxError(error),
-  }).pipe(
+          return {
+            createdWindowNames,
+            skippedWindowNames,
+          } satisfies CreateRuntimeWindowsResult
+        },
+        catch: (error) => mapTmuxError(error),
+      }),
+    ),
     Effect.mapError((error) =>
       toRuntimeProviderError('createRuntimeWindows', error),
     ),
@@ -448,10 +460,6 @@ async function sendPaneCommands(
   for (const command of normalizeRuntimePaneCommands(paneCommand)) {
     await execTmux(['send-keys', '-t', paneId, command, 'C-m'])
   }
-}
-
-async function listRuntimeDiscoverySafe() {
-  return Effect.runPromise(listRuntimesLive())
 }
 
 async function execTmux(args: string[]) {

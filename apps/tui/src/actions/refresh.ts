@@ -1,7 +1,7 @@
 import { ConfigService } from '@harbr/config'
 import { isSameRuntimeIdentity } from '@harbr/domain'
 import { ReconcilerService } from '@harbr/reconciler'
-import { Effect, Either } from 'effect'
+import { Effect, Result } from 'effect'
 
 import type { TuiServices, TuiStore } from '~/app-context'
 import {
@@ -27,7 +27,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
   try {
     const syncResult = await services.effectRuntime.runPromise(
       services.startupTelemetry.withParent(
-        Effect.either(
+        Effect.result(
           Effect.gen(function* () {
             const configService = yield* ConfigService
             const config = yield* configService.load
@@ -49,10 +49,10 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
     )
 
     services.startupTelemetry.mark('data.sync_completed', {
-      'data.sync_succeeded': Either.isRight(syncResult),
+      'data.sync_succeeded': Result.isSuccess(syncResult),
     })
 
-    if (Either.isLeft(syncResult)) {
+    if (Result.isFailure(syncResult)) {
       store.setState((state) => ({
         browse: {
           ...state.browse,
@@ -60,7 +60,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
         },
         data: { ...state.data, projectRows: [] },
       }))
-      store.getState().setNotice(formatError(syncResult.left), 'error')
+      store.getState().setNotice(formatError(syncResult.failure), 'error')
       return
     }
 

@@ -6,11 +6,12 @@ export type DatabaseClientOptionsApi = {
   readonly dbPath: string
 }
 
-export class DatabaseClientOptions extends Context.Tag(
-  '@harbr/db/DatabaseClientOptions',
-)<DatabaseClientOptions, DatabaseClientOptionsApi>() {}
+export class DatabaseClientOptions extends Context.Service<
+  DatabaseClientOptions,
+  DatabaseClientOptionsApi
+>()('@harbr/db/DatabaseClientOptions') {}
 
-export class DatabaseClient extends Context.Tag('@harbr/db/DatabaseClient')<
+export class DatabaseClient extends Context.Service<
   DatabaseClient,
   DatabaseClientApi
->() {}
+>()('@harbr/db/DatabaseClient') {}

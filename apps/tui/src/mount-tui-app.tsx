@@ -32,7 +32,7 @@ export async function mountTuiApp({
   startupTimeline,
 }: MountTuiAppOptions) {
   const effectRuntime = makeTuiEffectRuntime(options)
-  startupTimeline.mark('effect_runtime.ready')
+  startupTimeline.mark('effect_runtime.created')
 
   const telemetryState: {
     startupTelemetry?: Awaited<ReturnType<typeof makeStartupTelemetry>>
