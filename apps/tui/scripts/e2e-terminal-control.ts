@@ -19,12 +19,7 @@ const tmuxConfigPath = path.join(fixtureRoot, 'tmux.conf')
 const tmuxSocketPath = path.join(fixtureRoot, 'tmux.sock')
 const runtimeDir = path.join(fixtureRoot, 'runtime')
 const popupScriptPath = path.join(fixtureRoot, 'open-harbr.sh')
-const artifactsRoot = path.join(
-  repoRoot,
-  '.artifacts',
-  'terminal-control',
-  'e2e',
-)
+const artifactsRoot = path.join(repoRoot, '.artifacts', 'terminal-control', 'e2e')
 const shellEnvironment = { ...process.env }
 
 delete shellEnvironment.TMUX
@@ -70,10 +65,7 @@ async function setupFixture() {
   await mkdir(path.join(atlasPath, 'packages', 'core'), { recursive: true })
   await writeFile(path.join(atlasPath, 'README.md'), '# Atlas\n')
   await writeFile(path.join(atlasPath, 'apps', 'web', 'README.md'), '# Web\n')
-  await writeFile(
-    path.join(atlasPath, 'packages', 'core', 'README.md'),
-    '# Core\n',
-  )
+  await writeFile(path.join(atlasPath, 'packages', 'core', 'README.md'), '# Core\n')
   run('git', ['init', '-b', 'main', atlasPath])
   run('git', ['-C', atlasPath, 'add', '.'])
   run('git', [
@@ -87,15 +79,7 @@ async function setupFixture() {
     '-m',
     'Create Atlas',
   ])
-  run('git', [
-    '-C',
-    atlasPath,
-    'worktree',
-    'add',
-    '-b',
-    'feature/launch',
-    atlasWorktreePath,
-  ])
+  run('git', ['-C', atlasPath, 'worktree', 'add', '-b', 'feature/launch', atlasWorktreePath])
 
   await mkdir(studioPath, { recursive: true })
   await writeFile(path.join(studioPath, 'README.md'), '# Studio\n')
@@ -196,8 +180,7 @@ async function activeSessionSwitchesThroughPopup(terminal: TerminalControl) {
     await client.keyboard.press('Enter')
     await client.screen.waitUntil(
       (screen) =>
-        screen.text.includes('STUDIO SESSION') &&
-        !screen.text.includes('Filter active sessions'),
+        screen.text.includes('STUDIO SESSION') && !screen.text.includes('Filter active sessions'),
       { timeoutMs: 15_000 },
     )
     assert.equal(currentClientSession(), 'Studio')
@@ -230,9 +213,7 @@ async function browseActionsAndHelpWorkThroughPopup(terminal: TerminalControl) {
     await client.screen.waitForText('Keyboard Help')
     await client.keyboard.press('Escape')
     await client.screen.waitUntil(
-      (screen) =>
-        screen.text.includes('Filter modules') &&
-        !screen.text.includes('Keyboard Help'),
+      (screen) => screen.text.includes('Filter modules') && !screen.text.includes('Keyboard Help'),
       { timeoutMs: 10_000 },
     )
 
@@ -249,31 +230,26 @@ async function browseActionsAndHelpWorkThroughPopup(terminal: TerminalControl) {
 
     await client.keyboard.press('Escape')
     await client.screen.waitUntil(
-      (screen) =>
-        screen.text.includes('Actions') && !screen.text.includes('2 panes'),
+      (screen) => screen.text.includes('Actions') && !screen.text.includes('2 panes'),
       { timeoutMs: 10_000 },
     )
     await client.screen.text()
     await client.keyboard.press('Escape')
-    await client.screen.waitUntil(
-      (screen) => !screen.text.includes('Start module'),
-      { timeoutMs: 10_000 },
-    )
+    await client.screen.waitUntil((screen) => !screen.text.includes('Start module'), {
+      timeoutMs: 10_000,
+    })
     await client.screen.text()
     await client.keyboard.press('Control+C')
-    await client.screen.waitUntil(
-      (screen) => !screen.text.includes('Filter modules'),
-      { timeoutMs: 10_000 },
-    )
+    await client.screen.waitUntil((screen) => !screen.text.includes('Filter modules'), {
+      timeoutMs: 10_000,
+    })
     assert.equal(currentClientSession(), 'Studio')
   })
 
   console.log('✓ Browse, Help, action menu, and layout picker work in popup')
 }
 
-async function configuredWindowsCreateRealTmuxLayout(
-  terminal: TerminalControl,
-) {
+async function configuredWindowsCreateRealTmuxLayout(terminal: TerminalControl) {
   await using client = await attachClient(terminal, 'Studio')
 
   await client.withArtifactsOnFailure('create-windows', async () => {
@@ -296,33 +272,20 @@ async function configuredWindowsCreateRealTmuxLayout(
     await client.keyboard.press('Enter')
     await client.screen.waitForText('2 panes')
     await client.keyboard.press('Enter')
-    await client.screen.waitUntil(
-      (screen) => !screen.text.includes('Filter modules'),
-      { timeoutMs: 15_000 },
-    )
+    await client.screen.waitUntil((screen) => !screen.text.includes('Filter modules'), {
+      timeoutMs: 15_000,
+    })
 
     const createdSession = 'Atlas~~atlas-launch~~apps/web'
     assert.equal(currentClientSession(), createdSession)
     assert.deepEqual(
-      runTmux([
-        'list-windows',
-        '-t',
-        `=${createdSession}`,
-        '-F',
-        '#{window_name}',
-      ])
+      runTmux(['list-windows', '-t', `=${createdSession}`, '-F', '#{window_name}'])
         .trim()
         .split('\n'),
       ['Agent', 'Run'],
     )
     assert.deepEqual(
-      runTmux([
-        'list-panes',
-        '-t',
-        `=${createdSession}:Run`,
-        '-F',
-        '#{pane_title}',
-      ])
+      runTmux(['list-panes', '-t', `=${createdSession}:Run`, '-F', '#{pane_title}'])
         .trim()
         .split('\n'),
       ['Server', 'Shell'],
@@ -339,16 +302,14 @@ async function activeModuleSessionIsSearchable(terminal: TerminalControl) {
     await client.screen.waitForText('STUDIO SESSION')
     await openHarbr(client)
     await client.keyboard.type('apps/web')
-    await client.screen.waitUntil(
-      (screen) => /│ apps\/web\s+│/.test(screen.text),
-      { timeoutMs: 10_000 },
-    )
+    await client.screen.waitUntil((screen) => /│ apps\/web\s+│/.test(screen.text), {
+      timeoutMs: 10_000,
+    })
     await client.screen.text()
     await client.keyboard.press('Enter')
-    await client.screen.waitUntil(
-      (screen) => !screen.text.includes('Filter active sessions'),
-      { timeoutMs: 15_000 },
-    )
+    await client.screen.waitUntil((screen) => !screen.text.includes('Filter active sessions'), {
+      timeoutMs: 15_000,
+    })
     assert.equal(currentClientSession(), 'Atlas~~atlas-launch~~apps/web')
   })
 
@@ -357,14 +318,7 @@ async function activeModuleSessionIsSearchable(terminal: TerminalControl) {
 
 async function attachClient(terminal: TerminalControl, sessionName: string) {
   return terminal.launch({
-    command: [
-      'tmux',
-      '-S',
-      tmuxSocketPath,
-      'attach-session',
-      '-t',
-      sessionName,
-    ],
+    command: ['tmux', '-S', tmuxSocketPath, 'attach-session', '-t', sessionName],
     host: 'opentui',
     viewport: { cols: 140, rows: 44 },
     record: 'on-failure',
@@ -399,18 +353,11 @@ function currentClientSession() {
   return runTmux(['list-clients', '-F', '#{client_session}']).trim()
 }
 
-function runTmux(
-  args: string[],
-  options: { allowFailure?: boolean } = {},
-): string {
+function runTmux(args: string[], options: { allowFailure?: boolean } = {}): string {
   return run('tmux', ['-S', tmuxSocketPath, ...args], options)
 }
 
-function run(
-  command: string,
-  args: string[],
-  options: { allowFailure?: boolean } = {},
-) {
+function run(command: string, args: string[], options: { allowFailure?: boolean } = {}) {
   try {
     return execFileSync(command, args, {
       cwd: repoRoot,
