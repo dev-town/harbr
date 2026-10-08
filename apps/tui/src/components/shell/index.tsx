@@ -1,7 +1,6 @@
 import { ActiveRoute, BrowseRoute } from '~/routes'
 import { useShell } from '~/hooks/useShell'
 import { Layout } from '~/components/layout'
-import { Logo } from '~/components/logo'
 import { Tab, Tabs } from '~/components/tabs'
 import { FooterRow } from '~/components/footer-row'
 
@@ -10,9 +9,6 @@ export function Shell() {
 
   return (
     <Layout>
-      <Layout.Header>
-        <Logo />
-      </Layout.Header>
       <Layout.Tabs>
         <Tabs value={currentRoute} onValueChange={onRouteSelect}>
           <Tab label="Active" value="active" />

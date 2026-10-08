@@ -105,7 +105,7 @@ export const themeCatalog = {
   },
   catppuccin: {
     backdrop: '#11111b',
-    modalBackdrop: '#00000096',
+    modalBackdrop: '#00000060',
     panel: '#181825',
     panelSoft: '#1e1e2e',
     border: '#89b4fa',

@@ -15,24 +15,10 @@ function Root({ children }: LayoutProps) {
     <box
       border
       borderColor={theme.border}
-      borderStyle="rounded"
+      borderStyle="single"
       flexDirection="column"
       height="100%"
       style={{ backgroundColor: theme.panel }}
-      width="100%"
-    >
-      {children}
-    </box>
-  )
-}
-
-function Header({ children }: LayoutSlotProps) {
-  return (
-    <box
-      flexDirection="row"
-      justifyContent="flex-end"
-      marginBottom={1}
-      paddingRight={3}
       width="100%"
     >
       {children}
@@ -84,6 +70,5 @@ function Footer({ children }: LayoutSlotProps) {
 export const Layout = Object.assign(Root, {
   Content,
   Footer,
-  Header,
   Tabs: TabsSlot,
 })

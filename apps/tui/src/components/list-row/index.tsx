@@ -45,7 +45,7 @@ export function ListRow({
     <box
       border
       borderColor={selectedColor}
-      borderStyle="rounded"
+      borderStyle="single"
       onMouseDown={onRowClick}
       onMouseOut={() => onRowHover(null)}
       onMouseOver={() => onRowHover(rowId)}

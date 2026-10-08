@@ -484,6 +484,24 @@ bun run test:e2e:terminal-control
 
 This builds the TUI, opens Harbr through a centered tmux popup in a private tmux server, and checks Active session switching, Browse navigation, keyboard help, and configured window and pane creation. The test creates disposable Git repositories and a worktree; it does not use your running tmux server or Harbr database. Failure recordings are saved under `.artifacts/terminal-control/e2e/`.
 
+Record a draft product walkthrough (requires `tmux`):
+
+```sh
+bun run record:walkthrough
+```
+
+The recorder builds Harbr, creates disposable Git repositories and tmux sessions, then captures the outer tmux window as one continuous walkthrough: a real switch from one active session to another, Browse navigation through a Herdr-shaped Rust workspace fixture, a menu of configured windows, and scrolling keyboard help. The demo starts real Neovim and isolated Zsh shells using your Starship theme when available. It writes an editable terminal-control recording, review frames, and four ordered MP4 feature clips to `.artifacts/terminal-control/walkthrough/`. The private tmux server uses a small warm-coloured status configuration with an obvious active-session label and does not load your full tmux or Zsh plugin setup.
+
+To show a real terminal app in the initial Atlas session, set `HARBR_DEMO_APP_COMMAND` to its launch command before recording. For example, `HARBR_DEMO_APP_COMMAND=lazygit bun run record:walkthrough`. For LazyGit, the recorder copies your complete `~/.config/lazygit/config.yml` into the disposable fixture and passes it explicitly with `--use-config-file`; set `HARBR_DEMO_LAZYGIT_CONFIG` to use a different file. The recorder also reads `~/.config/ghostty/ghostty-theme` when present and applies its foreground, background, and 16 ANSI colours to the outer terminal-control session before attaching tmux. Set `HARBR_DEMO_GHOSTTY_THEME` to use another theme file. OpenCode can be used if it starts successfully in an isolated fixture: `HARBR_DEMO_APP_COMMAND=$HOME/.opencode/bin/opencode bun run record:walkthrough`. The recorder gives the app disposable XDG data and config directories, so it does not use your OpenCode sessions or credentials. The default recording remains repeatable without an extra app binary.
+
+Render the launch cut with Remotion. The DevTown Labs welcome video with audio is included in this repository:
+
+```sh
+bun run render:walkthrough
+```
+
+The renderer copies the bundled intro into the clips directory as `00-devtown-intro.mp4`, then reads the numbered 01–04 MP4 files in order, preserving the intro audio. Set `HARBR_DEMO_INTRO=/absolute/path/to/another-intro.mp4` to use a different opening, or add a `99-*.mp4` outro. Each recorded feature gets a longer DevTown-styled title card. A standalone `05-also-features.mp4` lists mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes that card before “Try Harbr” and the GitHub URL. The result is `launch-cut-1080p.mp4`. To edit a feature without re-recording, replace its numbered MP4 and rerender. Generated clips and renders remain local artifacts.
+
 Individual checks:
 
 ```sh

@@ -13,7 +13,7 @@ export function Tab({ isSelected = false, label, onSelect, value }: TabProps) {
     <box
       border={['top', 'right', 'left']}
       borderColor={isSelected ? theme.border : theme.borderSoft}
-      borderStyle="rounded"
+      borderStyle="single"
       flexDirection="row"
       height={2}
       marginRight={1}
