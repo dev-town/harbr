@@ -36,6 +36,7 @@
     "sync:compiled": "./dist/harbr sync",
     "sync:compiled:json": "./dist/harbr sync --json",
     "test:e2e:tui-themes": "bun scripts/e2e-themes.ts",
+    "test:e2e:terminal-control": "bun run build && bun scripts/e2e-terminal-control.ts",
     "test:e2e:startup-layout": "bun scripts/e2e-startup-layout.tsx",
     "profile:up": "bun src/index.tsx profile up",
     "profile:down": "bun src/index.tsx profile down",
@@ -43,6 +44,7 @@
   },
   "devDependencies": {
     "@harbr/test-utils": "workspace:*",
+    "@kitlangton/terminal-control": "1.2.1",
     "@types/react": "^19.2.17"
   }
 }

@@ -28,3 +28,9 @@ jobs:
 
       - name: Build TUI binary
         run: bun run build:tui
+
+      - name: Install tmux for terminal E2E
+        run: command -v tmux || (sudo apt-get update && sudo apt-get install -y tmux)
+
+      - name: Run terminal E2E
+        run: bun run test:e2e:terminal-control
