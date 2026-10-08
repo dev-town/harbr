@@ -433,7 +433,7 @@ async function setupFixture() {
   await writeFile(
     configPath,
     JSON.stringify({
-      theme: 'tokyonight',
+      theme: 'catppuccin',
       projects: [
         {
           name: 'Atlas',
