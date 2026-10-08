@@ -23,6 +23,12 @@ const tmuxSocketPath = path.join(fixtureRoot, 'tmux.sock')
 const tmuxConfigPath = path.join(fixtureRoot, 'tmux.conf')
 const popupScriptPath = path.join(fixtureRoot, 'open-harbr.sh')
 const appScriptPath = path.join(fixtureRoot, 'open-demo-app.sh')
+const lazygitConfigPath = path.join(
+  fixtureRoot,
+  'xdg-config',
+  'lazygit',
+  'config.yml',
+)
 const nvimConfigPath = path.join(fixtureRoot, 'nvim.lua')
 const configPath = path.join(fixtureRoot, 'config.json')
 const dbPath = path.join(fixtureRoot, 'harbr.sqlite')
@@ -478,6 +484,24 @@ async function setupFixture() {
     ].join('\n'),
   )
   await chmod(popupScriptPath, 0o700)
+  await mkdir(path.dirname(lazygitConfigPath), { recursive: true })
+  await writeFile(
+    lazygitConfigPath,
+    [
+      'gui:',
+      '  theme:',
+      '    activeBorderColor: ["#89b4fa", bold]',
+      '    inactiveBorderColor: ["#a6adc8"]',
+      '    optionsTextColor: ["#89b4fa"]',
+      '    selectedLineBgColor: ["#313244"]',
+      '    cherryPickedCommitBgColor: ["#45475a"]',
+      '    cherryPickedCommitFgColor: ["#89b4fa"]',
+      '    unstagedChangesColor: ["#f38ba8"]',
+      '    defaultFgColor: ["#cdd6f4"]',
+      '    searchingActiveBorderColor: ["#f9e2af"]',
+      '',
+    ].join('\n'),
+  )
   if (demoAppCommand) {
     await writeFile(
       appScriptPath,
