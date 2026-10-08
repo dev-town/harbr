@@ -484,6 +484,14 @@ bun run test:e2e:terminal-control
 
 This builds the TUI, opens Harbr through a centered tmux popup in a private tmux server, and checks Active session switching, Browse navigation, keyboard help, and configured window and pane creation. The test creates disposable Git repositories and a worktree; it does not use your running tmux server or Harbr database. Failure recordings are saved under `.artifacts/terminal-control/e2e/`.
 
+Record a draft product walkthrough (requires `tmux`):
+
+```sh
+bun run record:walkthrough
+```
+
+The recorder builds Harbr, creates disposable Git repositories and tmux sessions, then captures the outer tmux window as Harbr switches active sessions, browses a monorepo, shows keyboard help, and creates a configured layout. It writes the editable terminal-control recording, review frames, raw MP4, and a captioned 1080p draft to `.artifacts/terminal-control/walkthrough/`. Set `HARBR_VIDEO_FONT` to a local font file if the default font is unavailable. The draft is a review artifact; the opening and closing sequence can be added later.
+
 Individual checks:
 
 ```sh

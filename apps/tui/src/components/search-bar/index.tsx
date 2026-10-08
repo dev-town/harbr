@@ -25,7 +25,7 @@ export function SearchBar({
     <box
       border
       borderColor={theme.borderSoft}
-      borderStyle="rounded"
+      borderStyle="single"
       height={3}
       paddingLeft={1}
       paddingRight={1}

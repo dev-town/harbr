@@ -2,7 +2,6 @@ import { useBindings } from '@opentui/keymap/react'
 import { useLayoutEffect } from 'react'
 
 import { Layout } from '~/components/layout'
-import { Logo } from '~/components/logo'
 import { SearchBar } from '~/components/search-bar'
 import { Tab, Tabs } from '~/components/tabs'
 import { theme } from '~/config/theme'
@@ -28,9 +27,6 @@ export function StartupShell({ error, onCommit, onQuit }: StartupShellProps) {
 
   return (
     <Layout>
-      <Layout.Header>
-        <Logo />
-      </Layout.Header>
       <Layout.Tabs>
         <Tabs value="active" onValueChange={() => undefined}>
           <Tab label="Active" value="active" />
