@@ -140,27 +140,22 @@ try {
     mark('active-ready')
     await hold(550)
 
-    for (let step = 0; step < 3; step++) {
-      send('down')
-      await hold(500)
+    for (const direction of ['down', 'down', 'down', 'up']) {
+      send(direction)
+      await hold(550)
     }
-    send('enter')
-    waitFor('README.md')
-    await hold(1_300)
-    mark('studio-end')
+    await hold(1_250)
+    mark('active-end')
 
-    openHarbr()
-    waitFor('Filter active sessions')
-    await hold(450)
+    await hold(1_000)
     send('tab')
     waitFor('Filter projects')
-    await hold(550)
+    await hold(700)
     for (let step = 0; step < 8; step++) {
       send('up')
-      await hold(170)
+      await hold(100)
     }
-    mark('browse-ready')
-    await hold(500)
+    await hold(650)
 
     for (let step = 0; step < 3; step++) {
       send('down')
@@ -177,18 +172,25 @@ try {
     waitFor('Filter modules')
     await hold(500)
     mark('modules')
-    await hold(1_250)
+    await hold(1_500)
     mark('modules-end')
 
+    await hold(1_200)
     send('text:?')
     waitFor('Keyboard Help')
-    await hold(500)
-    mark('help')
-    await hold(2_150)
+    await hold(850)
+    mark('help-before-scroll')
+    for (let step = 0; step < 4; step++) {
+      send('down')
+      await hold(580)
+    }
+    mark('help-after-scroll')
+    await hold(1_400)
     send('escape')
-    await hold(750)
+    await hold(1_050)
     mark('help-end')
 
+    await hold(1_000)
     send('ctrl-a')
     waitFor('Create module windows')
     await hold(750)
@@ -223,27 +225,8 @@ try {
     ])
     await hold(1_600)
     mark('created')
-    await hold(650)
+    await hold(1_500)
     mark('end')
-
-    runTmux(['switch-client', '-t', 'Atlas'])
-    await hold(450)
-    openHarbr()
-    waitFor('Filter active sessions')
-    await hold(550)
-    mark('mouse-ready')
-    await hold(500)
-    mouse('click', 37, 10)
-    waitFor('Filter projects')
-    await hold(750)
-    mouse('move', 35, 17)
-    await hold(650)
-    mouse('move', 35, 26)
-    await hold(650)
-    mouse('click', 35, 26)
-    waitFor('Filter workspaces')
-    await hold(1_300)
-    mark('mouse-end')
   } finally {
     run(termctrl, ['stop', sessionName], repoRoot, { allowFailure: true })
   }
@@ -253,12 +236,12 @@ try {
       file: '01-switch-live-sessions.mp4',
       clips: [
         { from: 'start', to: 'before-open-end' },
-        { from: 'active-ready', to: 'studio-end' },
+        { from: 'active-ready', to: 'active-end' },
       ],
     },
     {
       file: '02-find-repos-and-packages.mp4',
-      clips: [{ from: 'browse-ready', to: 'modules-end' }],
+      clips: [{ from: 'active-end', to: 'modules-end' }],
     },
     {
       file: '03-keyboard-help.mp4',
@@ -267,10 +250,6 @@ try {
     {
       file: '04-create-a-layout.mp4',
       clips: [{ from: 'help-end', to: 'end' }],
-    },
-    {
-      file: '05-mouse-support-if-you-really-need-it.mp4',
-      clips: [{ from: 'mouse-ready', to: 'mouse-end' }],
     },
   ]
   for (const file of await readdir(clipsPath)) {
@@ -301,10 +280,11 @@ try {
   }
   for (const marker of [
     'active-ready',
-    'browse-ready',
+    'active-end',
+    'help-before-scroll',
+    'help-after-scroll',
     'layout',
     'created',
-    'mouse-end',
   ]) {
     run(termctrl, [
       'save',
@@ -537,10 +517,6 @@ function waitFor(text: string) {
 
 function send(...keys: string[]) {
   run(termctrl, ['send', sessionName, ...keys])
-}
-
-function mouse(action: 'move' | 'click', column: number, row: number) {
-  run(termctrl, ['mouse', sessionName, action, String(column), String(row)])
 }
 
 function mark(name: string) {

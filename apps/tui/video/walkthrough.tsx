@@ -6,13 +6,13 @@ import {
   staticFile,
   useCurrentFrame,
 } from 'remotion'
-import { tildePath } from './tilde-path'
 
 const background = '#111111'
 const cream = '#F9F7F3'
 const gold = '#C89D65'
 const muted = '#6F6862'
-const splashFrames = 66
+const splashFrames = 102
+export const alsoFrames = 135
 const endFrames = 120
 
 export type Clip = {
@@ -31,22 +31,14 @@ export function totalFrames(clips: Clip[]) {
     clips.reduce(
       (total, clip) =>
         total + clip.frames + (clip.kind === 'feature' ? splashFrames : 0),
-      endFrames,
+      endFrames + alsoFrames,
     ),
   )
 }
 
 function Splash({ clip }: { clip: Clip }) {
   const frame = useCurrentFrame()
-  const tildeOpacity = interpolate(frame, [0, 8, 18, 26], [0, 1, 1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  })
-  const titleOpacity = interpolate(frame, [27, 38, 56, 65], [0, 1, 1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  })
-  const titleOffset = interpolate(frame, [27, 40], [12, 0], {
+  const opacity = interpolate(frame, [0, 14, 84, 101], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -60,22 +52,10 @@ function Splash({ clip }: { clip: Clip }) {
         justifyContent: 'center',
       }}
     >
-      <svg
-        width="330"
-        height="80"
-        viewBox="100 125 255 60"
-        style={{
-          position: 'absolute',
-          opacity: tildeOpacity,
-        }}
-      >
-        <path d={tildePath} fill={gold} />
-      </svg>
       <div
         style={{
           textAlign: 'center',
-          opacity: titleOpacity,
-          transform: `translateY(${titleOffset}px)`,
+          opacity,
         }}
       >
         <div
@@ -88,18 +68,74 @@ function Splash({ clip }: { clip: Clip }) {
             marginBottom: 20,
           }}
         >
-          {clip.number} / 05
+          {clip.number} / 04
         </div>
         <div
           style={{
             fontFamily: 'Cormorant Garamond, Georgia, serif',
-            fontSize: clip.number === '05' ? 100 : 122,
+            fontSize: 122,
             fontWeight: 500,
             lineHeight: 1.05,
             maxWidth: 1680,
           }}
         >
           {clip.title}
+        </div>
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+export function AlsoScene() {
+  const frame = useCurrentFrame()
+  const opacity = interpolate(frame, [0, 16, 117, 134], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundColor: background,
+        color: cream,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <div style={{ opacity, textAlign: 'center' }}>
+        <div
+          style={{
+            color: muted,
+            fontFamily: 'JetBrains Mono, Menlo, monospace',
+            fontSize: 23,
+            fontWeight: 500,
+            letterSpacing: 5,
+            marginBottom: 35,
+          }}
+        >
+          ALSO
+        </div>
+        <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
+          {[
+            'Mouse support (if you really need it)',
+            'Herdr supported',
+            'Monorepo quick navigation',
+          ].map((feature) => (
+            <div
+              key={feature}
+              style={{
+                display: 'flex',
+                textAlign: 'left',
+                fontFamily: 'Cormorant Garamond, Georgia, serif',
+                fontSize: 69,
+                fontWeight: 500,
+                lineHeight: 1.25,
+              }}
+            >
+              <span style={{ color: gold, flex: '0 0 46px' }}>·</span>
+              <span>{feature}</span>
+            </div>
+          ))}
         </div>
       </div>
     </AbsoluteFill>
@@ -186,6 +222,9 @@ export function Walkthrough({ clips }: WalkthroughProps) {
           <ClipVideo clip={clip} />
         </Series.Sequence>,
       ])}
+      <Series.Sequence durationInFrames={alsoFrames}>
+        <AlsoScene />
+      </Series.Sequence>
       <Series.Sequence durationInFrames={endFrames}>
         <EndScene />
       </Series.Sequence>

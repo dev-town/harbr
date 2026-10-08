@@ -23,7 +23,7 @@ if (introPath) {
   )
 }
 const clipFiles = (await readdir(clipsPath))
-  .filter((file) => /^(?:0\d|[1-9]\d)-[\w-]+\.mp4$/.test(file))
+  .filter((file) => /^(?:00|0[1-4]|99)-[\w-]+\.mp4$/.test(file))
   .sort()
 
 if (clipFiles.length === 0) {
@@ -33,14 +33,11 @@ if (clipFiles.length === 0) {
 const clips: Clip[] = clipFiles.map((file) => {
   const number = file.slice(0, 2)
   const kind = number === '00' ? 'intro' : number === '99' ? 'outro' : 'feature'
-  const title =
-    number === '05'
-      ? 'Mouse support (if you really need it)'
-      : file
-          .replace(/^\d\d-/, '')
-          .replace(/\.mp4$/, '')
-          .replaceAll('-', ' ')
-          .replace(/^./, (letter) => letter.toUpperCase())
+  const title = file
+    .replace(/^\d\d-/, '')
+    .replace(/\.mp4$/, '')
+    .replaceAll('-', ' ')
+    .replace(/^./, (letter) => letter.toUpperCase())
   return {
     file,
     kind,
@@ -81,7 +78,26 @@ execFileSync(
   ],
   { cwd: repoRoot, stdio: 'inherit' },
 )
-console.log(`Rendered ${clips.length} ordered clips: ${outputPath}`)
+const alsoPath = path.join(clipsPath, '05-also-features.mp4')
+execFileSync(
+  remotion,
+  [
+    'render',
+    path.join(appRoot, 'video', 'index.ts'),
+    'HarbrAlso',
+    alsoPath,
+    '--codec',
+    'h264',
+    '--pixel-format',
+    'yuv420p',
+    '--concurrency',
+    '2',
+  ],
+  { cwd: repoRoot, stdio: 'inherit' },
+)
+console.log(
+  `Rendered ${clips.length} source clips with an Also card: ${outputPath}`,
+)
 
 function probeDuration(file: string) {
   const result = spawnSync(ffmpeg.path, ['-i', file], { encoding: 'utf8' })
