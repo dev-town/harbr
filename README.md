@@ -490,17 +490,17 @@ Record a draft product walkthrough (requires `tmux`):
 bun run record:walkthrough
 ```
 
-The recorder builds Harbr, creates disposable Git repositories and tmux sessions, then captures the outer tmux window as one continuous walkthrough: arrow navigation in Active, a tab switch into Browse, monorepo navigation, scrolling keyboard help, and a configured layout. The demo starts real Neovim and isolated Zsh shells using your Starship theme when available. It writes an editable terminal-control recording, review frames, and four ordered MP4 feature clips to `.artifacts/terminal-control/walkthrough/`. The private tmux server uses a small Catppuccin-style status configuration and does not load your full tmux or Zsh plugin setup.
+The recorder builds Harbr, creates disposable Git repositories and tmux sessions, then captures the outer tmux window as one continuous walkthrough: a real switch from one active session to another, Browse navigation through a Herdr-shaped Rust workspace fixture, a menu of configured windows, and scrolling keyboard help. The demo starts real Neovim and isolated Zsh shells using your Starship theme when available. It writes an editable terminal-control recording, review frames, and four ordered MP4 feature clips to `.artifacts/terminal-control/walkthrough/`. The private tmux server uses a small warm-coloured status configuration with an obvious active-session label and does not load your full tmux or Zsh plugin setup.
 
-To show a live agent in the created `Agent` window, set `HARBR_DEMO_AGENT_COMMAND` to its launch command before recording. For example, `HARBR_DEMO_AGENT_COMMAND=opencode bun run record:walkthrough`. This is optional: a live agent may depend on local credentials or network access, while the default recording remains repeatable.
+To show a real terminal app in the initial Atlas session, set `HARBR_DEMO_APP_COMMAND` to its launch command before recording. For example, `HARBR_DEMO_APP_COMMAND=lazygit bun run record:walkthrough`. OpenCode can be used if it starts successfully in an isolated fixture: `HARBR_DEMO_APP_COMMAND=$HOME/.opencode/bin/opencode bun run record:walkthrough`. The recorder gives the app disposable XDG data and config directories, so it does not use your OpenCode sessions or credentials. The default recording remains repeatable without an extra app binary.
 
 Render the launch cut with Remotion, optionally including a supplied DevTown welcome video:
 
 ```sh
-HARBR_DEMO_INTRO=/absolute/path/to/TildeToLabs.mp4 bun run render:walkthrough
+HARBR_DEMO_INTRO=/absolute/path/to/devtown-tilde-to-labs.mp4 bun run render:walkthrough
 ```
 
-The renderer copies `HARBR_DEMO_INTRO` into the clips directory as `00-devtown-intro.mp4`, then reads the numbered 01–04 MP4 files in order. You can also add a `00-*.mp4` intro or `99-*.mp4` outro manually. Each recorded feature gets a longer DevTown-styled title card. A standalone `05-also-features.mp4` lists mouse support, Herdr, and monorepo navigation; the main cut includes that card before “Try Harbr” and the GitHub URL. The result is `launch-cut-1080p.mp4`. To edit a feature without re-recording, replace its numbered MP4 and rerender. The supplied welcome video stays outside Git; only the rendering workflow and generated clips are local artifacts.
+The renderer copies `HARBR_DEMO_INTRO` into the clips directory as `00-devtown-intro.mp4`, then reads the numbered 01–04 MP4 files in order, preserving any audio in the intro. You can also add a `00-*.mp4` intro or `99-*.mp4` outro manually. Each recorded feature gets a longer DevTown-styled title card. A standalone `05-also-features.mp4` lists mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes that card before “Try Harbr” and the GitHub URL. The result is `launch-cut-1080p.mp4`. To edit a feature without re-recording, replace its numbered MP4 and rerender. The supplied welcome video stays outside Git; only the rendering workflow and generated clips are local artifacts.
 
 Individual checks:
 

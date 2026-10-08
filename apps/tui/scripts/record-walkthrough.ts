@@ -22,12 +22,15 @@ const zdotDir = path.join(fixtureRoot, 'zdot')
 const tmuxSocketPath = path.join(fixtureRoot, 'tmux.sock')
 const tmuxConfigPath = path.join(fixtureRoot, 'tmux.conf')
 const popupScriptPath = path.join(fixtureRoot, 'open-harbr.sh')
+const appScriptPath = path.join(fixtureRoot, 'open-demo-app.sh')
 const nvimConfigPath = path.join(fixtureRoot, 'nvim.lua')
 const configPath = path.join(fixtureRoot, 'config.json')
 const dbPath = path.join(fixtureRoot, 'harbr.sqlite')
 const atlasPath = path.join(fixtureRoot, 'atlas')
 const atlasWorktreePath = path.join(fixtureRoot, 'atlas-launch')
 const studioPath = path.join(fixtureRoot, 'studio')
+const herdrPath = path.join(fixtureRoot, 'herdr')
+const herdrWorktreePath = path.join(fixtureRoot, 'herdr-workspace')
 const lumenPath = path.join(fixtureRoot, 'lumen')
 const lumenWorktreePath = path.join(fixtureRoot, 'lumen-launch')
 const relayPath = path.join(fixtureRoot, 'relay')
@@ -35,7 +38,9 @@ const beaconPath = path.join(fixtureRoot, 'beacon')
 const docsPath = path.join(fixtureRoot, 'docs')
 const sessionName = `harbr-walkthrough-${process.pid}`
 const termctrl = resolveTerminalControlBinary()
-const agentCommand = process.env.HARBR_DEMO_AGENT_COMMAND?.trim()
+const demoAppCommand =
+  process.env.HARBR_DEMO_APP_COMMAND?.trim() ??
+  process.env.HARBR_DEMO_AGENT_COMMAND?.trim()
 const environment = { ...process.env }
 
 delete environment.TMUX
@@ -75,32 +80,15 @@ try {
     studioPath,
     'exec zsh -i',
   ])
-  runTmux(['new-session', '-d', '-s', 'Relay', '-c', relayPath, 'exec zsh -i'])
-  runTmux([
-    'new-session',
-    '-d',
-    '-s',
-    'Lumen~~main~~apps/api',
-    '-c',
-    path.join(lumenPath, 'apps', 'api'),
-    'exec zsh -i',
-  ])
   await hold(900)
   runTmux([
     'send-keys',
     '-t',
     'Studio',
-    `nvim -u ${nvimConfigPath} -i NONE -n README.md`,
+    `nvim -u ${nvimConfigPath} -i NONE -n src/session.ts`,
     'Enter',
   ])
-  runTmux(['send-keys', '-t', 'Relay', 'git log --oneline -3', 'Enter'])
-  runTmux([
-    'send-keys',
-    '-t',
-    'Lumen~~main~~apps/api',
-    `nvim -u ${nvimConfigPath} -i NONE -n src/index.ts`,
-    'Enter',
-  ])
+  await hold(2_500)
 
   run(termctrl, [
     'start',
@@ -126,6 +114,16 @@ try {
 
   try {
     waitFor('Atlas')
+    if (demoAppCommand) {
+      runTmux(['send-keys', '-t', 'Atlas', `clear; ${appScriptPath}`, 'Enter'])
+      await hold(1_500)
+      runTmux([
+        'rename-window',
+        '-t',
+        'Atlas:0',
+        path.basename(demoAppCommand.split(' ')[0] ?? 'app'),
+      ])
+    }
     mark('start')
     await hold(1_050)
     mark('before-open-end')
@@ -133,21 +131,18 @@ try {
     openHarbr()
     waitFor('Filter active sessions')
     await hold(450)
-    for (let step = 0; step < 6; step++) {
-      send('up')
-      await hold(170)
-    }
     mark('active-ready')
-    await hold(550)
-
-    for (const direction of ['down', 'down', 'down', 'up']) {
-      send(direction)
-      await hold(550)
-    }
-    await hold(1_250)
+    await hold(850)
+    send('down')
+    await hold(850)
+    send('enter')
+    await hold(1_700)
     mark('active-end')
 
     await hold(1_000)
+    openHarbr()
+    waitFor('Filter active sessions')
+    await hold(850)
     send('tab')
     waitFor('Filter projects')
     await hold(700)
@@ -170,62 +165,49 @@ try {
     await hold(650)
     send('enter')
     waitFor('Filter modules')
+    await hold(850)
+    send('down')
+    await hold(550)
+    send('down')
+    await hold(550)
+    send('up')
+    await hold(500)
+    send('up')
     await hold(500)
     mark('modules')
     await hold(1_500)
     mark('modules-end')
-
-    await hold(1_200)
-    send('text:?')
-    waitFor('Keyboard Help')
-    await hold(850)
-    mark('help-before-scroll')
-    for (let step = 0; step < 4; step++) {
-      send('down')
-      await hold(580)
-    }
-    mark('help-after-scroll')
-    await hold(1_400)
-    send('escape')
-    await hold(1_050)
-    mark('help-end')
 
     await hold(1_000)
     send('ctrl-a')
     waitFor('Create module windows')
     await hold(750)
     send('down')
-    await hold(600)
+    await hold(550)
     send('enter')
-    waitFor('2 panes')
-    await hold(650)
+    waitFor('Space toggle')
+    await hold(850)
     mark('layout')
-    await hold(1_650)
-
-    send('enter')
-    await hold(950)
-    if (agentCommand) {
-      runTmux(['select-window', '-t', '=Lumen~~lumen-launch~~apps/api:Agent'])
-      await hold(1_800)
+    for (let step = 0; step < 3; step++) {
+      send('down')
+      await hold(560)
     }
-    runTmux(['select-window', '-t', '=Lumen~~lumen-launch~~apps/api:Run'])
-    runTmux([
-      'send-keys',
-      '-t',
-      '=Lumen~~lumen-launch~~apps/api:Run.0',
-      `nvim -u ${nvimConfigPath} -i NONE -n src/index.ts`,
-      'Enter',
-    ])
-    runTmux([
-      'send-keys',
-      '-t',
-      '=Lumen~~lumen-launch~~apps/api:Run.1',
-      'git status -sb',
-      'Enter',
-    ])
+    await hold(1_350)
+    send('escape')
+    await hold(1_100)
+    mark('layout-end')
+
+    await hold(900)
+    send('text:?')
+    waitFor('Keyboard Help')
+    await hold(1_100)
+    mark('help-before-scroll')
+    for (let step = 0; step < 52; step++) {
+      send('down')
+      await hold(115)
+    }
+    mark('help-after-scroll')
     await hold(1_600)
-    mark('created')
-    await hold(1_500)
     mark('end')
   } finally {
     run(termctrl, ['stop', sessionName], repoRoot, { allowFailure: true })
@@ -244,12 +226,12 @@ try {
       clips: [{ from: 'active-end', to: 'modules-end' }],
     },
     {
-      file: '03-keyboard-help.mp4',
-      clips: [{ from: 'modules-end', to: 'help-end' }],
+      file: '03-configured-layouts.mp4',
+      clips: [{ from: 'modules-end', to: 'layout-end' }],
     },
     {
-      file: '04-create-a-layout.mp4',
-      clips: [{ from: 'help-end', to: 'end' }],
+      file: '04-keyboard-help.mp4',
+      clips: [{ from: 'layout-end', to: 'end' }],
     },
   ]
   for (const file of await readdir(clipsPath)) {
@@ -281,10 +263,10 @@ try {
   for (const marker of [
     'active-ready',
     'active-end',
+    'modules',
+    'layout',
     'help-before-scroll',
     'help-after-scroll',
-    'layout',
-    'created',
   ]) {
     run(termctrl, [
       'save',
@@ -319,7 +301,73 @@ async function setupFixture() {
     'feature/launch',
     atlasWorktreePath,
   ])
+  await writeFile(
+    path.join(atlasPath, 'apps', 'web', 'src', 'index.ts'),
+    [
+      'export function openWorkspace(project: string, branch: string) {',
+      '  return {',
+      '    project,',
+      '    branch,',
+      '    status: "ready",',
+      '    openedAt: new Date().toISOString(),',
+      '  }',
+      '}',
+      '',
+    ].join('\n'),
+  )
   await createRepo(studioPath, [])
+  await mkdir(path.join(studioPath, 'src'), { recursive: true })
+  await writeFile(
+    path.join(studioPath, 'src', 'session.ts'),
+    [
+      'export type DevSession = {',
+      '  project: string',
+      '  branch: string',
+      '  editor: "nvim" | "opencode"',
+      '  active: boolean',
+      '}',
+      '',
+      'export function switchSession(',
+      '  sessions: DevSession[],',
+      '  nextProject: string,',
+      '): DevSession[] {',
+      '  return sessions.map((session) => ({',
+      '    ...session,',
+      '    active: session.project === nextProject,',
+      '  }))',
+      '}',
+      '',
+      'const sessions: DevSession[] = [',
+      '  { project: "Atlas", branch: "main", editor: "opencode", active: false },',
+      '  { project: "Studio", branch: "main", editor: "nvim", active: true },',
+      ']',
+      '',
+      'switchSession(sessions, "Studio")',
+      '',
+    ].join('\n'),
+  )
+  run('git', ['-C', studioPath, 'add', '.'])
+  run('git', [
+    '-C',
+    studioPath,
+    '-c',
+    'user.name=Harbr Demo',
+    '-c',
+    'user.email=demo@example.invalid',
+    'commit',
+    '-m',
+    'Add session navigation example',
+  ])
+  await createHerdrRepo()
+  run('git', [
+    '-C',
+    herdrPath,
+    'worktree',
+    'add',
+    '-b',
+    'feature/workspace',
+    herdrWorktreePath,
+  ])
   await createRepo(lumenPath, ['apps/api', 'packages/ui'])
   run('git', [
     '-C',
@@ -391,36 +439,29 @@ async function setupFixture() {
           name: 'Atlas',
           repo: atlasPath,
           modules: ['apps/web', 'packages/core'],
-          windows: [
-            {
-              name: 'Agent',
-              panes: [
-                {
-                  name: 'OpenCode',
-                  ...(agentCommand ? { command: agentCommand } : {}),
-                },
-              ],
-            },
-            { name: 'Run', panes: [{ name: 'Server' }, { name: 'Shell' }] },
-          ],
         },
         { name: 'Studio', repo: studioPath },
+        {
+          name: 'Herdr',
+          repo: herdrPath,
+          modules: ['src', 'crates/ghostty-vt', 'docs/next', 'skills/herdr'],
+          windows: [
+            { name: 'OpenCode', panes: [{ name: 'OpenCode' }] },
+            {
+              name: 'Editor + Tests',
+              panes: [{ name: 'Neovim' }, { name: 'Tests' }],
+            },
+            {
+              name: 'Server + Logs',
+              panes: [{ name: 'Server' }, { name: 'Logs' }],
+            },
+            { name: 'Review', panes: [{ name: 'Diff' }, { name: 'Shell' }] },
+          ],
+        },
         {
           name: 'Lumen',
           repo: lumenPath,
           modules: ['apps/api', 'packages/ui'],
-          windows: [
-            {
-              name: 'Agent',
-              panes: [
-                {
-                  name: 'OpenCode',
-                  ...(agentCommand ? { command: agentCommand } : {}),
-                },
-              ],
-            },
-            { name: 'Run', panes: [{ name: 'Server' }, { name: 'Shell' }] },
-          ],
         },
         { name: 'Relay', repo: relayPath },
         { name: 'Beacon', repo: beaconPath },
@@ -437,6 +478,21 @@ async function setupFixture() {
     ].join('\n'),
   )
   await chmod(popupScriptPath, 0o700)
+  if (demoAppCommand) {
+    await writeFile(
+      appScriptPath,
+      [
+        '#!/bin/sh',
+        `export XDG_DATA_HOME="${path.join(fixtureRoot, 'xdg-data')}"`,
+        `export XDG_CONFIG_HOME="${path.join(fixtureRoot, 'xdg-config')}"`,
+        `export XDG_CACHE_HOME="${path.join(fixtureRoot, 'xdg-cache')}"`,
+        'export OPENCODE_DISABLE_AUTOUPDATE=1',
+        `exec ${demoAppCommand}`,
+        '',
+      ].join('\n'),
+    )
+    await chmod(appScriptPath, 0o700)
+  }
   await writeFile(
     tmuxConfigPath,
     [
@@ -444,12 +500,12 @@ async function setupFixture() {
       'unbind C-b',
       'set -g default-terminal "screen-256color"',
       'set -g status-position top',
-      'set -g status-style "bg=#1e1e2e,fg=#cdd6f4"',
-      'set -g status-left "#[bg=#89b4fa,fg=#1e1e2e,bold] #S #[bg=#1e1e2e,fg=#89b4fa]"',
+      'set -g status-style "bg=#141311,fg=#F9F7F3"',
+      'set -g status-left "#[bg=#C89D65,fg=#111111,bold] ● ACTIVE  #S #[bg=#141311,fg=#C89D65]"',
       'set -g status-left-length 60',
-      'set -g status-right "#[fg=#a6adc8]#(date +%H:%M) #[bg=#cba6f7,fg=#1e1e2e,bold] DEV "',
-      'set -g window-status-format " #[fg=#6c7086]#I:#W "',
-      'set -g window-status-current-format " #[bg=#313244,fg=#cdd6f4,bold]#I:#W "',
+      'set -g status-right "#[fg=#6F6862]#(date +%H:%M) #[bg=#F9F7F3,fg=#111111,bold] DEV "',
+      'set -g window-status-format " #[fg=#6F6862]#I:#W "',
+      'set -g window-status-current-format " #[bg=#38332e,fg=#F9F7F3,bold]#I:#W "',
       'set -g default-shell /bin/zsh',
       'set -g default-command "exec zsh -i"',
       'set -g mouse on',
@@ -458,6 +514,47 @@ async function setupFixture() {
       '',
     ].join('\n'),
   )
+}
+
+async function createHerdrRepo() {
+  await mkdir(path.join(herdrPath, 'src'), { recursive: true })
+  await mkdir(path.join(herdrPath, 'crates', 'ghostty-vt', 'src'), {
+    recursive: true,
+  })
+  await mkdir(path.join(herdrPath, 'docs', 'next'), { recursive: true })
+  await mkdir(path.join(herdrPath, 'skills', 'herdr'), { recursive: true })
+  await writeFile(path.join(herdrPath, 'README.md'), '# Herdr\n')
+  await writeFile(
+    path.join(herdrPath, 'Cargo.toml'),
+    '[package]\nname = "herdr"\nversion = "0.1.0"\n\n[workspace]\nmembers = ["crates/ghostty-vt"]\n',
+  )
+  await writeFile(path.join(herdrPath, 'src', 'main.rs'), 'fn main() {}\n')
+  await writeFile(
+    path.join(herdrPath, 'crates', 'ghostty-vt', 'Cargo.toml'),
+    '[package]\nname = "ghostty-vt"\nversion = "0.1.0"\n',
+  )
+  await writeFile(
+    path.join(herdrPath, 'crates', 'ghostty-vt', 'src', 'lib.rs'),
+    'pub fn parse() {}\n',
+  )
+  await writeFile(path.join(herdrPath, 'docs', 'next', 'README.md'), '# Docs\n')
+  await writeFile(
+    path.join(herdrPath, 'skills', 'herdr', 'README.md'),
+    '# Herdr skill\n',
+  )
+  run('git', ['init', '-b', 'main', herdrPath])
+  run('git', ['-C', herdrPath, 'add', '.'])
+  run('git', [
+    '-C',
+    herdrPath,
+    '-c',
+    'user.name=Harbr Demo',
+    '-c',
+    'user.email=demo@example.invalid',
+    'commit',
+    '-m',
+    'Create Herdr workspace fixture',
+  ])
 }
 
 async function createRepo(repoPath: string, modules: string[]) {

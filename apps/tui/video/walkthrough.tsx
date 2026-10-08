@@ -120,6 +120,7 @@ export function AlsoScene() {
             'Mouse support (if you really need it)',
             'Herdr supported',
             'Monorepo quick navigation',
+            'Git worktrees',
           ].map((feature) => (
             <div
               key={feature}
@@ -127,7 +128,7 @@ export function AlsoScene() {
                 display: 'flex',
                 textAlign: 'left',
                 fontFamily: 'Cormorant Garamond, Georgia, serif',
-                fontSize: 69,
+                fontSize: 63,
                 fontWeight: 500,
                 lineHeight: 1.25,
               }}
