@@ -1,7 +1,15 @@
 #!/usr/bin/env bun
 
 import { execFileSync } from 'node:child_process'
-import { chmod, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
+import {
+  chmod,
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
@@ -23,12 +31,7 @@ const tmuxSocketPath = path.join(fixtureRoot, 'tmux.sock')
 const tmuxConfigPath = path.join(fixtureRoot, 'tmux.conf')
 const popupScriptPath = path.join(fixtureRoot, 'open-harbr.sh')
 const appScriptPath = path.join(fixtureRoot, 'open-demo-app.sh')
-const lazygitConfigPath = path.join(
-  fixtureRoot,
-  'xdg-config',
-  'lazygit',
-  'config.yml',
-)
+const lazygitConfigPath = path.join(fixtureRoot, 'lazygit-config.yml')
 const nvimConfigPath = path.join(fixtureRoot, 'nvim.lua')
 const configPath = path.join(fixtureRoot, 'config.json')
 const dbPath = path.join(fixtureRoot, 'harbr.sqlite')
@@ -47,6 +50,12 @@ const termctrl = resolveTerminalControlBinary()
 const demoAppCommand =
   process.env.HARBR_DEMO_APP_COMMAND?.trim() ??
   process.env.HARBR_DEMO_AGENT_COMMAND?.trim()
+const isLazygitDemo =
+  path.basename(demoAppCommand?.split(/\s+/)[0] ?? '') === 'lazygit'
+const lazygitSourceConfigPath = path.resolve(
+  process.env.HARBR_DEMO_LAZYGIT_CONFIG ??
+    path.join(process.env.HOME ?? '', '.config', 'lazygit', 'config.yml'),
+)
 const environment = { ...process.env }
 
 delete environment.TMUX
@@ -484,24 +493,12 @@ async function setupFixture() {
     ].join('\n'),
   )
   await chmod(popupScriptPath, 0o700)
-  await mkdir(path.dirname(lazygitConfigPath), { recursive: true })
-  await writeFile(
-    lazygitConfigPath,
-    [
-      'gui:',
-      '  theme:',
-      '    activeBorderColor: ["#89b4fa", bold]',
-      '    inactiveBorderColor: ["#a6adc8"]',
-      '    optionsTextColor: ["#89b4fa"]',
-      '    selectedLineBgColor: ["#313244"]',
-      '    cherryPickedCommitBgColor: ["#45475a"]',
-      '    cherryPickedCommitFgColor: ["#89b4fa"]',
-      '    unstagedChangesColor: ["#f38ba8"]',
-      '    defaultFgColor: ["#cdd6f4"]',
-      '    searchingActiveBorderColor: ["#f9e2af"]',
-      '',
-    ].join('\n'),
-  )
+  if (isLazygitDemo) {
+    if (!(await Bun.file(lazygitSourceConfigPath).exists())) {
+      throw new Error(`LazyGit config not found: ${lazygitSourceConfigPath}`)
+    }
+    await copyFile(lazygitSourceConfigPath, lazygitConfigPath)
+  }
   if (demoAppCommand) {
     await writeFile(
       appScriptPath,
@@ -511,7 +508,7 @@ async function setupFixture() {
         `export XDG_CONFIG_HOME="${path.join(fixtureRoot, 'xdg-config')}"`,
         `export XDG_CACHE_HOME="${path.join(fixtureRoot, 'xdg-cache')}"`,
         'export OPENCODE_DISABLE_AUTOUPDATE=1',
-        `exec ${demoAppCommand}`,
+        `exec ${demoAppCommand}${isLazygitDemo ? ` --use-config-file "${lazygitConfigPath}"` : ''}`,
         '',
       ].join('\n'),
     )
