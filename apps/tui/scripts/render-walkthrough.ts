@@ -11,17 +11,14 @@ import type { Clip, WalkthroughProps } from '../video/walkthrough'
 const repoRoot = path.resolve(import.meta.dirname, '../../..')
 const appRoot = path.resolve(import.meta.dirname, '..')
 const outputRoot = path.resolve(
-  process.argv[2] ??
-    path.join(repoRoot, '.artifacts', 'terminal-control', 'walkthrough'),
+  process.argv[2] ?? path.join(repoRoot, '.artifacts', 'terminal-control', 'walkthrough'),
 )
 const clipsPath = path.join(outputRoot, 'clips')
-const introPath = process.env.HARBR_DEMO_INTRO
-if (introPath) {
-  await copyFile(
-    path.resolve(introPath),
-    path.join(clipsPath, '00-devtown-intro.mp4'),
-  )
-}
+const introPath = path.resolve(
+  process.env.HARBR_DEMO_INTRO ??
+    path.join(appRoot, 'video', 'assets', 'devtown-tilde-to-labs.mp4'),
+)
+await copyFile(introPath, path.join(clipsPath, '00-devtown-intro.mp4'))
 const clipFiles = (await readdir(clipsPath))
   .filter((file) => /^(?:00|0[1-4]|99)-[\w-]+\.mp4$/.test(file))
   .sort()
@@ -43,18 +40,12 @@ const clips: Clip[] = clipFiles.map((file) => {
     kind,
     number,
     title,
-    frames: Math.max(
-      1,
-      Math.floor(probeDuration(path.join(clipsPath, file)) * 30),
-    ),
+    frames: Math.max(1, Math.floor(probeDuration(path.join(clipsPath, file)) * 30)),
   }
 })
 
 const propsPath = path.join(outputRoot, 'remotion-props.json')
-await writeFile(
-  propsPath,
-  JSON.stringify({ clips } satisfies WalkthroughProps, null, 2),
-)
+await writeFile(propsPath, JSON.stringify({ clips } satisfies WalkthroughProps, null, 2))
 
 const outputPath = path.join(outputRoot, 'launch-cut-1080p.mp4')
 const remotion = path.join(repoRoot, 'node_modules', '.bin', 'remotion')
@@ -95,14 +86,11 @@ execFileSync(
   ],
   { cwd: repoRoot, stdio: 'inherit' },
 )
-console.log(
-  `Rendered ${clips.length} source clips with an Also card: ${outputPath}`,
-)
+console.log(`Rendered ${clips.length} source clips with an Also card: ${outputPath}`)
 
 function probeDuration(file: string) {
   const result = spawnSync(ffmpeg.path, ['-i', file], { encoding: 'utf8' })
   const match = result.stderr?.match(/Duration: (\d+):(\d+):(\d+(?:\.\d+)?)/)
-  if (!match)
-    throw new Error(`Could not read duration from ${file}: ${result.stderr}`)
+  if (!match) throw new Error(`Could not read duration from ${file}: ${result.stderr}`)
   return Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3])
 }

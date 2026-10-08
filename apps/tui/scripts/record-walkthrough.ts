@@ -1,16 +1,7 @@
 #!/usr/bin/env bun
 
 import { execFileSync } from 'node:child_process'
-import {
-  chmod,
-  copyFile,
-  mkdir,
-  mkdtemp,
-  readFile,
-  readdir,
-  rm,
-  writeFile,
-} from 'node:fs/promises'
+import { chmod, copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
@@ -20,8 +11,7 @@ import { resolveTerminalControlBinary } from '@kitlangton/terminal-control'
 const repoRoot = path.resolve(import.meta.dirname, '../../..')
 const appRoot = path.resolve(import.meta.dirname, '..')
 const outputRoot = path.resolve(
-  process.argv[2] ??
-    path.join(repoRoot, '.artifacts', 'terminal-control', 'walkthrough'),
+  process.argv[2] ?? path.join(repoRoot, '.artifacts', 'terminal-control', 'walkthrough'),
 )
 const recordingPath = path.join(outputRoot, 'walkthrough.termctrl')
 const clipsPath = path.join(outputRoot, 'clips')
@@ -51,10 +41,8 @@ const docsPath = path.join(fixtureRoot, 'docs')
 const sessionName = `harbr-walkthrough-${process.pid}`
 const termctrl = resolveTerminalControlBinary()
 const demoAppCommand =
-  process.env.HARBR_DEMO_APP_COMMAND?.trim() ??
-  process.env.HARBR_DEMO_AGENT_COMMAND?.trim()
-const isLazygitDemo =
-  path.basename(demoAppCommand?.split(/\s+/)[0] ?? '') === 'lazygit'
+  process.env.HARBR_DEMO_APP_COMMAND?.trim() ?? process.env.HARBR_DEMO_AGENT_COMMAND?.trim()
+const isLazygitDemo = path.basename(demoAppCommand?.split(/\s+/)[0] ?? '') === 'lazygit'
 const lazygitSourceConfigPath = path.resolve(
   process.env.HARBR_DEMO_LAZYGIT_CONFIG ??
     path.join(process.env.HOME ?? '', '.config', 'lazygit', 'config.yml'),
@@ -93,15 +81,7 @@ try {
     atlasPath,
     'exec zsh -i',
   ])
-  runTmux([
-    'new-session',
-    '-d',
-    '-s',
-    'Studio',
-    '-c',
-    studioPath,
-    'exec zsh -i',
-  ])
+  runTmux(['new-session', '-d', '-s', 'Studio', '-c', studioPath, 'exec zsh -i'])
   await hold(900)
   runTmux([
     'send-keys',
@@ -133,14 +113,7 @@ try {
   try {
     if (terminalTheme) {
       const statePath = path.join(fixtureRoot, 'terminal-state.json')
-      run(termctrl, [
-        'save',
-        sessionName,
-        '--format',
-        'json',
-        '--out',
-        statePath,
-      ])
+      run(termctrl, ['save', sessionName, '--format', 'json', '--out', statePath])
       const state = JSON.parse(await readFile(statePath, 'utf8')) as {
         foreground: { r: number; g: number; b: number }
         background: { r: number; g: number; b: number }
@@ -355,15 +328,7 @@ async function setupFixture() {
     ].join('\n'),
   )
   await createRepo(atlasPath, ['apps/web', 'packages/core'])
-  run('git', [
-    '-C',
-    atlasPath,
-    'worktree',
-    'add',
-    '-b',
-    'feature/launch',
-    atlasWorktreePath,
-  ])
+  run('git', ['-C', atlasPath, 'worktree', 'add', '-b', 'feature/launch', atlasWorktreePath])
   await writeFile(
     path.join(atlasPath, 'apps', 'web', 'src', 'index.ts'),
     [
@@ -422,25 +387,9 @@ async function setupFixture() {
     'Add session navigation example',
   ])
   await createHerdrRepo()
-  run('git', [
-    '-C',
-    herdrPath,
-    'worktree',
-    'add',
-    '-b',
-    'feature/workspace',
-    herdrWorktreePath,
-  ])
+  run('git', ['-C', herdrPath, 'worktree', 'add', '-b', 'feature/workspace', herdrWorktreePath])
   await createRepo(lumenPath, ['apps/api', 'packages/ui'])
-  run('git', [
-    '-C',
-    lumenPath,
-    'worktree',
-    'add',
-    '-b',
-    'feature/api',
-    lumenWorktreePath,
-  ])
+  run('git', ['-C', lumenPath, 'worktree', 'add', '-b', 'feature/api', lumenWorktreePath])
   await createRepo(relayPath, [])
   await createRepo(beaconPath, [])
   await createRepo(docsPath, [])
@@ -455,11 +404,7 @@ async function setupFixture() {
       '',
     ].join('\n'),
   )
-  const starshipConfig = path.join(
-    process.env.HOME ?? '',
-    '.config',
-    'starship.toml',
-  )
+  const starshipConfig = path.join(process.env.HOME ?? '', '.config', 'starship.toml')
   if (process.env.STARSHIP_CONFIG) {
     environment.STARSHIP_CONFIG = process.env.STARSHIP_CONFIG
   } else if (await Bun.file(starshipConfig).exists()) {
@@ -588,9 +533,7 @@ async function setupFixture() {
 
 function parseGhosttyTheme(theme: string) {
   function color(key: string) {
-    const value = theme.match(
-      new RegExp(`^\\s*${key}\\s*=\\s*#?([0-9a-fA-F]{6})\\s*$`, 'm'),
-    )?.[1]
+    const value = theme.match(new RegExp(`^\\s*${key}\\s*=\\s*#?([0-9a-fA-F]{6})\\s*$`, 'm'))?.[1]
     if (!value) throw new Error(`Ghostty theme is missing ${key}`)
     return value.toLowerCase()
   }
@@ -598,11 +541,9 @@ function parseGhosttyTheme(theme: string) {
   const foreground = color('foreground')
   const background = color('background')
   const palette = new Map(
-    [
-      ...theme.matchAll(
-        /^\s*palette\s*=\s*(\d{1,2})\s*=\s*#?([0-9a-fA-F]{6})\s*$/gm,
-      ),
-    ].map(([, index, hex]) => [Number(index), hex.toLowerCase()]),
+    [...theme.matchAll(/^\s*palette\s*=\s*(\d{1,2})\s*=\s*#?([0-9a-fA-F]{6})\s*$/gm)].map(
+      ([, index, hex]) => [Number(index), hex.toLowerCase()],
+    ),
   )
   const osc = (code: number | string, hex: string) =>
     `\x1b]${code};rgb:${hex.slice(0, 2)}/${hex.slice(2, 4)}/${hex.slice(4)}\x07`
@@ -637,10 +578,7 @@ async function createHerdrRepo() {
     'pub fn parse() {}\n',
   )
   await writeFile(path.join(herdrPath, 'docs', 'next', 'README.md'), '# Docs\n')
-  await writeFile(
-    path.join(herdrPath, 'skills', 'herdr', 'README.md'),
-    '# Herdr skill\n',
-  )
+  await writeFile(path.join(herdrPath, 'skills', 'herdr', 'README.md'), '# Herdr skill\n')
   run('git', ['init', '-b', 'main', herdrPath])
   run('git', ['-C', herdrPath, 'add', '.'])
   run('git', [

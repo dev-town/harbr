@@ -29,8 +29,7 @@ export function totalFrames(clips: Clip[]) {
   return Math.max(
     1,
     clips.reduce(
-      (total, clip) =>
-        total + clip.frames + (clip.kind === 'feature' ? splashFrames : 0),
+      (total, clip) => total + clip.frames + (clip.kind === 'feature' ? splashFrames : 0),
       endFrames + alsoFrames,
     ),
   )
@@ -211,10 +210,7 @@ export function Walkthrough({ clips }: WalkthroughProps) {
       {introAndFeatures.flatMap((clip) => [
         ...(clip.kind === 'feature'
           ? [
-              <Series.Sequence
-                key={`${clip.file}-splash`}
-                durationInFrames={splashFrames}
-              >
+              <Series.Sequence key={`${clip.file}-splash`} durationInFrames={splashFrames}>
                 <Splash clip={clip} />
               </Series.Sequence>,
             ]
