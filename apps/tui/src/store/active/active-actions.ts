@@ -1,15 +1,6 @@
-import {
-  getRepairedSelectedId,
-  moveSelectedId,
-} from '~/store/shared/list-selectors'
-import {
-  selectSelectedActiveRow,
-  selectVisibleActiveRows,
-} from './active-selectors'
-import {
-  selectActiveActionRows,
-  selectIsActionsOpen,
-} from '~/store/surfaces/surfaces-selectors'
+import { getRepairedSelectedId, moveSelectedId } from '~/store/shared/list-selectors'
+import { selectSelectedActiveRow, selectVisibleActiveRows } from './active-selectors'
+import { selectActiveActionRows, selectIsActionsOpen } from '~/store/surfaces/surfaces-selectors'
 import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '~/store/types'
 
 export function createActiveActions(
@@ -33,10 +24,7 @@ export function createActiveActions(
       }))
 
       const rows = selectVisibleActiveRows(get())
-      const selectedId = getRepairedSelectedId(
-        rows,
-        get().active.list.selectedId,
-      )
+      const selectedId = getRepairedSelectedId(rows, get().active.list.selectedId)
       set((state) => ({
         active: { list: { ...state.active.list, selectedId } },
       }))
@@ -47,11 +35,7 @@ export function createActiveActions(
       })),
     moveActiveSelection: (delta) => {
       const rows = selectVisibleActiveRows(get())
-      const selectedId = moveSelectedId(
-        rows,
-        get().active.list.selectedId,
-        delta,
-      )
+      const selectedId = moveSelectedId(rows, get().active.list.selectedId, delta)
       set((state) => ({
         active: { list: { ...state.active.list, selectedId } },
         app: { ...state.app, notice: null },
@@ -62,10 +46,7 @@ export function createActiveActions(
         return
       }
 
-      if (
-        selectActiveActionRows(get()).length === 0 ||
-        !selectSelectedActiveRow(get())
-      ) {
+      if (selectActiveActionRows(get()).length === 0 || !selectSelectedActiveRow(get())) {
         get().setNotice('No actions for current context', 'warning')
         return
       }

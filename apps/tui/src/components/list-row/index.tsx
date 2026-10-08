@@ -30,20 +30,13 @@ export function ListRow({
   rowId,
   variant,
 }: ListRowProps) {
-  const selectedColor = isSelected
-    ? theme.selection
-    : isHovered
-      ? theme.panelSoft
-      : theme.panel
+  const selectedColor = isSelected ? theme.selection : isHovered ? theme.panelSoft : theme.panel
   const nameWidth = 34
   const metaWidth = 52
   const gutterWidth = 4
   const notice = meta?.notice
-  const noticeText = notice
-    ? `${noticeIcon(notice.level)} ${notice.message}`
-    : ''
-  const inlineMeta =
-    meta && !notice && variant !== 'stacked' ? getInlineMeta(meta, variant) : ''
+  const noticeText = notice ? `${noticeIcon(notice.level)} ${notice.message}` : ''
+  const inlineMeta = meta && !notice && variant !== 'stacked' ? getInlineMeta(meta, variant) : ''
   const stackedMeta = meta && !notice ? getStackedMeta(meta) : ''
   const topTextColor = isSelected ? theme.activeText : theme.text
   const stackedRowHeight = stackedMeta || notice ? 2 : 1
@@ -62,11 +55,7 @@ export function ListRow({
     >
       {variant === 'stacked' ? (
         <box flexDirection="row" width="100%">
-          <box
-            height={stackedRowHeight}
-            style={{ justifyContent: 'center' }}
-            width={2}
-          >
+          <box height={stackedRowHeight} style={{ justifyContent: 'center' }} width={2}>
             <text>
               <span fg={markerColor}>{marker}</span>
             </text>
@@ -77,9 +66,7 @@ export function ListRow({
             </text>
             {notice ? (
               <text>
-                <span fg={noticeColor(notice.level)}>
-                  {truncate(noticeText, 72)}
-                </span>
+                <span fg={noticeColor(notice.level)}>{truncate(noticeText, 72)}</span>
               </text>
             ) : stackedMeta ? (
               <text>
@@ -104,17 +91,13 @@ export function ListRow({
           {notice ? (
             <box flexGrow={1} style={{ justifyContent: 'flex-end' }}>
               <text>
-                <span fg={noticeColor(notice.level)}>
-                  {truncateLeft(noticeText, metaWidth)}
-                </span>
+                <span fg={noticeColor(notice.level)}>{truncateLeft(noticeText, metaWidth)}</span>
               </text>
             </box>
           ) : inlineMeta ? (
             <box flexGrow={1} style={{ justifyContent: 'flex-end' }}>
               <text>
-                <span fg={theme.muted}>
-                  {truncateLeft(inlineMeta, metaWidth)}
-                </span>
+                <span fg={theme.muted}>{truncateLeft(inlineMeta, metaWidth)}</span>
               </text>
             </box>
           ) : (

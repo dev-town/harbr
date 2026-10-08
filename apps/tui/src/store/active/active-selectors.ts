@@ -1,8 +1,4 @@
-import {
-  isSameRuntimeIdentity,
-  type CurrentRuntime,
-  type RuntimeAttachment,
-} from '@harbr/domain'
+import { isSameRuntimeIdentity, type CurrentRuntime, type RuntimeAttachment } from '@harbr/domain'
 
 import type { TuiStoreModel } from '~/store/types'
 import type { HarbourRow } from '~/types/rows'
@@ -29,22 +25,14 @@ export function selectVisibleActiveRows(
 }
 
 export function selectSelectedActiveRow(state: TuiStoreModel) {
-  return getSelectedRow(
-    selectVisibleActiveRows(state),
-    state.active.list.selectedId,
-  )
+  return getSelectedRow(selectVisibleActiveRows(state), state.active.list.selectedId)
 }
 
 export function selectHoveredActiveRow(state: TuiStoreModel) {
-  return getSelectedRow(
-    selectVisibleActiveRows(state),
-    state.active.list.hoveredId,
-  )
+  return getSelectedRow(selectVisibleActiveRows(state), state.active.list.hoveredId)
 }
 
-function hasRuntime(
-  row: HarbourRow,
-): row is HarbourRow & { runtime: RuntimeAttachment } {
+function hasRuntime(row: HarbourRow): row is HarbourRow & { runtime: RuntimeAttachment } {
   return row.runtime !== null
 }
 

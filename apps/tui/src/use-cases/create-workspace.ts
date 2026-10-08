@@ -12,22 +12,15 @@ export type CreateWorkspaceInput = {
   workspaceName: string
 }
 
-export async function createWorkspace(
-  services: TuiServices,
-  input: CreateWorkspaceInput,
-) {
+export async function createWorkspace(services: TuiServices, input: CreateWorkspaceInput) {
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
       const configService = yield* ConfigService
       const config = yield* configService.load
-      const projectConfig = config.projects.find(
-        (project) => project.name === input.projectName,
-      )
+      const projectConfig = config.projects.find((project) => project.name === input.projectName)
 
       if (!projectConfig) {
-        return yield* Effect.fail(
-          new Error(`Project config not found: ${input.projectName}`),
-        )
+        return yield* Effect.fail(new Error(`Project config not found: ${input.projectName}`))
       }
 
       const git = yield* GitService

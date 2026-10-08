@@ -1,17 +1,10 @@
 import type { RuntimeIdentity, RuntimeTarget } from '@harbr/domain'
 import { RuntimeService } from '@harbr/runtime'
-import {
-  runtimeLayoutTargetFixture,
-  runtimeLayoutWindowsFixture,
-} from '@harbr/test-utils'
+import { runtimeLayoutTargetFixture, runtimeLayoutWindowsFixture } from '@harbr/test-utils'
 import { Effect, Layer } from 'effect'
 import { describe, expect, it } from 'vitest'
 
-import {
-  HerdrClient,
-  HerdrUnavailable,
-  type HerdrClientApi,
-} from './herdr.client'
+import { HerdrClient, HerdrUnavailable, type HerdrClientApi } from './herdr.client'
 import { formatHerdrWorkspaceLabel } from './herdr.label'
 import { normalizeHerdrSnapshot } from './herdr.snapshot'
 import { getHerdrRuntimeSource } from './index'
@@ -34,11 +27,7 @@ describe('getHerdrRuntimeSource', () => {
 
 describe('normalizeHerdrSnapshot', () => {
   it('normalizes workspace IDs, labels, worktrees, and focused workspace', () => {
-    const result = normalizeHerdrSnapshot(
-      snapshotFixture(),
-      source,
-      'workspace-module',
-    )
+    const result = normalizeHerdrSnapshot(snapshotFixture(), source, 'workspace-module')
 
     expect(result).toEqual({
       currentRuntime: {
@@ -73,15 +62,13 @@ describe('normalizeHerdrSnapshot', () => {
   })
 
   it('uses the structured focused workspace when launch context is absent', () => {
-    expect(
-      normalizeHerdrSnapshot(snapshotFixture(), source).currentRuntime,
-    ).toMatchObject({ identity: { externalId: 'workspace-main' } })
+    expect(normalizeHerdrSnapshot(snapshotFixture(), source).currentRuntime).toMatchObject({
+      identity: { externalId: 'workspace-main' },
+    })
   })
 
   it('rejects presentation text instead of scraping it', () => {
-    expect(() => normalizeHerdrSnapshot('Alpha main', source)).toThrow(
-      'not an object',
-    )
+    expect(() => normalizeHerdrSnapshot('Alpha main', source)).toThrow('not an object')
   })
 })
 
@@ -91,10 +78,7 @@ describe('RuntimeService', () => {
     const layer = layoutRuntimeLayer(commands)
 
     const first = await createRuntimeWindows(layer, runtimeLayoutWindowsFixture)
-    const second = await createRuntimeWindows(
-      layer,
-      runtimeLayoutWindowsFixture,
-    )
+    const second = await createRuntimeWindows(layer, runtimeLayoutWindowsFixture)
 
     expect(first).toEqual({
       createdWindowNames: ['Editor', 'Logs'],
@@ -143,10 +127,7 @@ describe('RuntimeService', () => {
     const commands: string[][] = []
     const layer = layoutRuntimeLayer(commands)
 
-    const result = await createRuntimeWindows(
-      layer,
-      runtimeLayoutWindowsFixture.slice(1),
-    )
+    const result = await createRuntimeWindows(layer, runtimeLayoutWindowsFixture.slice(1))
 
     expect(result.createdWindowNames).toEqual(['Logs'])
     expect(commands).toContainEqual(['tab', 'close', 'tab-initial'])
@@ -156,10 +137,7 @@ describe('RuntimeService', () => {
     const commands: string[][] = []
     const layer = layoutRuntimeLayer(commands, false)
 
-    const result = await createRuntimeWindows(
-      layer,
-      runtimeLayoutWindowsFixture.slice(0, 1),
-    )
+    const result = await createRuntimeWindows(layer, runtimeLayoutWindowsFixture.slice(0, 1))
 
     expect(result.createdWindowNames).toEqual(['Editor'])
     expect(commands.slice(0, 3)).toEqual([
@@ -187,9 +165,9 @@ describe('RuntimeService', () => {
     } satisfies HerdrClientApi)
     const layer = RuntimeServiceLayer.pipe(Layer.provide(client))
 
-    await expect(
-      createRuntimeWindows(layer, runtimeLayoutWindowsFixture),
-    ).rejects.toThrow('Herdr could not apply this layout: tab creation failed')
+    await expect(createRuntimeWindows(layer, runtimeLayoutWindowsFixture)).rejects.toThrow(
+      'Herdr could not apply this layout: tab creation failed',
+    )
   })
 
   it('closes a workspace by its stable Herdr ID', async () => {
@@ -203,16 +181,13 @@ describe('RuntimeService', () => {
 
   it('returns an actionable error when Herdr cannot close a workspace', async () => {
     const client = Layer.succeed(HerdrClient, {
-      execute: () =>
-        Effect.fail(new HerdrUnavailable('workspace is busy', false)),
+      execute: () => Effect.fail(new HerdrUnavailable('workspace is busy', false)),
     } satisfies HerdrClientApi)
     const layer = RuntimeServiceLayer.pipe(Layer.provide(client))
 
     const result = closeRuntime(layer, identity('workspace-module'))
 
-    await expect(result).rejects.toThrow(
-      'Herdr could not close this workspace: workspace is busy',
-    )
+    await expect(result).rejects.toThrow('Herdr could not close this workspace: workspace is busy')
   })
 
   it('refuses to close a workspace from another runtime source', async () => {
@@ -224,9 +199,7 @@ describe('RuntimeService', () => {
       source: { provider: 'herdr', sourceId: `${source.sourceId}:other` },
     })
 
-    await expect(result).rejects.toThrow(
-      'Runtime does not belong to the active Herdr source',
-    )
+    await expect(result).rejects.toThrow('Runtime does not belong to the active Herdr source')
     expect(commands).toEqual([])
   })
 
@@ -297,15 +270,7 @@ describe('RuntimeService', () => {
 
       expect(commands).toEqual([
         ['api', 'snapshot'],
-        [
-          'workspace',
-          'create',
-          '--cwd',
-          target.cwd,
-          '--label',
-          label,
-          '--focus',
-        ],
+        ['workspace', 'create', '--cwd', target.cwd, '--label', label, '--focus'],
       ])
       expect(formatHerdrWorkspaceLabel(target)).toBe(label)
     },
@@ -316,9 +281,7 @@ describe('RuntimeService', () => {
     const client = Layer.succeed(HerdrClient, {
       execute: (args) =>
         Effect.sync(() => commands.push([...args])).pipe(
-          Effect.andThen(
-            Effect.fail(new HerdrUnavailable('session unavailable', false)),
-          ),
+          Effect.andThen(Effect.fail(new HerdrUnavailable('session unavailable', false))),
         ),
     } satisfies HerdrClientApi)
     const layer = RuntimeServiceLayer.pipe(Layer.provide(client))
@@ -330,9 +293,7 @@ describe('RuntimeService', () => {
       }).pipe(Effect.provide(layer)),
     )
 
-    await expect(result).rejects.toThrow(
-      'Herdr could not open this context: session unavailable',
-    )
+    await expect(result).rejects.toThrow('Herdr could not open this context: session unavailable')
     expect(commands).toEqual([['api', 'snapshot']])
   })
 })
@@ -350,10 +311,7 @@ async function openRuntime(
   )
 }
 
-async function closeRuntime(
-  layer: Layer.Layer<RuntimeService>,
-  targetIdentity: RuntimeIdentity,
-) {
+async function closeRuntime(layer: Layer.Layer<RuntimeService>, targetIdentity: RuntimeIdentity) {
   await Effect.runPromise(
     Effect.gen(function* () {
       const runtime = yield* RuntimeService
@@ -426,11 +384,7 @@ function layoutRuntimeLayer(commands: string[][], hasWorkspace = true) {
 
         if (args[0] === 'workspace' && args[1] === 'create') {
           addInitialSurface()
-          return creationResponse(
-            'workspace-feature',
-            'tab-initial',
-            'pane-initial',
-          )
+          return creationResponse('workspace-feature', 'tab-initial', 'pane-initial')
         }
 
         if (args[0] === 'tab' && args[1] === 'rename') {
@@ -560,11 +514,7 @@ function layoutSnapshotFixture(
   }
 }
 
-function creationResponse(
-  workspaceId: string | undefined,
-  tabId: string,
-  paneId: string,
-) {
+function creationResponse(workspaceId: string | undefined, tabId: string, paneId: string) {
   return JSON.stringify({
     result: {
       root_pane: { pane_id: paneId },

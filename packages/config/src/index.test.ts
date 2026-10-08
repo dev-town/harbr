@@ -18,17 +18,13 @@ const tempRoots: string[] = []
 
 afterEach(async () => {
   await Promise.all(
-    tempRoots
-      .splice(0)
-      .map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
+    tempRoots.splice(0).map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
   )
 })
 
 describe('loadConfigAtPath', () => {
   it('returns config_not_found for missing files', async () => {
-    const result = await runEither(
-      loadConfigAtPath('/tmp/harbour-config-that-does-not-exist.json'),
-    )
+    const result = await runEither(loadConfigAtPath('/tmp/harbour-config-that-does-not-exist.json'))
 
     expectLeft(result, ConfigNotFoundError, {
       configPath: '/tmp/harbour-config-that-does-not-exist.json',
@@ -81,9 +77,7 @@ describe('loadConfigAtPath', () => {
     }
 
     expect(result.left.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'duplicate_project_name' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ code: 'duplicate_project_name' })]),
     )
   })
 
@@ -301,9 +295,7 @@ describe('loadConfigAtPath', () => {
     }
 
     expect(result.left.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'repo_not_found' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ code: 'repo_not_found' })]),
     )
   })
 
@@ -370,9 +362,7 @@ describe('loadConfigAtPath', () => {
     }
 
     expect(result.left.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'module_path_not_relative' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ code: 'module_path_not_relative' })]),
     )
   })
 
@@ -443,8 +433,7 @@ describe('loadConfigAtPath', () => {
       expect.arrayContaining([
         expect.objectContaining({
           code: 'module_path_not_relative',
-          message:
-            'module selector `/` is not supported; use `.` for repo root',
+          message: 'module selector `/` is not supported; use `.` for repo root',
         }),
       ]),
     )
@@ -505,9 +494,7 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    await expect(
-      runSuccess(loadConfigAtPath(tildeConfigPath)),
-    ).resolves.toEqual({
+    await expect(runSuccess(loadConfigAtPath(tildeConfigPath))).resolves.toEqual({
       configPath,
       theme: 'system',
       projects: [
@@ -685,9 +672,7 @@ describe('loadConfigAtPath', () => {
     }
 
     expect(result.left.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'unknown_window_ref' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ code: 'unknown_window_ref' })]),
     )
   })
 
@@ -722,9 +707,7 @@ describe('loadConfigAtPath', () => {
     }
 
     expect(result.left.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'duplicate_window_name' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ code: 'duplicate_window_name' })]),
     )
   })
 
@@ -763,17 +746,13 @@ describe('loadConfigAtPath', () => {
     }
 
     expect(result.left.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'duplicate_pane_name' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ code: 'duplicate_pane_name' })]),
     )
   })
 })
 
 async function runEither(effect: ReturnType<typeof loadConfigAtPath>) {
-  return Effect.runPromise(
-    Effect.either(effect).pipe(Effect.provide(configTestLayer)),
-  )
+  return Effect.runPromise(Effect.either(effect).pipe(Effect.provide(configTestLayer)))
 }
 
 async function runSuccess(effect: ReturnType<typeof loadConfigAtPath>) {
@@ -781,9 +760,7 @@ async function runSuccess(effect: ReturnType<typeof loadConfigAtPath>) {
 }
 
 function loadConfigAtPath(configPath: string) {
-  return Effect.flatMap(ConfigService, (service) =>
-    service.loadAtPath(configPath),
-  )
+  return Effect.flatMap(ConfigService, (service) => service.loadAtPath(configPath))
 }
 
 const configTestLayer = ConfigServiceLive.pipe(

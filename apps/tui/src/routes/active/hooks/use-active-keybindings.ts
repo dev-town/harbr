@@ -4,10 +4,7 @@ import { useTerminalDimensions } from '@opentui/react'
 import { loadProjects } from '~/actions/refresh'
 import { makeActiveBindings } from '~/keymap/bindings'
 import { keymapPriority } from '~/keymap/priorities'
-import {
-  handleActiveRouteBack,
-  handleActiveRouteSelect,
-} from '~/routes/active/actions'
+import { handleActiveRouteBack, handleActiveRouteSelect } from '~/routes/active/actions'
 import { useTuiServices } from '~/hooks/useTuiServices'
 import { tuiStore, useTuiStore } from '~/store'
 
@@ -32,10 +29,8 @@ export function useActiveKeybindings() {
               onMoveDown: () => tuiStore.getState().moveActiveSelection(1),
               onMoveUp: () => tuiStore.getState().moveActiveSelection(-1),
               onNextRoute: () => tuiStore.getState().nextRoute(),
-              onPageDown: () =>
-                tuiStore.getState().moveActiveSelection(pageDelta),
-              onPageUp: () =>
-                tuiStore.getState().moveActiveSelection(-pageDelta),
+              onPageDown: () => tuiStore.getState().moveActiveSelection(pageDelta),
+              onPageUp: () => tuiStore.getState().moveActiveSelection(-pageDelta),
               onPreviousRoute: () => tuiStore.getState().previousRoute(),
               onRefresh: () => void loadProjects(services, tuiStore),
               onSelect: () => handleActiveRouteSelect(services, tuiStore),

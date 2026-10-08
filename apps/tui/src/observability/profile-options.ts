@@ -5,11 +5,8 @@ import type { TuiProfileOptions } from '~/types'
 
 const defaultEndpoint = 'http://localhost:4318'
 
-export function readProfileOptions(
-  args: string[],
-): TuiProfileOptions | undefined {
-  const enabled =
-    hasFlag(args, '--profile') || process.env.HARBR_PROFILE === '1'
+export function readProfileOptions(args: string[]): TuiProfileOptions | undefined {
+  const enabled = hasFlag(args, '--profile') || process.env.HARBR_PROFILE === '1'
 
   if (!enabled) {
     return undefined

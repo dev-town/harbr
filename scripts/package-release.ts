@@ -19,9 +19,7 @@ const releaseTargets = [
   { name: 'linux-x64', bunTarget: 'bun-linux-x64' },
 ] as const satisfies ReadonlyArray<ReleaseTarget>
 
-const tuiPackage = (await Bun.file(
-  'apps/tui/package.json',
-).json()) as PackageJson
+const tuiPackage = (await Bun.file('apps/tui/package.json').json()) as PackageJson
 const version = tuiPackage.version
 
 if (!version) {
@@ -40,10 +38,7 @@ function artifactBase(target: ReleaseTarget): string {
 }
 
 async function sha256(path: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    'SHA-256',
-    await Bun.file(path).arrayBuffer(),
-  )
+  const digest = await crypto.subtle.digest('SHA-256', await Bun.file(path).arrayBuffer())
 
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -65,9 +60,7 @@ async function run(
   const exitCode = await childProcess.exited
 
   if (exitCode !== 0) {
-    console.error(
-      `${command} ${args.join(' ')} failed with exit code ${exitCode}.`,
-    )
+    console.error(`${command} ${args.join(' ')} failed with exit code ${exitCode}.`)
     process.exit(exitCode)
   }
 
@@ -88,9 +81,7 @@ async function runInherit(
   const exitCode = await childProcess.exited
 
   if (exitCode !== 0) {
-    console.error(
-      `${command} ${args.join(' ')} failed with exit code ${exitCode}.`,
-    )
+    console.error(`${command} ${args.join(' ')} failed with exit code ${exitCode}.`)
     process.exit(exitCode)
   }
 }
@@ -158,9 +149,7 @@ await Bun.write(
 
 await Bun.write(
   checksumsPath,
-  `${createdArtifacts
-    .map((artifact) => `${artifact.sha256}  ${artifact.name}`)
-    .join('\n')}\n`,
+  `${createdArtifacts.map((artifact) => `${artifact.sha256}  ${artifact.name}`).join('\n')}\n`,
 )
 
 console.log('Release artifacts:')

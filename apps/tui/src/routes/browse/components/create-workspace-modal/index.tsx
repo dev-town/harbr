@@ -72,21 +72,13 @@ export function CreateWorkspaceModal() {
         borderColor={showValidationError ? theme.error : theme.border}
         borderStyle="single"
         flexDirection="column"
-        onMouseUp={(event: { stopPropagation(): void }) =>
-          event.stopPropagation()
-        }
+        onMouseUp={(event: { stopPropagation(): void }) => event.stopPropagation()}
         padding={padding}
         ref={focusRef}
         style={{ backgroundColor: theme.panel }}
         width={modalWidth}
       >
-        <box
-          flexDirection="column"
-          marginBottom={1}
-          paddingLeft={1}
-          paddingRight={1}
-          width="100%"
-        >
+        <box flexDirection="column" marginBottom={1} paddingLeft={1} paddingRight={1} width="100%">
           <text>
             <strong fg={theme.text}>{title}</strong>
           </text>
@@ -116,9 +108,7 @@ export function CreateWorkspaceModal() {
           </box>
         </box>
         <box height={1} marginTop={1} width="100%">
-          {showValidationError ? (
-            <text fg={theme.error}>{validationError}</text>
-          ) : null}
+          {showValidationError ? <text fg={theme.error}>{validationError}</text> : null}
         </box>
       </box>
     </box>

@@ -21,10 +21,7 @@ export function ActiveRoute() {
           focused={activeRoute.searchFocused}
           inputRef={activeRoute.searchRef}
           onChange={activeRoute.onSearchChange}
-          onSubmit={() =>
-            activeRoute.selectedRow &&
-            activeRoute.onOpenRow(activeRoute.selectedRow)
-          }
+          onSubmit={() => activeRoute.selectedRow && activeRoute.onOpenRow(activeRoute.selectedRow)}
           placeholder={activeRoute.placeholder}
           value={activeRoute.query}
         />

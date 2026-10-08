@@ -16,23 +16,17 @@ export async function parseWorktreeList(output: string) {
   for (const block of blocks) {
     const lines = block.split('\n')
     const worktreeLine = lines.find((line) => line.startsWith('worktree '))
-    const isPrunable = lines.some(
-      (line) => line === 'prunable' || line.startsWith('prunable '),
-    )
+    const isPrunable = lines.some((line) => line === 'prunable' || line.startsWith('prunable '))
 
     if (!worktreeLine || isPrunable) {
       continue
     }
 
     const worktreePath = worktreeLine.slice('worktree '.length)
-    const branchLine = lines.find((line) =>
-      line.startsWith('branch refs/heads/'),
-    )
+    const branchLine = lines.find((line) => line.startsWith('branch refs/heads/'))
 
     entries.push({
-      branchName: branchLine
-        ? branchLine.slice('branch refs/heads/'.length)
-        : null,
+      branchName: branchLine ? branchLine.slice('branch refs/heads/'.length) : null,
       path: await realpath(worktreePath),
       isBare: lines.includes('bare'),
     })

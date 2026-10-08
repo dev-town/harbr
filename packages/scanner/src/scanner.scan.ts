@@ -19,19 +19,14 @@ export function scanProject(project: ProjectConfig, workspacePath: string) {
   )
 }
 
-export function resolveProjectModules(
-  project: ProjectConfig,
-  workspacePath: string,
-) {
+export function resolveProjectModules(project: ProjectConfig, workspacePath: string) {
   const resolvedWorkspacePath = path.resolve(workspacePath)
 
   return Effect.map(
     Effect.all(
       project.modules.map((selector) =>
         selector.mode === 'explicit'
-          ? Effect.succeed([
-              resolveExplicitModule(selector, resolvedWorkspacePath),
-            ])
+          ? Effect.succeed([resolveExplicitModule(selector, resolvedWorkspacePath)])
           : resolveChildModules(selector, resolvedWorkspacePath),
       ),
     ),
@@ -60,10 +55,7 @@ function resolveExplicitModule(
   }
 }
 
-function resolveChildModules(
-  selector: ProjectConfig['modules'][number],
-  workspacePath: string,
-) {
+function resolveChildModules(selector: ProjectConfig['modules'][number], workspacePath: string) {
   const selectorPath = path.join(workspacePath, selector.path)
 
   return Effect.promise(async () => {

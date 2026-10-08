@@ -101,11 +101,11 @@ The database is not the ultimate source of truth for Git or tmux. It stores Harb
 
 ### Code Quality
 
-- ESLint latest flat config
-- `eslint-plugin-boundaries` at repo root
+- Oxlint at repo root
+- TypeScript AST package boundary check at `scripts/check-package-boundaries.ts`
 - TypeScript strict mode
-- Prettier
-- shared config packages inside the monorepo
+- Oxfmt
+- shared TypeScript config package inside the monorepo
 
 ### Agent Development
 
@@ -146,8 +146,8 @@ harbr/
   turbo.json
   package.json
   tsconfig.json
-  eslint.config.mjs
-  prettier.config.mjs
+  .oxlintrc.json
+  .oxfmtrc.json
 ```
 
 ---

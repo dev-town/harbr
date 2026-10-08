@@ -44,11 +44,9 @@ export const RuntimeServiceLayer = Layer.effect(
 
     return {
       closeRuntime: (identity) => closeRuntimeLive(client, identity),
-      createRuntimeWindows: (input) =>
-        createHerdrRuntimeWindows(client, input, source),
+      createRuntimeWindows: (input) => createHerdrRuntimeWindows(client, input, source),
       getCurrentRuntime: getCurrentRuntimeLive(client),
-      openOrCreateRuntime: (target, identity) =>
-        openOrCreateRuntimeLive(client, target, identity),
+      openOrCreateRuntime: (target, identity) => openOrCreateRuntimeLive(client, target, identity),
       source,
     } satisfies RuntimeServiceApi
   }),
@@ -58,9 +56,7 @@ export const RuntimeDiscoveryServiceLive = RuntimeDiscoveryServiceLayer.pipe(
   Layer.provide(HerdrClientLive),
 )
 
-export const RuntimeServiceLive = RuntimeServiceLayer.pipe(
-  Layer.provide(HerdrClientLive),
-)
+export const RuntimeServiceLive = RuntimeServiceLayer.pipe(Layer.provide(HerdrClientLive))
 
 function discoverHerdrRuntimes(client: HerdrClientApi) {
   return readNormalizedSnapshot(client).pipe(
@@ -76,9 +72,7 @@ function discoverHerdrRuntimes(client: HerdrClientApi) {
       Effect.succeed<RuntimeDiscovery>({
         runtimes: [],
         runtimeIssue: {
-          code: error.providerMissing
-            ? 'provider_not_found'
-            : 'source_unavailable',
+          code: error.providerMissing ? 'provider_not_found' : 'source_unavailable',
           source,
         },
         source,
@@ -120,9 +114,7 @@ function closeRuntimeLive(client: HerdrClientApi, identity: RuntimeIdentity) {
 function getCurrentRuntimeLive(client: HerdrClientApi) {
   return readNormalizedSnapshot(client).pipe(
     Effect.map((snapshot) => snapshot.currentRuntime),
-    Effect.catchTag('HerdrUnavailable', () =>
-      Effect.succeed<CurrentRuntime>(null),
-    ),
+    Effect.catchTag('HerdrUnavailable', () => Effect.succeed<CurrentRuntime>(null)),
     Effect.withSpan('runtime.herdr.getCurrentRuntime'),
   )
 }
@@ -136,18 +128,12 @@ function openOrCreateRuntimeLive(
     const snapshot = yield* readNormalizedSnapshot(client)
     const existingByIdentity =
       identity && isSameRuntimeSource(identity.source, source)
-        ? snapshot.runtimes.find(
-            (runtime) => runtime.identity.externalId === identity.externalId,
-          )
+        ? snapshot.runtimes.find((runtime) => runtime.identity.externalId === identity.externalId)
         : undefined
     const existing = existingByIdentity
 
     if (existing) {
-      yield* client.execute([
-        'workspace',
-        'focus',
-        existing.identity.externalId,
-      ])
+      yield* client.execute(['workspace', 'focus', existing.identity.externalId])
       return
     }
 
@@ -186,22 +172,16 @@ function readNormalizedSnapshot(client: HerdrClientApi) {
           normalizeHerdrSnapshot(
             JSON.parse(stdout) as unknown,
             source,
-            process.env.HERDR_ACTIVE_WORKSPACE_ID ||
-              process.env.HERDR_WORKSPACE_ID,
+            process.env.HERDR_ACTIVE_WORKSPACE_ID || process.env.HERDR_WORKSPACE_ID,
           ),
         catch: (error) =>
-          new HerdrUnavailable(
-            error instanceof Error ? error.message : String(error),
-            false,
-          ),
+          new HerdrUnavailable(error instanceof Error ? error.message : String(error), false),
       }),
     ),
   )
 }
 
-function getRuntimeTargetScope(
-  target: Parameters<RuntimeServiceApi['openOrCreateRuntime']>[0],
-) {
+function getRuntimeTargetScope(target: Parameters<RuntimeServiceApi['openOrCreateRuntime']>[0]) {
   if (target.moduleName) {
     return 'module'
   }

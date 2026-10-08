@@ -1,21 +1,11 @@
-import {
-  type CurrentRuntime,
-  isSameRuntimeIdentity,
-  type RuntimeAttachment,
-} from '@harbr/domain'
+import { type CurrentRuntime, isSameRuntimeIdentity, type RuntimeAttachment } from '@harbr/domain'
 
 import {
   getCannotCloseCurrentRuntimeNotice,
   getCloseRuntimeLabel,
 } from '~/helpers/runtime-terminology'
 
-import type {
-  HarbourRow,
-  ActionRow,
-  ModuleRow,
-  ProjectRow,
-  WorkspaceRow,
-} from '~/types/rows'
+import type { HarbourRow, ActionRow, ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
 import { browseActionIds } from './browse-action-ids'
 import { getSelectedRow } from '~/store/shared/list-selectors'
 import type { TuiStoreModel } from '~/store/types'
@@ -46,18 +36,14 @@ export function selectBrowseRows(state: TuiStoreModel): readonly HarbourRow[] {
   return state.data.projectRows
 }
 
-export function selectVisibleBrowseRows(
-  state: TuiStoreModel,
-): readonly HarbourRow[] {
+export function selectVisibleBrowseRows(state: TuiStoreModel): readonly HarbourRow[] {
   const query = state.browse.list.query.trim().toLowerCase()
   const baseRows = selectBrowseRows(state).map((row) => ({
     ...row,
     isCurrent: isCurrentBrowseRow(row, state.app.currentRuntime),
   }))
   const scopedRows =
-    state.browse.visibility === 'active'
-      ? baseRows.filter((row) => row.isActive)
-      : [...baseRows]
+    state.browse.visibility === 'active' ? baseRows.filter((row) => row.isActive) : [...baseRows]
 
   if (!query) {
     return scopedRows
@@ -71,26 +57,18 @@ export function selectVisibleBrowseRows(
 }
 
 export function selectSelectedBrowseRow(state: TuiStoreModel) {
-  return getSelectedRow(
-    selectVisibleBrowseRows(state),
-    state.browse.list.selectedId,
-  )
+  return getSelectedRow(selectVisibleBrowseRows(state), state.browse.list.selectedId)
 }
 
 export function selectHoveredBrowseRow(state: TuiStoreModel) {
-  return getSelectedRow(
-    selectVisibleBrowseRows(state),
-    state.browse.list.hoveredId,
-  )
+  return getSelectedRow(selectVisibleBrowseRows(state), state.browse.list.hoveredId)
 }
 
 export function selectBrowseBreadcrumb(state: TuiStoreModel) {
   const projectId = getSelectedProjectId(state.browse.scope)
   const workspaceId = getSelectedWorkspaceId(state.browse.scope)
   const section = selectCurrentBrowseSection(state)
-  const projectLabel = state.data.projectRows.find(
-    (row) => row.projectId === projectId,
-  )?.label
+  const projectLabel = state.data.projectRows.find((row) => row.projectId === projectId)?.label
   const workspaceLabel = state.data.workspaceRows.find(
     (row) => row.workspaceId === workspaceId,
   )?.label
@@ -122,15 +100,10 @@ export function selectSelectedProjectIssue(state: TuiStoreModel) {
     return null
   }
 
-  return (
-    state.data.projectRows.find((row) => row.projectId === projectId)
-      ?.projectIssue ?? null
-  )
+  return state.data.projectRows.find((row) => row.projectId === projectId)?.projectIssue ?? null
 }
 
-export function selectBrowseActionRows(
-  state: TuiStoreModel,
-): readonly ActionRow[] {
+export function selectBrowseActionRows(state: TuiStoreModel): readonly ActionRow[] {
   const target = getBrowseActionTarget(state)
 
   if (!target) {
@@ -140,14 +113,10 @@ export function selectBrowseActionRows(
   return buildActionRows(state, target)
 }
 
-export function getBrowseActionTarget(
-  state: TuiStoreModel,
-): SupportedContextRow | null {
+export function getBrowseActionTarget(state: TuiStoreModel): SupportedContextRow | null {
   const visibleRows = selectVisibleBrowseRows(state)
   const selectedRow = selectSelectedBrowseRow(state)
-  const currentRow = visibleRows.find(
-    (row) => row.id === state.browse.list.selectedId,
-  )
+  const currentRow = visibleRows.find((row) => row.id === state.browse.list.selectedId)
   const section = selectCurrentBrowseSection(state)
   const projectId = getSelectedProjectId(state.browse.scope)
   const workspaceId = getSelectedWorkspaceId(state.browse.scope)
@@ -156,29 +125,18 @@ export function getBrowseActionTarget(
     return currentRow
   }
 
-  if (
-    section === 'modules' &&
-    workspaceId &&
-    selectedRow?.kind === 'workspace'
-  ) {
+  if (section === 'modules' && workspaceId && selectedRow?.kind === 'workspace') {
     return selectedRow
   }
 
-  if (
-    section === 'workspaces' &&
-    projectId &&
-    selectedRow?.kind === 'project'
-  ) {
+  if (section === 'workspaces' && projectId && selectedRow?.kind === 'project') {
     return selectedRow
   }
 
   return null
 }
 
-function buildActionRows(
-  state: TuiStoreModel,
-  target: SupportedContextRow,
-): readonly ActionRow[] {
+function buildActionRows(state: TuiStoreModel, target: SupportedContextRow): readonly ActionRow[] {
   const closeAction = makeCloseSessionActionRow(state, target)
 
   if (target.kind === 'project') {
@@ -208,12 +166,7 @@ function buildActionRows(
         target,
       ),
       ...makeWindowActionRows(state, target, 'workspace'),
-      makeActionRow(
-        browseActionIds.createWorkspace,
-        'New workspace',
-        'git worktree',
-        target,
-      ),
+      makeActionRow(browseActionIds.createWorkspace, 'New workspace', 'git worktree', target),
       makeActionRow(
         browseActionIds.openProjectRoot,
         `${getRuntimeVerbForContext(state, { projectId: target.projectId })} project root`,
@@ -322,10 +275,7 @@ function makeCloseSessionActionRow(
   ]
 }
 
-function isCurrentActiveRuntime(
-  state: TuiStoreModel,
-  runtime: RuntimeAttachment,
-) {
+function isCurrentActiveRuntime(state: TuiStoreModel, runtime: RuntimeAttachment) {
   return state.app.currentRuntime
     ? isSameRuntimeIdentity(state.app.currentRuntime.identity, runtime.identity)
     : false
@@ -352,20 +302,14 @@ function makeActionRow(
   }
 }
 
-function getRuntimeVerbForContext(
-  state: TuiStoreModel,
-  context: ActionRow['target']['context'],
-) {
+function getRuntimeVerbForContext(state: TuiStoreModel, context: ActionRow['target']['context']) {
   const runtimeExists = state.data.activeRuntimeRows.some((runtime) => {
     if (context.moduleId) {
       return runtime.kind === 'module' && runtime.moduleId === context.moduleId
     }
 
     if (context.workspaceId) {
-      return (
-        runtime.kind === 'workspace' &&
-        runtime.workspaceId === context.workspaceId
-      )
+      return runtime.kind === 'workspace' && runtime.workspaceId === context.workspaceId
     }
 
     return runtime.kind === 'project' && runtime.projectId === context.projectId
@@ -375,29 +319,22 @@ function getRuntimeVerbForContext(
 }
 
 function formatContextId(context: ActionRow['target']['context']) {
-  return [context.projectId, context.workspaceId, context.moduleId]
-    .filter(Boolean)
-    .join(':')
+  return [context.projectId, context.workspaceId, context.moduleId].filter(Boolean).join(':')
 }
 
 function hasProjectWindows(state: TuiStoreModel, projectId: string) {
   return (
-    (state.data.projectWindows.find((entry) => entry.projectId === projectId)
-      ?.windows.length ?? 0) > 0
+    (state.data.projectWindows.find((entry) => entry.projectId === projectId)?.windows.length ??
+      0) > 0
   )
 }
 
 function getProjectRow(state: TuiStoreModel, projectId: string) {
-  return (
-    state.data.projectRows.find((row) => row.projectId === projectId) ?? null
-  )
+  return state.data.projectRows.find((row) => row.projectId === projectId) ?? null
 }
 
 function getWorkspaceRow(state: TuiStoreModel, workspaceId: string) {
-  return (
-    state.data.workspaceRows.find((row) => row.workspaceId === workspaceId) ??
-    null
-  )
+  return state.data.workspaceRows.find((row) => row.workspaceId === workspaceId) ?? null
 }
 
 function getBrowseRowScore(row: HarbourRow, query: string) {

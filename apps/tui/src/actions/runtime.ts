@@ -8,21 +8,13 @@ import { RuntimeService } from '@harbr/runtime'
 import { Effect } from 'effect'
 
 import type { TuiServices, TuiStore } from '~/app-context'
-import type {
-  HarbourRow,
-  ModuleRow,
-  ProjectRow,
-  WorkspaceRow,
-} from '~/types/rows'
+import type { HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
 import { saveUiContext } from '~/data'
 import { formatError } from '~/helpers/errors'
 import { getCannotCloseCurrentRuntimeNotice } from '~/helpers/runtime-terminology'
 import { loadProjects } from './refresh'
 
-export async function persistContext(
-  services: TuiServices,
-  nextContext: HarbourContext,
-) {
+export async function persistContext(services: TuiServices, nextContext: HarbourContext) {
   try {
     await saveUiContext(services, nextContext)
   } catch {
@@ -30,11 +22,7 @@ export async function persistContext(
   }
 }
 
-export async function openProjectRoot(
-  services: TuiServices,
-  store: TuiStore,
-  row: ProjectRow,
-) {
+export async function openProjectRoot(services: TuiServices, store: TuiStore, row: ProjectRow) {
   await openRuntimeForTarget(
     services,
     store,
@@ -44,11 +32,7 @@ export async function openProjectRoot(
   )
 }
 
-export async function openWorkspaceRoot(
-  services: TuiServices,
-  store: TuiStore,
-  row: WorkspaceRow,
-) {
+export async function openWorkspaceRoot(services: TuiServices, store: TuiStore, row: WorkspaceRow) {
   await openRuntimeForTarget(
     services,
     store,
@@ -58,11 +42,7 @@ export async function openWorkspaceRoot(
   )
 }
 
-export async function openModuleRuntime(
-  services: TuiServices,
-  store: TuiStore,
-  row: ModuleRow,
-) {
+export async function openModuleRuntime(services: TuiServices, store: TuiStore, row: ModuleRow) {
   await openRuntimeForTarget(
     services,
     store,
@@ -96,15 +76,9 @@ export async function closeActiveRuntime(
 
   if (
     row.isCurrent ||
-    (currentRuntime &&
-      isSameRuntimeIdentity(currentRuntime.identity, row.runtime.identity))
+    (currentRuntime && isSameRuntimeIdentity(currentRuntime.identity, row.runtime.identity))
   ) {
-    store
-      .getState()
-      .setNotice(
-        getCannotCloseCurrentRuntimeNotice(row.runtime.identity),
-        'warning',
-      )
+    store.getState().setNotice(getCannotCloseCurrentRuntimeNotice(row.runtime.identity), 'warning')
     return
   }
 

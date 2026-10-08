@@ -1,8 +1,4 @@
-import type {
-  CurrentRuntime,
-  RuntimePathObservation,
-  RuntimeSource,
-} from '@harbr/domain'
+import type { CurrentRuntime, RuntimePathObservation, RuntimeSource } from '@harbr/domain'
 
 export type HerdrWorkspace = {
   readonly focused?: boolean
@@ -62,18 +58,13 @@ export function normalizeHerdrSnapshot(
         ]
       : []
   })
-  const focusedWorkspaceId =
-    launchWorkspaceId || snapshot.focused_workspace_id || undefined
+  const focusedWorkspaceId = launchWorkspaceId || snapshot.focused_workspace_id || undefined
   const current = focusedWorkspaceId
-    ? runtimes.find(
-        (runtime) => runtime.identity.externalId === focusedWorkspaceId,
-      )
+    ? runtimes.find((runtime) => runtime.identity.externalId === focusedWorkspaceId)
     : undefined
 
   return {
-    currentRuntime: current
-      ? { identity: current.identity, status: current.status }
-      : null,
+    currentRuntime: current ? { identity: current.identity, status: current.status } : null,
     runtimes,
   }
 }
@@ -85,9 +76,7 @@ export function readHerdrSessionSnapshot(input: unknown): HerdrSessionSnapshot {
 
   const result = isRecord(input.result) ? input.result : input
   const snapshot =
-    result.type === 'session_snapshot' && isRecord(result.snapshot)
-      ? result.snapshot
-      : result
+    result.type === 'session_snapshot' && isRecord(result.snapshot) ? result.snapshot : result
 
   if (!Array.isArray(snapshot.workspaces) || !Array.isArray(snapshot.panes)) {
     throw new Error('Herdr snapshot is missing workspaces or panes')
@@ -99,9 +88,7 @@ export function readHerdrSessionSnapshot(input: unknown): HerdrSessionSnapshot {
 
   return {
     focused_workspace_id:
-      typeof snapshot.focused_workspace_id === 'string'
-        ? snapshot.focused_workspace_id
-        : null,
+      typeof snapshot.focused_workspace_id === 'string' ? snapshot.focused_workspace_id : null,
     panes,
     tabs,
     workspaces,
@@ -139,8 +126,7 @@ function readPane(input: unknown): HerdrPane {
   return {
     cwd: typeof input.cwd === 'string' ? input.cwd : null,
     focused: input.focused === true,
-    foreground_cwd:
-      typeof input.foreground_cwd === 'string' ? input.foreground_cwd : null,
+    foreground_cwd: typeof input.foreground_cwd === 'string' ? input.foreground_cwd : null,
     label: typeof input.label === 'string' ? input.label : null,
     ...(typeof input.pane_id === 'string' ? { pane_id: input.pane_id } : {}),
     ...(typeof input.tab_id === 'string' ? { tab_id: input.tab_id } : {}),
@@ -165,21 +151,15 @@ function readTab(input: unknown): HerdrTab {
   }
 }
 
-function findWorkspacePath(
-  panes: readonly HerdrPane[],
-  workspace: HerdrWorkspace,
-) {
+function findWorkspacePath(panes: readonly HerdrPane[], workspace: HerdrWorkspace) {
   const checkoutPath = workspace.worktree?.checkout_path?.trim()
 
   if (checkoutPath) {
     return checkoutPath
   }
 
-  const workspacePanes = panes.filter(
-    (pane) => pane.workspace_id === workspace.workspace_id,
-  )
-  const pane =
-    workspacePanes.find((candidate) => candidate.focused) ?? workspacePanes[0]
+  const workspacePanes = panes.filter((pane) => pane.workspace_id === workspace.workspace_id)
+  const pane = workspacePanes.find((candidate) => candidate.focused) ?? workspacePanes[0]
 
   return pane?.cwd?.trim() || pane?.foreground_cwd?.trim() || null
 }

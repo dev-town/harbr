@@ -4,9 +4,7 @@ import { resolveRuntimeProvider } from './launch-context'
 
 describe('resolveRuntimeProvider', () => {
   it('selects tmux outside Herdr', () => {
-    expect(resolveRuntimeProvider({ TMUX: '/tmp/tmux/default,1,0' })).toBe(
-      'tmux',
-    )
+    expect(resolveRuntimeProvider({ TMUX: '/tmp/tmux/default,1,0' })).toBe('tmux')
   })
 
   it('selects Herdr when launched from a Herdr workspace', () => {

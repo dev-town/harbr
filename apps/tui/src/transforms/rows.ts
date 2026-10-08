@@ -6,12 +6,7 @@ import type {
 } from '@harbr/domain'
 import { join } from 'node:path'
 
-import type {
-  HarbourRow,
-  ModuleRow,
-  ProjectRow,
-  WorkspaceRow,
-} from '~/types/rows'
+import type { HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
 
 export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
   const projectIssue = summary.projectIssue ?? null
@@ -45,9 +40,7 @@ export function mapProjectSummaryToRow(summary: ProjectSummary): ProjectRow {
   }
 }
 
-export function mapWorkspaceSummaryToRow(
-  summary: WorkspaceSummary,
-): WorkspaceRow {
+export function mapWorkspaceSummaryToRow(summary: WorkspaceSummary): WorkspaceRow {
   const branchName = summary.branchName ?? null
 
   return {
@@ -95,11 +88,7 @@ export function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
     modulePath: summary.path,
     runtime: summary.runtime,
     target: {
-      breadcrumb: [
-        summary.projectName,
-        summary.workspaceName,
-        summary.name,
-      ].join(' › '),
+      breadcrumb: [summary.projectName, summary.workspaceName, summary.name].join(' › '),
       context: {
         projectId: summary.projectId,
         workspaceId: summary.workspaceId,
@@ -108,9 +97,7 @@ export function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
       label: summary.name,
       runtimeTarget: {
         cwd:
-          summary.path === '.'
-            ? summary.workspacePath
-            : join(summary.workspacePath, summary.path),
+          summary.path === '.' ? summary.workspacePath : join(summary.workspacePath, summary.path),
         moduleName: summary.name,
         projectName: summary.projectName,
         workspaceName: summary.workspaceName,
@@ -120,9 +107,7 @@ export function mapModuleSummaryToRow(summary: ModuleSummary): ModuleRow {
   }
 }
 
-export function mapActiveRuntimeSummaryToRow(
-  summary: ActiveRuntimeSummary,
-): HarbourRow {
+export function mapActiveRuntimeSummaryToRow(summary: ActiveRuntimeSummary): HarbourRow {
   const runtime = summary.runtime
 
   if (summary.scope === 'project') {
@@ -238,10 +223,7 @@ function formatSessionMetadata(activeSessionCount: number) {
   return `${activeSessionCount} sessions`
 }
 
-function formatWorkspaceMetadata(
-  branchName: string | null,
-  activeSessionCount: number,
-) {
+function formatWorkspaceMetadata(branchName: string | null, activeSessionCount: number) {
   const sessionMetadata = formatSessionMetadata(activeSessionCount)
 
   if (!branchName) {
@@ -259,9 +241,7 @@ function getActiveRuntimeContextLabel(summary: ActiveRuntimeSummary) {
   }
 
   if (summary.scope === 'workspace') {
-    return [summary.projectName, summary.workspaceName]
-      .filter(Boolean)
-      .join(' › ')
+    return [summary.projectName, summary.workspaceName].filter(Boolean).join(' › ')
   }
 
   return summary.projectName

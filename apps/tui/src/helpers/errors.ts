@@ -21,21 +21,14 @@ export function formatError(error: unknown) {
 }
 
 function isTaggedError(error: unknown, tag: string): error is { _tag: string } {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    '_tag' in error &&
-    error._tag === tag
-  )
+  return typeof error === 'object' && error !== null && '_tag' in error && error._tag === tag
 }
 
 function isInvalidConfigError(
   error: unknown,
 ): error is { _tag: 'InvalidConfigError'; issues: HarbourConfigIssue[] } {
   return (
-    isTaggedError(error, 'InvalidConfigError') &&
-    'issues' in error &&
-    Array.isArray(error.issues)
+    isTaggedError(error, 'InvalidConfigError') && 'issues' in error && Array.isArray(error.issues)
   )
 }
 
@@ -48,9 +41,7 @@ function isConfigPathError(error: unknown): error is {
     error !== null &&
     '_tag' in error &&
     typeof error._tag === 'string' &&
-    ['ConfigNotFoundError', 'ConfigReadError', 'InvalidJsonError'].includes(
-      error._tag,
-    ) &&
+    ['ConfigNotFoundError', 'ConfigReadError', 'InvalidJsonError'].includes(error._tag) &&
     'configPath' in error &&
     typeof error.configPath === 'string'
   )

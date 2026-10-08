@@ -9,10 +9,7 @@ type ResultsListProps<TRow extends { id: string }> = {
   emptyLabel?: string
   hoveredId: string | null
   isLoading?: boolean
-  renderRow: (
-    row: TRow,
-    state: { isHovered: boolean; isSelected: boolean },
-  ) => ReactNode
+  renderRow: (row: TRow, state: { isHovered: boolean; isSelected: boolean }) => ReactNode
   rows: readonly TRow[]
   selectedId: string | null
 }
@@ -27,26 +24,23 @@ export function ResultsList<TRow extends { id: string }>({
 }: ResultsListProps<TRow>) {
   const scrollboxRef = useRef<ScrollBoxRenderable | null>(null)
   const [showLoading, setShowLoading] = useState(false)
-  const setScrollboxRef = useCallback(
-    (scrollbox: ScrollBoxRenderable | null) => {
-      scrollboxRef.current = scrollbox
+  const setScrollboxRef = useCallback((scrollbox: ScrollBoxRenderable | null) => {
+    scrollboxRef.current = scrollbox
 
-      if (!scrollbox) {
-        return
+    if (!scrollbox) {
+      return
+    }
+
+    // OpenTUI measures a new scrollbox with a zero-height viewport, which
+    // makes its automatic scrollbar visible for one frame. Keep it hidden
+    // until the deferred layout recalculation has the real viewport size.
+    scrollbox.verticalScrollBar.visible = false
+    process.nextTick(() => {
+      if (scrollboxRef.current === scrollbox) {
+        scrollbox.verticalScrollBar.resetVisibilityControl()
       }
-
-      // OpenTUI measures a new scrollbox with a zero-height viewport, which
-      // makes its automatic scrollbar visible for one frame. Keep it hidden
-      // until the deferred layout recalculation has the real viewport size.
-      scrollbox.verticalScrollBar.visible = false
-      process.nextTick(() => {
-        if (scrollboxRef.current === scrollbox) {
-          scrollbox.verticalScrollBar.resetVisibilityControl()
-        }
-      })
-    },
-    [],
-  )
+    })
+  }, [])
 
   useEffect(() => {
     if (!forceLoading) {
@@ -80,11 +74,7 @@ export function ResultsList<TRow extends { id: string }>({
       }}
     >
       {showLoading ? (
-        <StatusLine
-          color={theme.accent}
-          icon=""
-          text="Refreshing Harbr view..."
-        />
+        <StatusLine color={theme.accent} icon="" text="Refreshing Harbr view..." />
       ) : null}
       {!forceLoading && !showLoading && rows.length === 0 ? (
         <StatusLine

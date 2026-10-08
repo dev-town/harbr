@@ -7,10 +7,7 @@ import type {
 import { Effect, Either } from 'effect'
 
 import type { ProjectServiceApi, ProjectServiceError } from '@harbr/db'
-import type {
-  ProjectObservationResult,
-  ScannerServiceApi,
-} from '@harbr/scanner'
+import type { ProjectObservationResult, ScannerServiceApi } from '@harbr/scanner'
 
 import { stabilizeRuntimeFacts } from './reconciler.runtimes'
 
@@ -34,29 +31,19 @@ export function syncProjects(
       Either.isRight(observation.result) ? [observation.result.right] : [],
     )[0]
     const reconciledObservations = runtimeObservation
-      ? yield* reconcileRuntimeFacts(
-          observations,
-          projectService,
-          runtimeObservation.runtimeSource,
-        )
+      ? yield* reconcileRuntimeFacts(observations, projectService, runtimeObservation.runtimeSource)
       : observations
 
-    const results = yield* Effect.forEach(
-      reconciledObservations,
-      ({ project, result }) =>
-        Either.isLeft(result)
-          ? Effect.succeed<SyncProjectResult>(
-              projectErrorResult(project, result.left),
-            )
-          : persistObservation(projectService, result.right),
+    const results = yield* Effect.forEach(reconciledObservations, ({ project, result }) =>
+      Either.isLeft(result)
+        ? Effect.succeed<SyncProjectResult>(projectErrorResult(project, result.left))
+        : persistObservation(projectService, result.right),
     )
 
     if (runtimeObservation && runtimeObservation.runtimeIssue === null) {
       yield* projectService.pruneRuntimeBindings(
         runtimeObservation.runtimeSource,
-        runtimeObservation.observedRuntimes.map(
-          (runtime) => runtime.identity.externalId,
-        ),
+        runtimeObservation.observedRuntimes.map((runtime) => runtime.identity.externalId),
       )
     }
 
@@ -80,17 +67,12 @@ export function refreshConfiguredProject(
     const reconciledObservation = Either.isRight(reconciledResult)
       ? reconciledResult.right
       : observation
-    const result = yield* persistObservation(
-      projectService,
-      reconciledObservation,
-    )
+    const result = yield* persistObservation(projectService, reconciledObservation)
 
     if (observation.runtimeIssue === null) {
       yield* projectService.pruneRuntimeBindings(
         observation.runtimeSource,
-        observation.observedRuntimes.map(
-          (runtime) => runtime.identity.externalId,
-        ),
+        observation.observedRuntimes.map((runtime) => runtime.identity.externalId),
       )
     }
 
@@ -103,9 +85,8 @@ function reconcileRuntimeFacts(
   projectService: ProjectServiceApi,
   source: ProjectObservation['runtimeSource'],
 ) {
-  return Effect.map(
-    projectService.listActiveRuntimeSummaries(source),
-    (existing) => stabilizeRuntimeFacts(observations, existing),
+  return Effect.map(projectService.listActiveRuntimeSummaries(source), (existing) =>
+    stabilizeRuntimeFacts(observations, existing),
   )
 }
 
@@ -142,10 +123,7 @@ function persistObservation(
   })
 }
 
-function projectErrorResult(
-  project: ProjectConfig,
-  error: unknown,
-): SyncProjectResult {
+function projectErrorResult(project: ProjectConfig, error: unknown): SyncProjectResult {
   return {
     projectName: project.name,
     repoPath: project.repo,

@@ -7,8 +7,6 @@ export function getHerdrRuntimeSource(
     provider: 'herdr',
     sourceId:
       environment.HERDR_SOCKET_PATH?.trim() ||
-      (environment.HERDR_SESSION
-        ? `session:${environment.HERDR_SESSION}`
-        : 'current'),
+      (environment.HERDR_SESSION ? `session:${environment.HERDR_SESSION}` : 'current'),
   }
 }

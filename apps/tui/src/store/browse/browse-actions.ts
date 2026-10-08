@@ -1,14 +1,8 @@
 import type { VisibilityFilter } from '~/types/navigation'
-import {
-  getRepairedSelectedId,
-  moveSelectedId,
-} from '~/store/shared/list-selectors'
+import { getRepairedSelectedId, moveSelectedId } from '~/store/shared/list-selectors'
 import { projectsScope, workspacesScope } from './browse-scope'
 import { isImplicitWorkspace } from './browse-state'
-import {
-  selectBrowseActionRows,
-  selectVisibleBrowseRows,
-} from './browse-selectors'
+import { selectBrowseActionRows, selectVisibleBrowseRows } from './browse-selectors'
 import { selectIsActionsOpen } from '~/store/surfaces/surfaces-selectors'
 import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '~/store/types'
 
@@ -52,11 +46,7 @@ export function createBrowseActions(
       })),
     moveBrowseSelection: (delta) => {
       const rows = selectVisibleBrowseRows(get())
-      const selectedId = moveSelectedId(
-        rows,
-        get().browse.list.selectedId,
-        delta,
-      )
+      const selectedId = moveSelectedId(rows, get().browse.list.selectedId, delta)
       set((state) => ({
         app: { ...state.app, notice: null },
         browse: { ...state.browse, list: { ...state.browse.list, selectedId } },
@@ -136,9 +126,7 @@ export function createBrowseActions(
       get().resetBrowseSelection()
     },
     toggleBrowseVisibility: () => {
-      get().setBrowseVisibility(
-        get().browse.visibility === 'active' ? 'all' : 'active',
-      )
+      get().setBrowseVisibility(get().browse.visibility === 'active' ? 'all' : 'active')
       get().clearNotice()
     },
   }

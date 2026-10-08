@@ -2,12 +2,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
 import { Effect, Layer } from 'effect'
-import type {
-  RuntimeFact,
-  RuntimeIdentity,
-  RuntimeObservation,
-  RuntimeTarget,
-} from '@harbr/domain'
+import type { RuntimeFact, RuntimeIdentity, RuntimeObservation, RuntimeTarget } from '@harbr/domain'
 import {
   RuntimeDiscoveryService,
   RuntimeProviderError,
@@ -43,21 +38,14 @@ export const RuntimeServiceLive = Layer.succeed(RuntimeService, {
   source,
 } satisfies RuntimeServiceApi)
 
-export const RuntimeDiscoveryServiceLive = Layer.succeed(
-  RuntimeDiscoveryService,
-  {
-    listRuntimes: listRuntimesLive(),
-  } satisfies RuntimeDiscoveryServiceApi,
-)
+export const RuntimeDiscoveryServiceLive = Layer.succeed(RuntimeDiscoveryService, {
+  listRuntimes: listRuntimesLive(),
+} satisfies RuntimeDiscoveryServiceApi)
 
 function getCurrentRuntimeLive() {
   return Effect.tryPromise({
     try: async () => {
-      const { stdout } = await execFileAsync('tmux', [
-        'display-message',
-        '-p',
-        '#{session_name}',
-      ])
+      const { stdout } = await execFileAsync('tmux', ['display-message', '-p', '#{session_name}'])
       const runtime = parseSessionName(stdout.trim(), source)
 
       return runtime
@@ -66,9 +54,7 @@ function getCurrentRuntimeLive() {
     },
     catch: (error) => mapTmuxError(error),
   }).pipe(
-    Effect.catchTag('TmuxNotFoundError', () =>
-      Effect.succeed<CurrentRuntime>(null),
-    ),
+    Effect.catchTag('TmuxNotFoundError', () => Effect.succeed<CurrentRuntime>(null)),
     Effect.catchTag('TmuxCommandError', (error) =>
       classifyRuntimeDiscoveryIssue(error.message) !== undefined
         ? Effect.succeed<CurrentRuntime>(null)
@@ -81,11 +67,7 @@ function getCurrentRuntimeLive() {
 function listRuntimesLive() {
   return Effect.tryPromise({
     try: async () => {
-      const { stdout } = await execFileAsync('tmux', [
-        'list-sessions',
-        '-F',
-        '#{session_name}',
-      ])
+      const { stdout } = await execFileAsync('tmux', ['list-sessions', '-F', '#{session_name}'])
 
       return {
         runtimes: stdout
@@ -93,10 +75,7 @@ function listRuntimesLive() {
           .map((line) => line.trim())
           .filter((line) => line.length > 0)
           .map((sessionName) => parseSessionName(sessionName, source))
-          .filter(
-            (runtime): runtime is NonNullable<typeof runtime> =>
-              runtime !== null,
-          ),
+          .filter((runtime): runtime is NonNullable<typeof runtime> => runtime !== null),
         runtimeIssue: null,
         source,
       } satisfies RuntimeDiscovery
@@ -116,8 +95,7 @@ function listRuntimesLive() {
       return runtimeIssue !== undefined
         ? Effect.succeed<RuntimeDiscovery>({
             runtimes: [],
-            runtimeIssue:
-              runtimeIssue === null ? null : { code: runtimeIssue, source },
+            runtimeIssue: runtimeIssue === null ? null : { code: runtimeIssue, source },
             source,
           })
         : Effect.fail(toRuntimeProviderError('listRuntimes', error))
@@ -131,10 +109,7 @@ function openOrCreateRuntimeLive(target: RuntimeTarget) {
     try: async () => {
       const discovery = await listRuntimeDiscoverySafe()
       const client = await getCurrentClient()
-      const existingRuntime = findMatchingRuntime(
-        runtimeFacts(discovery.runtimes),
-        target,
-      )
+      const existingRuntime = findMatchingRuntime(runtimeFacts(discovery.runtimes), target)
 
       if (existingRuntime) {
         await execTmux([
@@ -149,19 +124,11 @@ function openOrCreateRuntimeLive(target: RuntimeTarget) {
 
       const sessionName = formatSessionName(target)
       await execTmux(['new-session', '-d', '-s', sessionName, '-c', target.cwd])
-      await execTmux([
-        'switch-client',
-        '-c',
-        client,
-        '-t',
-        formatSessionTarget(sessionName),
-      ])
+      await execTmux(['switch-client', '-c', client, '-t', formatSessionTarget(sessionName)])
     },
     catch: (error) => mapTmuxError(error),
   }).pipe(
-    Effect.mapError((error) =>
-      toRuntimeProviderError('openOrCreateRuntime', error),
-    ),
+    Effect.mapError((error) => toRuntimeProviderError('openOrCreateRuntime', error)),
     Effect.withSpan('runtime.tmux.openOrCreateRuntime', {
       attributes: {
         'harbr.project.name': target.projectName,
@@ -175,11 +142,7 @@ function closeRuntimeLive(identity: RuntimeIdentity) {
   return Effect.tryPromise({
     try: async () => {
       assertCurrentSource(identity)
-      await execTmux([
-        'kill-session',
-        '-t',
-        formatSessionTarget(identity.externalId),
-      ])
+      await execTmux(['kill-session', '-t', formatSessionTarget(identity.externalId)])
     },
     catch: (error) => mapTmuxError(error),
   }).pipe(
@@ -196,13 +159,9 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
   return Effect.tryPromise({
     try: async () => {
       const discovery = await listRuntimeDiscoverySafe()
-      const existingRuntime = findMatchingRuntime(
-        runtimeFacts(discovery.runtimes),
-        input.target,
-      )
+      const existingRuntime = findMatchingRuntime(runtimeFacts(discovery.runtimes), input.target)
       const firstWindow = input.windows[0]
-      const sessionName =
-        existingRuntime?.identity.externalId ?? formatSessionName(input.target)
+      const sessionName = existingRuntime?.identity.externalId ?? formatSessionName(input.target)
       let existingWindowNames = new Set<string>()
       let windowsToCreate = input.windows
       const createdWindowNames: string[] = []
@@ -211,23 +170,12 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
       if (existingRuntime) {
         existingWindowNames = await listWindowNames(sessionName)
       } else if (firstWindow) {
-        await createSessionWindowLayout(
-          sessionName,
-          input.target.cwd,
-          firstWindow,
-        )
+        await createSessionWindowLayout(sessionName, input.target.cwd, firstWindow)
         existingWindowNames.add(firstWindow.name)
         createdWindowNames.push(firstWindow.name)
         windowsToCreate = input.windows.slice(1)
       } else {
-        await execTmux([
-          'new-session',
-          '-d',
-          '-s',
-          sessionName,
-          '-c',
-          input.target.cwd,
-        ])
+        await execTmux(['new-session', '-d', '-s', sessionName, '-c', input.target.cwd])
       }
 
       for (const window of windowsToCreate) {
@@ -243,13 +191,7 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
 
       if (createdWindowNames.length > 0) {
         const client = await getCurrentClient()
-        await execTmux([
-          'switch-client',
-          '-c',
-          client,
-          '-t',
-          formatSessionTarget(sessionName),
-        ])
+        await execTmux(['switch-client', '-c', client, '-t', formatSessionTarget(sessionName)])
       }
 
       return {
@@ -259,9 +201,7 @@ function createRuntimeWindowsLive(input: RuntimeWindowCreation) {
     },
     catch: (error) => mapTmuxError(error),
   }).pipe(
-    Effect.mapError((error) =>
-      toRuntimeProviderError('createRuntimeWindows', error),
-    ),
+    Effect.mapError((error) => toRuntimeProviderError('createRuntimeWindows', error)),
     Effect.withSpan('runtime.tmux.createRuntimeWindows', {
       attributes: {
         'harbr.project.name': input.target.projectName,
@@ -322,10 +262,7 @@ async function createWindowLayout(
   await setPaneName(firstPaneId, firstPane.name)
 
   for (const pane of window.panes.slice(1)) {
-    const paneId = await splitWindowPane(
-      firstPaneId,
-      resolveRuntimePaneCwd(runtimeCwd, pane.cwd),
-    )
+    const paneId = await splitWindowPane(firstPaneId, resolveRuntimePaneCwd(runtimeCwd, pane.cwd))
     await setPaneName(paneId, pane.name)
     panes.push({ id: paneId, config: pane })
   }
@@ -360,10 +297,7 @@ async function createSessionWindowLayout(
   await setPaneName(firstPaneId, firstPane.name)
 
   for (const pane of window.panes.slice(1)) {
-    const paneId = await splitWindowPane(
-      firstPaneId,
-      resolveRuntimePaneCwd(runtimeCwd, pane.cwd),
-    )
+    const paneId = await splitWindowPane(firstPaneId, resolveRuntimePaneCwd(runtimeCwd, pane.cwd))
     await setPaneName(paneId, pane.name)
     panes.push({ id: paneId, config: pane })
   }
@@ -377,11 +311,7 @@ async function createSessionWindowLayout(
   }
 }
 
-async function createSessionWindowPane(
-  sessionName: string,
-  windowName: string,
-  cwd: string,
-) {
+async function createSessionWindowPane(sessionName: string, windowName: string, cwd: string) {
   const { stdout } = await execFileAsync('tmux', [
     'new-session',
     '-d',
@@ -399,11 +329,7 @@ async function createSessionWindowPane(
   return stdout.trim()
 }
 
-async function createWindowPane(
-  sessionName: string,
-  windowName: string,
-  cwd: string,
-) {
+async function createWindowPane(sessionName: string, windowName: string, cwd: string) {
   const { stdout } = await execFileAsync('tmux', [
     'new-window',
     '-d',
@@ -459,11 +385,7 @@ async function execTmux(args: string[]) {
 }
 
 async function getCurrentClient() {
-  const { stdout } = await execFileAsync('tmux', [
-    'display-message',
-    '-p',
-    '#{client_tty}',
-  ])
+  const { stdout } = await execFileAsync('tmux', ['display-message', '-p', '#{client_tty}'])
 
   return stdout.trim()
 }
@@ -474,11 +396,7 @@ function mapTmuxError(error: unknown) {
   }
 
   const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === 'string'
-        ? error
-        : String(error)
+    error instanceof Error ? error.message : typeof error === 'string' ? error : String(error)
 
   return new TmuxCommandError({ message })
 }
@@ -486,11 +404,7 @@ function mapTmuxError(error: unknown) {
 function toRuntimeProviderError(operation: string, error: unknown) {
   return new RuntimeProviderError({
     message:
-      error instanceof Error
-        ? error.message
-        : typeof error === 'string'
-          ? error
-          : String(error),
+      error instanceof Error ? error.message : typeof error === 'string' ? error : String(error),
     operation,
     provider: source.provider,
   })
@@ -505,9 +419,7 @@ function assertCurrentSource(identity: RuntimeIdentity) {
   }
 }
 
-function isExecError(
-  error: unknown,
-): error is Error & { code?: number | string | undefined } {
+function isExecError(error: unknown): error is Error & { code?: number | string | undefined } {
   return error instanceof Error
 }
 

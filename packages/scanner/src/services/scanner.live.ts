@@ -3,10 +3,7 @@ import { Effect, Layer } from 'effect'
 import { GitService } from '@harbr/git'
 import { RuntimeDiscoveryService } from '@harbr/runtime/discovery'
 import type { ProjectConfig } from '@harbr/domain'
-import {
-  observeProjectsWithGit,
-  observeProjectWithGit,
-} from '../scanner.observe'
+import { observeProjectsWithGit, observeProjectWithGit } from '../scanner.observe'
 import { ScannerService, type ScannerServiceApi } from './scanner.service'
 
 export const ScannerServiceLive = Layer.effect(

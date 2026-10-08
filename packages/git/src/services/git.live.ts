@@ -34,9 +34,7 @@ function inspectRepoLive(repoPath: string) {
   const resolvedRepoPath = path.resolve(repoPath)
 
   return Effect.gen(function* () {
-    const repoExists = yield* Effect.promise(() =>
-      isDirectory(resolvedRepoPath),
-    )
+    const repoExists = yield* Effect.promise(() => isDirectory(resolvedRepoPath))
 
     if (!repoExists) {
       return yield* Effect.fail(
@@ -46,10 +44,7 @@ function inspectRepoLive(repoPath: string) {
       )
     }
 
-    const isBare = yield* runGitRevParse(
-      resolvedRepoPath,
-      '--is-bare-repository',
-    )
+    const isBare = yield* runGitRevParse(resolvedRepoPath, '--is-bare-repository')
 
     if (isBare === 'true') {
       return {
@@ -62,9 +57,7 @@ function inspectRepoLive(repoPath: string) {
 
     if (
       gitDir !== '.git' ||
-      !(yield* Effect.promise(() =>
-        isDirectory(path.join(resolvedRepoPath, '.git')),
-      ))
+      !(yield* Effect.promise(() => isDirectory(path.join(resolvedRepoPath, '.git'))))
     ) {
       return yield* Effect.fail(
         new RepoNotSupportedError({
@@ -87,10 +80,7 @@ function inspectRepoLive(repoPath: string) {
 }
 
 function resolveWorkspacePathLive(repo: RepoInspection) {
-  return Effect.map(
-    listWorkspacesLive(repo),
-    (workspaces) => workspaces[0]?.path ?? null,
-  ).pipe(
+  return Effect.map(listWorkspacesLive(repo), (workspaces) => workspaces[0]?.path ?? null).pipe(
     Effect.withSpan('git.resolveWorkspacePath', {
       attributes: {
         'git.repo.path': repo.repoPath,
@@ -147,9 +137,7 @@ function listWorkspacesLive(repo: RepoInspection) {
     try: async () => {
       const [worktrees, canonicalRepoPath] = await Promise.all([
         listWorktrees(repo),
-        repo.kind === 'standard'
-          ? realpath(repo.repoPath)
-          : Promise.resolve(repo.repoPath),
+        repo.kind === 'standard' ? realpath(repo.repoPath) : Promise.resolve(repo.repoPath),
       ])
 
       return mapWorkspaces(repo, canonicalRepoPath, worktrees)
@@ -256,12 +244,7 @@ function slugifyProjectName(projectName: string) {
 function runGitRevParse(repoPath: string, flag: string) {
   return Effect.tryPromise({
     try: async () => {
-      const { stdout } = await execFileAsync('git', [
-        '-C',
-        repoPath,
-        'rev-parse',
-        flag,
-      ])
+      const { stdout } = await execFileAsync('git', ['-C', repoPath, 'rev-parse', flag])
       return stdout.trim()
     },
     catch: () =>
@@ -283,10 +266,7 @@ async function runGitSymbolicRef(repo: RepoInspection, ref: string) {
 function validateBranchName(repo: RepoInspection, branchName: string) {
   return Effect.tryPromise({
     try: async () => {
-      await execFileAsync(
-        'git',
-        getGitArgs(repo, ['check-ref-format', '--branch', branchName]),
-      )
+      await execFileAsync('git', getGitArgs(repo, ['check-ref-format', '--branch', branchName]))
       return branchName
     },
     catch: () => new InvalidBranchNameError({ branchName }),
@@ -316,10 +296,7 @@ async function resolveDefaultBranchStartPoint(repo: RepoInspection) {
     return headRef
   }
 
-  const remoteHead = await runGitSymbolicRef(
-    repo,
-    'refs/remotes/origin/HEAD',
-  ).catch(() => null)
+  const remoteHead = await runGitSymbolicRef(repo, 'refs/remotes/origin/HEAD').catch(() => null)
 
   if (remoteHead) {
     const remoteHeadRef = `refs/remotes/${remoteHead}`
@@ -342,20 +319,14 @@ async function resolveDefaultBranchStartPoint(repo: RepoInspection) {
 }
 
 async function runGitSymbolicRefFull(repo: RepoInspection, ref: string) {
-  const { stdout } = await execFileAsync(
-    'git',
-    getGitArgs(repo, ['symbolic-ref', '--quiet', ref]),
-  )
+  const { stdout } = await execFileAsync('git', getGitArgs(repo, ['symbolic-ref', '--quiet', ref]))
 
   return stdout.trim()
 }
 
 async function hasGitRef(repo: RepoInspection, ref: string) {
   try {
-    await execFileAsync(
-      'git',
-      getGitArgs(repo, ['show-ref', '--verify', '--quiet', ref]),
-    )
+    await execFileAsync('git', getGitArgs(repo, ['show-ref', '--verify', '--quiet', ref]))
     return true
   } catch {
     return false

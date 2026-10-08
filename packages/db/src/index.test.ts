@@ -30,10 +30,7 @@ function runtimeAttachment(externalId: string) {
   return { identity: runtimeIdentity(externalId), status: 'open' as const }
 }
 
-function runtimeAttachmentFor(
-  source: { provider: string; sourceId: string },
-  externalId: string,
-) {
+function runtimeAttachmentFor(source: { provider: string; sourceId: string }, externalId: string) {
   return {
     identity: { displayLabel: externalId, externalId, source },
     status: 'open' as const,
@@ -57,9 +54,7 @@ function projectRuntime(
 
 afterEach(async () => {
   await Promise.all(
-    tempRoots
-      .splice(0)
-      .map((tempRoot) => rm(tempRoot, { recursive: true, force: true })),
+    tempRoots.splice(0).map((tempRoot) => rm(tempRoot, { recursive: true, force: true })),
   )
 })
 
@@ -100,20 +95,13 @@ describe('db', () => {
         sqlite.exec(statement)
       }
 
-      const columns = sqlite
-        .prepare('PRAGMA table_info(runtimes)')
-        .all() as Array<{ name: string }>
-      const runtimeCount = sqlite
-        .prepare('SELECT count(*) AS count FROM runtimes')
-        .get() as { count: number }
+      const columns = sqlite.prepare('PRAGMA table_info(runtimes)').all() as Array<{ name: string }>
+      const runtimeCount = sqlite.prepare('SELECT count(*) AS count FROM runtimes').get() as {
+        count: number
+      }
 
       expect(columns.map((column) => column.name)).toEqual(
-        expect.arrayContaining([
-          'provider',
-          'source_id',
-          'external_id',
-          'display_label',
-        ]),
+        expect.arrayContaining(['provider', 'source_id', 'external_id', 'display_label']),
       )
       expect(runtimeCount.count).toBe(0)
     } finally {
@@ -154,9 +142,9 @@ describe('db', () => {
           runtime: runtimeAttachmentFor(tmuxSource, 'tmux-alpha'),
         }),
       ])
-      expect(
-        listProjectSummaries(database.db, otherSource)[0]?.runtime,
-      ).toEqual(runtimeAttachmentFor(otherSource, 'other-alpha'))
+      expect(listProjectSummaries(database.db, otherSource)[0]?.runtime).toEqual(
+        runtimeAttachmentFor(otherSource, 'other-alpha'),
+      )
 
       await replaceProjectSnapshot(database.db, {
         ...snapshot,
@@ -166,9 +154,7 @@ describe('db', () => {
       })
 
       expect(listActiveRuntimeSummaries(database.db, tmuxSource)).toEqual([])
-      expect(listActiveRuntimeSummaries(database.db, otherSource)).toHaveLength(
-        1,
-      )
+      expect(listActiveRuntimeSummaries(database.db, otherSource)).toHaveLength(1)
 
       await replaceProjectSnapshot(database.db, {
         ...snapshot,
@@ -177,9 +163,7 @@ describe('db', () => {
         runtimeSource: otherSource,
       })
 
-      expect(listActiveRuntimeSummaries(database.db, otherSource)).toHaveLength(
-        1,
-      )
+      expect(listActiveRuntimeSummaries(database.db, otherSource)).toHaveLength(1)
     } finally {
       database.sqlite.close()
     }
@@ -576,13 +560,7 @@ describe('db', () => {
         },
       ])
 
-      expect(
-        listWorkspaceSummaries(
-          database.db,
-          alphaSnapshot.project.id,
-          runtimeSource,
-        ),
-      ).toEqual([
+      expect(listWorkspaceSummaries(database.db, alphaSnapshot.project.id, runtimeSource)).toEqual([
         {
           branchName: null,
           id: mainWorkspaceId,
@@ -617,40 +595,36 @@ describe('db', () => {
 
       expect(mainWorkspaceId).toBeDefined()
 
-      expect(
-        listModuleSummaries(
-          database.db,
-          mainWorkspaceId ?? 'missing',
-          runtimeSource,
-        ),
-      ).toEqual([
-        {
-          id: expect.any(String),
-          projectId: alphaSnapshot.project.id,
-          workspaceId: mainWorkspaceId,
-          name: 'apps/cli',
-          path: 'apps/cli',
-          projectName: 'alpha',
-          repoPath: '/tmp/alpha.git',
-          runtime: runtimeAttachment('alpha__main__apps/cli'),
-          workspaceName: 'main',
-          workspacePath: '/tmp/alpha-main',
-          hasActiveSession: true,
-        },
-        {
-          id: expect.any(String),
-          projectId: alphaSnapshot.project.id,
-          workspaceId: mainWorkspaceId,
-          name: 'apps/tui',
-          path: 'apps/tui',
-          projectName: 'alpha',
-          repoPath: '/tmp/alpha.git',
-          runtime: null,
-          workspaceName: 'main',
-          workspacePath: '/tmp/alpha-main',
-          hasActiveSession: false,
-        },
-      ])
+      expect(listModuleSummaries(database.db, mainWorkspaceId ?? 'missing', runtimeSource)).toEqual(
+        [
+          {
+            id: expect.any(String),
+            projectId: alphaSnapshot.project.id,
+            workspaceId: mainWorkspaceId,
+            name: 'apps/cli',
+            path: 'apps/cli',
+            projectName: 'alpha',
+            repoPath: '/tmp/alpha.git',
+            runtime: runtimeAttachment('alpha__main__apps/cli'),
+            workspaceName: 'main',
+            workspacePath: '/tmp/alpha-main',
+            hasActiveSession: true,
+          },
+          {
+            id: expect.any(String),
+            projectId: alphaSnapshot.project.id,
+            workspaceId: mainWorkspaceId,
+            name: 'apps/tui',
+            path: 'apps/tui',
+            projectName: 'alpha',
+            repoPath: '/tmp/alpha.git',
+            runtime: null,
+            workspaceName: 'main',
+            workspacePath: '/tmp/alpha-main',
+            hasActiveSession: false,
+          },
+        ],
+      )
     } finally {
       database.sqlite.close()
     }
@@ -699,13 +673,7 @@ describe('db', () => {
 
       const workspaceId = snapshot.workspaces[0]?.id
 
-      expect(
-        listModuleSummaries(
-          database.db,
-          workspaceId ?? 'missing',
-          runtimeSource,
-        ),
-      ).toEqual([
+      expect(listModuleSummaries(database.db, workspaceId ?? 'missing', runtimeSource)).toEqual([
         {
           id: expect.any(String),
           projectId: snapshot.project.id,
@@ -770,13 +738,7 @@ describe('db', () => {
       const workspaceId = snapshot.workspaces[0]?.id
 
       expect(runtimeRows[0]?.modulePath).toBe('.')
-      expect(
-        listModuleSummaries(
-          database.db,
-          workspaceId ?? 'missing',
-          runtimeSource,
-        ),
-      ).toEqual([
+      expect(listModuleSummaries(database.db, workspaceId ?? 'missing', runtimeSource)).toEqual([
         {
           id: expect.any(String),
           projectId: snapshot.project.id,

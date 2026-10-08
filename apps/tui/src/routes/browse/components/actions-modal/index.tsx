@@ -4,12 +4,7 @@ import { useMemo, useRef } from 'react'
 import { ActionsModal } from '~/components/actions-modal'
 import { useRegisterFocusTarget } from '~/hooks/useRegisterFocusTarget'
 import { useTuiServices } from '~/hooks/useTuiServices'
-import {
-  selectBrowseActionRows,
-  selectIsBrowseActionsOpen,
-  tuiStore,
-  useTuiStore,
-} from '~/store'
+import { selectBrowseActionRows, selectIsBrowseActionsOpen, tuiStore, useTuiStore } from '~/store'
 import { handleBrowseActionSelect } from '~/routes/browse/actions'
 
 export function BrowseActionsModal() {

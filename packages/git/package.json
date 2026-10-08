@@ -6,8 +6,6 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "eslint src --max-warnings=0",
-    "lint:fix": "eslint src --fix",
     "test": "vitest run src/index.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

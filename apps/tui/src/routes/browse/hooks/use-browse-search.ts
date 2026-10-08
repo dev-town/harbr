@@ -17,9 +17,7 @@ export function useBrowseSearch() {
   const searchRef = useRef<InputRenderable | null>(null)
   const currentSection = useTuiStore(selectCurrentBrowseSection)
   const query = useTuiStore((state) => state.browse.list.query)
-  const focusSearchNonce = useTuiStore(
-    (state) => state.surfaces.focusRequestKey,
-  )
+  const focusSearchNonce = useTuiStore((state) => state.surfaces.focusRequestKey)
   const selectedId = useTuiStore((state) => state.browse.list.selectedId)
   const projectRows = useTuiStore((state) => state.data.projectRows)
   const workspaceRows = useTuiStore((state) => state.data.workspaceRows)
@@ -30,20 +28,11 @@ export function useBrowseSearch() {
   const interactionMode = useTuiStore((state) => state.surfaces.interactionMode)
   const rows = useMemo(
     () => selectVisibleBrowseRows(tuiStore.getState()),
-    [
-      currentRuntime,
-      moduleRows,
-      projectRows,
-      query,
-      scope,
-      visibility,
-      workspaceRows,
-    ],
+    [currentRuntime, moduleRows, projectRows, query, scope, visibility, workspaceRows],
   )
   const isActionsOpen = useTuiStore(selectIsBrowseActionsOpen)
   const isWorktreeFormOpen = useTuiStore(selectIsWorktreeFormOpen)
-  const isSearchFocused =
-    interactionMode === 'input' && !isActionsOpen && !isWorktreeFormOpen
+  const isSearchFocused = interactionMode === 'input' && !isActionsOpen && !isWorktreeFormOpen
 
   useRegisterFocusTarget('browser', searchRef)
   useBrowseKeybindings()

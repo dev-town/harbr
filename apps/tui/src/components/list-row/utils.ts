@@ -8,10 +8,7 @@ export function getRowVariant(width: number): RowVariant {
   return 'default'
 }
 
-export function getInlineMeta(
-  meta: ListRowMeta,
-  variant: Exclude<RowVariant, 'stacked'>,
-) {
+export function getInlineMeta(meta: ListRowMeta, variant: Exclude<RowVariant, 'stacked'>) {
   const parts: string[] = []
 
   if (meta.breadcrumb) {
@@ -20,10 +17,7 @@ export function getInlineMeta(
     parts.push(` ${meta.branch}`)
   }
 
-  if (
-    meta.sessions &&
-    (variant === 'default' || (!meta.breadcrumb && !meta.branch))
-  ) {
+  if (meta.sessions && (variant === 'default' || (!meta.breadcrumb && !meta.branch))) {
     parts.push(`● ${meta.sessions}`)
   }
 

@@ -9,28 +9,18 @@ export function createAppActions(
   get: TuiStoreGet,
 ): Pick<
   TuiStoreActions,
-  | 'clearNotice'
-  | 'nextRoute'
-  | 'previousRoute'
-  | 'setCurrentRoute'
-  | 'setLoading'
-  | 'setNotice'
+  'clearNotice' | 'nextRoute' | 'previousRoute' | 'setCurrentRoute' | 'setLoading' | 'setNotice'
 > {
   return {
-    clearNotice: () =>
-      set((state) => ({ app: { ...state.app, notice: null } })),
+    clearNotice: () => set((state) => ({ app: { ...state.app, notice: null } })),
     nextRoute: () => {
       const currentIndex = orderedRoutes.indexOf(get().app.currentRoute)
-      get().setCurrentRoute(
-        orderedRoutes[(currentIndex + 1) % orderedRoutes.length] ?? 'browse',
-      )
+      get().setCurrentRoute(orderedRoutes[(currentIndex + 1) % orderedRoutes.length] ?? 'browse')
     },
     previousRoute: () => {
       const currentIndex = orderedRoutes.indexOf(get().app.currentRoute)
       get().setCurrentRoute(
-        orderedRoutes[
-          (currentIndex - 1 + orderedRoutes.length) % orderedRoutes.length
-        ] ?? 'browse',
+        orderedRoutes[(currentIndex - 1 + orderedRoutes.length) % orderedRoutes.length] ?? 'browse',
       )
     },
     setCurrentRoute: (route) =>
@@ -44,8 +34,7 @@ export function createAppActions(
         },
         worktreeForm: createWorktreeFormState(),
       })),
-    setLoading: (isLoading) =>
-      set((state) => ({ app: { ...state.app, isLoading } })),
+    setLoading: (isLoading) => set((state) => ({ app: { ...state.app, isLoading } })),
     setNotice: (notice, level = 'info') =>
       set((state) => {
         if (!notice) {

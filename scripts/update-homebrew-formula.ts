@@ -1,10 +1,6 @@
 #!/usr/bin/env bun
 
-type ArtifactTarget =
-  | 'darwin-arm64'
-  | 'darwin-x64'
-  | 'linux-arm64'
-  | 'linux-x64'
+type ArtifactTarget = 'darwin-arm64' | 'darwin-x64' | 'linux-arm64' | 'linux-x64'
 
 type ReleaseManifest = {
   artifacts: Array<{
@@ -30,20 +26,14 @@ const manifestPath = readArg('--manifest') ?? 'dist/release/manifest.json'
 const repository = readArg('--repository') ?? 'dev-town/harbr'
 
 if (!formulaPath) {
-  console.error(
-    'Usage: bun scripts/update-homebrew-formula.ts --formula <path>',
-  )
+  console.error('Usage: bun scripts/update-homebrew-formula.ts --formula <path>')
   process.exit(1)
 }
 
 const manifest = (await Bun.file(manifestPath).json()) as ReleaseManifest
-const artifacts = new Map(
-  manifest.artifacts.map((artifact) => [artifact.target, artifact]),
-)
+const artifacts = new Map(manifest.artifacts.map((artifact) => [artifact.target, artifact]))
 
-function artifact(
-  target: ArtifactTarget,
-): ReleaseManifest['artifacts'][number] {
+function artifact(target: ArtifactTarget): ReleaseManifest['artifacts'][number] {
   const match = artifacts.get(target)
 
   if (!match) {

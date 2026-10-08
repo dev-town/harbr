@@ -30,9 +30,7 @@ afterEach(async () => {
   }
 
   await Promise.all(
-    tempRoots
-      .splice(0)
-      .map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
+    tempRoots.splice(0).map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
   )
 })
 
@@ -109,13 +107,7 @@ describe('inspectRepo', () => {
       '-m',
       'init',
     ])
-    await execFileAsync('git', [
-      '-C',
-      repoPath,
-      'worktree',
-      'add',
-      worktreePath,
-    ])
+    await execFileAsync('git', ['-C', repoPath, 'worktree', 'add', worktreePath])
 
     const result = await runEither(inspectRepo(worktreePath))
 
@@ -156,14 +148,7 @@ describe('resolveWorkspacePath', () => {
       'init',
     ])
     await execFileAsync('git', ['-C', mainPath, 'push', 'origin', 'HEAD'])
-    await execFileAsync('git', [
-      '--git-dir',
-      repoPath,
-      'worktree',
-      'add',
-      worktreePath,
-      'master',
-    ])
+    await execFileAsync('git', ['--git-dir', repoPath, 'worktree', 'add', worktreePath, 'master'])
 
     const expectedWorkspacePath = await realpath(worktreePath)
 
@@ -193,9 +178,7 @@ describe('getDefaultBranch', () => {
 
     await expect(
       Effect.runPromise(
-        getDefaultBranch({ repoPath, kind: 'standard' }).pipe(
-          Effect.provide(GitServiceLive),
-        ),
+        getDefaultBranch({ repoPath, kind: 'standard' }).pipe(Effect.provide(GitServiceLive)),
       ),
     ).resolves.toBe('trunk')
   })
@@ -289,9 +272,7 @@ describe('createWorktree', () => {
       ).pipe(Effect.provide(GitServiceLive)),
     )
     const defaultBranch = await Effect.runPromise(
-      getDefaultBranch({ repoPath, kind: 'standard' }).pipe(
-        Effect.provide(GitServiceLive),
-      ),
+      getDefaultBranch({ repoPath, kind: 'standard' }).pipe(Effect.provide(GitServiceLive)),
     )
 
     expect(created).toMatchObject({
@@ -439,9 +420,7 @@ describe('listWorkspaces', () => {
 })
 
 async function runEither(effect: ReturnType<typeof inspectRepo>) {
-  return Effect.runPromise(
-    Effect.either(effect).pipe(Effect.provide(GitServiceLive)),
-  )
+  return Effect.runPromise(Effect.either(effect).pipe(Effect.provide(GitServiceLive)))
 }
 
 function inspectRepo(repoPath: string) {
@@ -449,9 +428,7 @@ function inspectRepo(repoPath: string) {
 }
 
 function resolveWorkspacePath(repo: RepoInspection) {
-  return Effect.flatMap(GitService, (service) =>
-    service.resolveWorkspacePath(repo),
-  )
+  return Effect.flatMap(GitService, (service) => service.resolveWorkspacePath(repo))
 }
 
 function listWorkspaces(repo: RepoInspection) {
@@ -463,18 +440,14 @@ function getDefaultBranch(repo: RepoInspection) {
 }
 
 function createWorktree(repo: RepoInspection, input: CreateWorktreeInput) {
-  return Effect.flatMap(GitService, (service) =>
-    service.createWorktree(repo, input),
-  )
+  return Effect.flatMap(GitService, (service) => service.createWorktree(repo, input))
 }
 
 async function runSuccess(effect: ReturnType<typeof inspectRepo>) {
   return Effect.runPromise(effect.pipe(Effect.provide(GitServiceLive)))
 }
 
-async function runWorkspaceSuccess(
-  effect: ReturnType<typeof resolveWorkspacePath>,
-) {
+async function runWorkspaceSuccess(effect: ReturnType<typeof resolveWorkspacePath>) {
   return Effect.runPromise(effect.pipe(Effect.provide(GitServiceLive)))
 }
 

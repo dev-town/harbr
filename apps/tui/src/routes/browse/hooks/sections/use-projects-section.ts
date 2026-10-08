@@ -1,7 +1,4 @@
-import {
-  openDefaultWorkspaceModules,
-  openWorkspaces,
-} from '~/actions/drilldown'
+import { openDefaultWorkspaceModules, openWorkspaces } from '~/actions/drilldown'
 import { openProjectRoot } from '~/actions/runtime'
 import { useTuiServices } from '~/hooks/useTuiServices'
 import { tuiStore } from '~/store'

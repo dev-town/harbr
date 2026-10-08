@@ -58,13 +58,7 @@ function TabsSlot({ children }: LayoutSlotProps) {
 
 function Content({ children }: LayoutSlotProps) {
   return (
-    <box
-      flexDirection="column"
-      flexGrow={1}
-      paddingLeft={2}
-      paddingRight={2}
-      width="100%"
-    >
+    <box flexDirection="column" flexGrow={1} paddingLeft={2} paddingRight={2} width="100%">
       {children}
     </box>
   )

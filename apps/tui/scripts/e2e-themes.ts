@@ -27,9 +27,7 @@ for (const themeId of themeIds) {
   try {
     await validateTheme(themeId)
   } catch (error) {
-    failures.push(
-      `${themeId}: ${error instanceof Error ? error.message : String(error)}`,
-    )
+    failures.push(`${themeId}: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 
@@ -52,26 +50,12 @@ async function validateTheme(themeId: ThemeId) {
   let sessionId: string | null = null
 
   await mkdir(themeRoot, { recursive: true })
-  await writeFile(
-    configPath,
-    JSON.stringify({ theme: themeId, projects: [] }, null, 2),
-    'utf8',
-  )
+  await writeFile(configPath, JSON.stringify({ theme: themeId, projects: [] }, null, 2), 'utf8')
 
   try {
-    sessionId = getSessionId(
-      runAgentTty(homePath, ['create', '--json', '--', '/bin/bash']),
-    )
+    sessionId = getSessionId(runAgentTty(homePath, ['create', '--json', '--', '/bin/bash']))
 
-    runAgentTty(homePath, [
-      'resize',
-      sessionId,
-      '--cols',
-      '120',
-      '--rows',
-      '36',
-      '--json',
-    ])
+    runAgentTty(homePath, ['resize', sessionId, '--cols', '120', '--rows', '36', '--json'])
 
     runAgentTty(homePath, [
       'run',
@@ -104,11 +88,7 @@ async function validateTheme(themeId: ThemeId) {
     const snapshotText = getTextPayload(snapshotResult.stdout)
 
     await writeFile(path.join(themeRoot, 'snapshot.txt'), snapshotText, 'utf8')
-    await writeFile(
-      path.join(themeRoot, 'snapshot.json'),
-      snapshotResult.stdout,
-      'utf8',
-    )
+    await writeFile(path.join(themeRoot, 'snapshot.json'), snapshotResult.stdout, 'utf8')
 
     if (snapshotText.trim().length === 0) {
       throw new Error('rendered snapshot is blank')
@@ -120,17 +100,9 @@ async function validateTheme(themeId: ThemeId) {
       }
     }
 
-    const screenshotResult = runAgentTty(homePath, [
-      'screenshot',
-      sessionId,
-      '--json',
-    ])
+    const screenshotResult = runAgentTty(homePath, ['screenshot', sessionId, '--json'])
 
-    await writeFile(
-      path.join(themeRoot, 'screenshot.json'),
-      screenshotResult.stdout,
-      'utf8',
-    )
+    await writeFile(path.join(themeRoot, 'screenshot.json'), screenshotResult.stdout, 'utf8')
   } finally {
     if (sessionId) {
       runAgentTty(homePath, ['send-keys', sessionId, 'Ctrl+C', '--json'], {
@@ -157,11 +129,7 @@ async function assertAgentTtyAvailable() {
   )
 }
 
-function runAgentTty(
-  homePath: string,
-  args: string[],
-  options: { allowFailure?: boolean } = {},
-) {
+function runAgentTty(homePath: string, args: string[], options: { allowFailure?: boolean } = {}) {
   return runCommand('agent-tty', ['--home', homePath, ...args], options)
 }
 
@@ -229,17 +197,12 @@ function parseJsonEnvelope(stdout: string): {
     return JSON.parse(stdout) as { result?: Record<string, unknown> }
   } catch (error) {
     throw new Error(
-      `agent-tty returned invalid JSON: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `agent-tty returned invalid JSON: ${error instanceof Error ? error.message : String(error)}`,
     )
   }
 }
 
-function findStringValue(
-  value: unknown,
-  keys: readonly string[],
-): string | null {
+function findStringValue(value: unknown, keys: readonly string[]): string | null {
   if (typeof value !== 'object' || value === null) {
     return null
   }

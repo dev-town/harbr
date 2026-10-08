@@ -17,9 +17,7 @@ export type HarbourConfigIssue = {
   value?: string
 }
 
-export class ConfigNotFoundError extends Data.TaggedError(
-  'ConfigNotFoundError',
-)<{
+export class ConfigNotFoundError extends Data.TaggedError('ConfigNotFoundError')<{
   configPath: string
 }> {}
 

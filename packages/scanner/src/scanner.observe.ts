@@ -7,10 +7,7 @@ import type {
   RuntimeObservation,
 } from '@harbr/domain'
 import type { GitServiceApi } from '@harbr/git'
-import type {
-  RuntimeDiscovery,
-  RuntimeDiscoveryServiceApi,
-} from '@harbr/runtime/discovery'
+import type { RuntimeDiscovery, RuntimeDiscoveryServiceApi } from '@harbr/runtime/discovery'
 import { Effect } from 'effect'
 
 import { scanProject } from './scanner.scan'
@@ -50,9 +47,7 @@ export function observeProjectWithGit(
   project: ProjectConfig,
 ) {
   return runtimeDiscovery.listRuntimes.pipe(
-    Effect.flatMap((discovery) =>
-      observeProjectWithDiscovery(git, discovery, project),
-    ),
+    Effect.flatMap((discovery) => observeProjectWithDiscovery(git, discovery, project)),
   )
 }
 
@@ -89,15 +84,9 @@ function observeProjectWithDiscovery(
                   workspaces: observedWorkspaces,
                   runtimes: discovery.runtimes
                     .map((runtime) =>
-                      normalizeRuntimeObservation(
-                        runtime,
-                        project,
-                        observedWorkspaces,
-                      ),
+                      normalizeRuntimeObservation(runtime, project, observedWorkspaces),
                     )
-                    .filter(
-                      (runtime): runtime is RuntimeFact => runtime !== null,
-                    ),
+                    .filter((runtime): runtime is RuntimeFact => runtime !== null),
                   runtimeIssue: discovery.runtimeIssue,
                   runtimeSource: discovery.source,
                 }) satisfies ProjectObservation,
@@ -120,9 +109,7 @@ function normalizeRuntimeObservation(
   workspaces: ProjectObservation['workspaces'],
 ): RuntimeFact | null {
   if (!('contextPath' in runtime)) {
-    return matchesProjectObservation(runtime, project.name, workspaces)
-      ? runtime
-      : null
+    return matchesProjectObservation(runtime, project.name, workspaces) ? runtime : null
   }
 
   const contextPath = path.resolve(runtime.contextPath)
@@ -130,8 +117,7 @@ function normalizeRuntimeObservation(
   for (const workspace of workspaces) {
     const module = workspace.modules.find(
       (candidate) =>
-        candidate.path !== '.' &&
-        path.resolve(candidate.workspacePath) === contextPath,
+        candidate.path !== '.' && path.resolve(candidate.workspacePath) === contextPath,
     )
 
     if (module) {

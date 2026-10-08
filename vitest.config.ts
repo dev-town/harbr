@@ -8,12 +8,6 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: [
-      '**/node_modules/**',
-      '**/.turbo/**',
-      '**/dist/**',
-      '**/coverage/**',
-      'vendor/**',
-    ],
+    exclude: ['**/node_modules/**', '**/.turbo/**', '**/dist/**', '**/coverage/**', 'vendor/**'],
   },
 })

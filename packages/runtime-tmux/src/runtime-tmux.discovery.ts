@@ -7,10 +7,7 @@ export function classifyRuntimeDiscoveryIssue(
     return null
   }
 
-  if (
-    message.includes('error connecting') ||
-    message.includes('failed to connect')
-  ) {
+  if (message.includes('error connecting') || message.includes('failed to connect')) {
     return 'source_unavailable'
   }
 

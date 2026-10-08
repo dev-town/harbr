@@ -10,10 +10,7 @@ export function useCreateWorkspace() {
   const step = useTuiStore((state) => state.worktreeForm.step)
   const onBack = useTuiStore((state) => state.backWorktreeForm)
   const onClose = useTuiStore((state) => state.closeWorktreeForm)
-  const view = useMemo(
-    () => selectWorktreeFormView(tuiStore.getState()),
-    [worktreeForm],
-  )
+  const view = useMemo(() => selectWorktreeFormView(tuiStore.getState()), [worktreeForm])
 
   return {
     ...view,

@@ -8,9 +8,7 @@ export function useAppShell() {
   const services = useTuiServices()
   const notice = useTuiStore((state) => state.app.notice)
   const isLoading = useTuiStore((state) => state.app.isLoading)
-  const activeRuntimeCount = useTuiStore(
-    (state) => state.data.activeRuntimeRows.length,
-  )
+  const activeRuntimeCount = useTuiStore((state) => state.data.activeRuntimeRows.length)
   const projectCount = useTuiStore((state) => state.data.projectRows.length)
   const hasCommittedResults = useRef(false)
 

@@ -95,8 +95,7 @@ export const ProjectServiceLive = Layer.effect(
         ),
       pruneRuntimeBindings: (source, observedExternalIds) =>
         Effect.try({
-          try: () =>
-            pruneRuntimeBindingsRaw(database.db, source, observedExternalIds),
+          try: () => pruneRuntimeBindingsRaw(database.db, source, observedExternalIds),
           catch: (error) =>
             new ProjectServiceError({
               operation: 'pruneRuntimeBindings',

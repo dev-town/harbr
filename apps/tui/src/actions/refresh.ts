@@ -13,10 +13,7 @@ import {
 } from '~/data'
 import { formatError } from '~/helpers/errors'
 import { projectsScope } from '~/store'
-import {
-  mapActiveRuntimeSummaryToRow,
-  mapProjectSummaryToRow,
-} from '~/transforms'
+import { mapActiveRuntimeSummaryToRow, mapProjectSummaryToRow } from '~/transforms'
 import { restoreCurrentRuntime, restoreUiContext } from './restore'
 
 export async function loadProjects(services: TuiServices, store: TuiStore) {
@@ -38,8 +35,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
             Effect.withSpan('harbr.loadProjects', {
               attributes: services.options.profile
                 ? {
-                    'harbr.profile.session_id':
-                      services.options.profile.sessionId,
+                    'harbr.profile.session_id': services.options.profile.sessionId,
                   }
                 : {},
             }),
@@ -64,32 +60,22 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       return
     }
 
-    const [
-      summaries,
-      activeRuntimeSummaries,
-      currentRuntime,
-      savedContext,
-      configuredWindows,
-    ] = await Promise.all([
-      listProjectSummaries(services),
-      listActiveRuntimeSummaries(services),
-      loadCurrentRuntime(services),
-      loadUiContext(services),
-      listConfiguredProjectWindows(services),
-    ])
+    const [summaries, activeRuntimeSummaries, currentRuntime, savedContext, configuredWindows] =
+      await Promise.all([
+        listProjectSummaries(services),
+        listActiveRuntimeSummaries(services),
+        loadCurrentRuntime(services),
+        loadUiContext(services),
+        listConfiguredProjectWindows(services),
+      ])
     const projectWindows = summaries.map((summary) => ({
       projectId: summary.id,
       projectName: summary.name,
-      windows:
-        configuredWindows.find((entry) => entry.projectName === summary.name)
-          ?.windows ?? [],
+      windows: configuredWindows.find((entry) => entry.projectName === summary.name)?.windows ?? [],
     }))
     const currentRuntimeSummary = currentRuntime
       ? (activeRuntimeSummaries.find((summary) =>
-          isSameRuntimeIdentity(
-            summary.runtime.identity,
-            currentRuntime.identity,
-          ),
+          isSameRuntimeIdentity(summary.runtime.identity, currentRuntime.identity),
         ) ?? null)
       : null
 
@@ -117,9 +103,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
       },
       data: {
         ...state.data,
-        activeRuntimeRows: activeRuntimeSummaries.map(
-          mapActiveRuntimeSummaryToRow,
-        ),
+        activeRuntimeRows: activeRuntimeSummaries.map(mapActiveRuntimeSummaryToRow),
         moduleRows: [],
         projectWindows,
         projectRows: summaries.map(mapProjectSummaryToRow),
@@ -145,9 +129,7 @@ export async function loadProjects(services: TuiServices, store: TuiStore) {
     store
       .getState()
       .setNotice(
-        summaries.length === 0
-          ? 'No projects yet. Check config or run sync.'
-          : null,
+        summaries.length === 0 ? 'No projects yet. Check config or run sync.' : null,
         'info',
       )
   } catch (error) {
@@ -183,8 +165,7 @@ function getActiveRuntimeRowId(
   }
 
   return (
-    rows.find((row) =>
-      isSameRuntimeIdentity(row.runtime.identity, currentRuntime.identity),
-    )?.id ?? null
+    rows.find((row) => isSameRuntimeIdentity(row.runtime.identity, currentRuntime.identity))?.id ??
+    null
   )
 }
