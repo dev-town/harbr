@@ -10,9 +10,7 @@ const tempRoots: string[] = []
 
 afterEach(async () => {
   await Promise.all(
-    tempRoots
-      .splice(0)
-      .map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
+    tempRoots.splice(0).map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
   )
 })
 
@@ -40,11 +38,7 @@ describe('readConfigTheme', () => {
     const tempRoot = await createTempRoot()
     const configPath = path.join(tempRoot, 'config.json')
 
-    await writeFile(
-      configPath,
-      JSON.stringify({ theme: 'unknown', projects: [] }),
-      'utf8',
-    )
+    await writeFile(configPath, JSON.stringify({ theme: 'unknown', projects: [] }), 'utf8')
 
     await expect(readConfigTheme(configPath)).resolves.toEqual({
       loaded: false,

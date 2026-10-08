@@ -1,10 +1,7 @@
 import path from 'node:path'
 
 import type { ZodIssue } from 'zod'
-import type {
-  HarbourConfigIssue,
-  HarbourConfigIssueCode,
-} from './config.errors'
+import type { HarbourConfigIssue, HarbourConfigIssueCode } from './config.errors'
 
 export function normalizeModuleSelector(selector: string) {
   if (selector === '.' || selector === './') {
@@ -26,18 +23,13 @@ export function normalizeModuleSelector(selector: string) {
 export function isWithinParent(parentPath: string, childPath: string) {
   const relativePath = path.relative(parentPath, childPath)
 
-  return (
-    relativePath === '' ||
-    (!relativePath.startsWith('..') && !path.isAbsolute(relativePath))
-  )
+  return relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath))
 }
 
 export function mapSchemaIssue(issue: ZodIssue): HarbourConfigIssue {
   return {
     code: getSchemaIssueCode(issue),
-    path: issue.path.map((segment) =>
-      typeof segment === 'symbol' ? String(segment) : segment,
-    ),
+    path: issue.path.map((segment) => (typeof segment === 'symbol' ? String(segment) : segment)),
     message: issue.message,
   }
 }
@@ -51,8 +43,7 @@ function stripLeadingCurrentDir(inputPath: string) {
 }
 
 function getSchemaIssueCode(issue: ZodIssue): HarbourConfigIssueCode {
-  const customCode =
-    issue.code === 'custom' ? issue.params?.issueCode : undefined
+  const customCode = issue.code === 'custom' ? issue.params?.issueCode : undefined
 
   if (
     customCode === 'duplicate_pane_name' ||

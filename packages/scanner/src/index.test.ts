@@ -6,19 +6,11 @@ import { promisify } from 'node:util'
 
 import type { ProjectConfig } from '@harbr/domain'
 import { GitService, GitServiceLive, type GitServiceApi } from '@harbr/git'
-import {
-  RuntimeDiscoveryService,
-  type RuntimeDiscoveryServiceApi,
-} from '@harbr/runtime/discovery'
+import { RuntimeDiscoveryService, type RuntimeDiscoveryServiceApi } from '@harbr/runtime/discovery'
 import { Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  ScannerService,
-  ScannerServiceLive,
-  resolveProjectModules,
-  scanProject,
-} from './index'
+import { ScannerService, ScannerServiceLive, resolveProjectModules, scanProject } from './index'
 
 const execFileAsync = promisify(execFile)
 const tempRoots: string[] = []
@@ -42,9 +34,7 @@ function pathRuntime(
 
 afterEach(async () => {
   await Promise.all(
-    tempRoots
-      .splice(0)
-      .map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
+    tempRoots.splice(0).map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
   )
 })
 
@@ -55,13 +45,9 @@ describe('resolveProjectModules', () => {
 
     await mkdir(workspacePath, { recursive: true })
 
-    const project = createProject([
-      { raw: 'apps', path: 'apps', mode: 'explicit' },
-    ])
+    const project = createProject([{ raw: 'apps', path: 'apps', mode: 'explicit' }])
 
-    await expect(
-      runSuccess(resolveProjectModules(project, workspacePath)),
-    ).resolves.toEqual([
+    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves.toEqual([
       {
         name: 'apps',
         path: 'apps',
@@ -79,9 +65,7 @@ describe('resolveProjectModules', () => {
 
     const project = createProject([{ raw: '.', path: '.', mode: 'explicit' }])
 
-    await expect(
-      runSuccess(resolveProjectModules(project, workspacePath)),
-    ).resolves.toEqual([
+    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves.toEqual([
       {
         name: '/',
         path: '.',
@@ -100,19 +84,11 @@ describe('resolveProjectModules', () => {
     await mkdir(path.join(workspacePath, 'apps', 'cli', 'nested'), {
       recursive: true,
     })
-    await writeFile(
-      path.join(workspacePath, 'apps', 'README.md'),
-      'docs\n',
-      'utf8',
-    )
+    await writeFile(path.join(workspacePath, 'apps', 'README.md'), 'docs\n', 'utf8')
 
-    const project = createProject([
-      { raw: 'apps/', path: 'apps', mode: 'children' },
-    ])
+    const project = createProject([{ raw: 'apps/', path: 'apps', mode: 'children' }])
 
-    await expect(
-      runSuccess(resolveProjectModules(project, workspacePath)),
-    ).resolves.toEqual([
+    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves.toEqual([
       {
         name: 'apps/cli',
         path: 'apps/cli',
@@ -147,9 +123,7 @@ describe('resolveProjectModules', () => {
       modules: [{ raw: 'packages/', path: 'packages', mode: 'children' }],
     }
 
-    await expect(
-      runSuccess(resolveProjectModules(project, workspacePath)),
-    ).resolves.toEqual([
+    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves.toEqual([
       {
         name: 'packages/config',
         path: 'packages/config',
@@ -171,13 +145,9 @@ describe('resolveProjectModules', () => {
 
     await mkdir(workspacePath, { recursive: true })
 
-    const project = createProject([
-      { raw: 'packages/', path: 'packages', mode: 'children' },
-    ])
+    const project = createProject([{ raw: 'packages/', path: 'packages', mode: 'children' }])
 
-    await expect(
-      runSuccess(resolveProjectModules(project, workspacePath)),
-    ).resolves.toEqual([])
+    await expect(runSuccess(resolveProjectModules(project, workspacePath))).resolves.toEqual([])
   })
 })
 
@@ -196,21 +166,19 @@ describe('scanProject', () => {
       modules: [{ raw: 'apps/', path: 'apps', mode: 'children' }],
     }
 
-    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual(
-      {
-        projectName: 'alpha',
-        repoPath,
-        workspacePath,
-        modules: [
-          {
-            name: 'apps/cli',
-            path: 'apps/cli',
-            workspacePath: path.join(workspacePath, 'apps', 'cli'),
-            selector: { raw: 'apps/', path: 'apps', mode: 'children' },
-          },
-        ],
-      },
-    )
+    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual({
+      projectName: 'alpha',
+      repoPath,
+      workspacePath,
+      modules: [
+        {
+          name: 'apps/cli',
+          path: 'apps/cli',
+          workspacePath: path.join(workspacePath, 'apps', 'cli'),
+          selector: { raw: 'apps/', path: 'apps', mode: 'children' },
+        },
+      ],
+    })
   })
 
   it('includes root module labels in scan output', async () => {
@@ -226,21 +194,19 @@ describe('scanProject', () => {
       modules: [{ raw: '.', path: '.', mode: 'explicit' }],
     }
 
-    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual(
-      {
-        projectName: 'alpha',
-        repoPath,
-        workspacePath,
-        modules: [
-          {
-            name: '/',
-            path: '.',
-            workspacePath,
-            selector: { raw: '.', path: '.', mode: 'explicit' },
-          },
-        ],
-      },
-    )
+    await expect(runScan(scanProject(project, workspacePath))).resolves.toEqual({
+      projectName: 'alpha',
+      repoPath,
+      workspacePath,
+      modules: [
+        {
+          name: '/',
+          path: '.',
+          workspacePath,
+          selector: { raw: '.', path: '.', mode: 'explicit' },
+        },
+      ],
+    })
   })
 })
 
@@ -282,9 +248,7 @@ describe('observeProject', () => {
         },
       ],
     })
-    expect([null, 'provider_not_found']).toContain(
-      observation.runtimeIssue?.code ?? null,
-    )
+    expect([null, 'provider_not_found']).toContain(observation.runtimeIssue?.code ?? null)
   })
 
   it('can run against a provided git service layer', async () => {
@@ -326,14 +290,10 @@ describe('observeProject', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(ScannerService, (service) =>
-          service.observeProject(project),
-        ).pipe(
+        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
-              Layer.provide(
-                Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
-              ),
+              Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
               Layer.provide(Layer.succeed(GitService, git)),
             ),
           ),
@@ -382,10 +342,7 @@ describe('observeProject', () => {
       inspectRepo: (repoPath) =>
         Effect.gen(function* () {
           activeInspections += 1
-          maxActiveInspections = Math.max(
-            maxActiveInspections,
-            activeInspections,
-          )
+          maxActiveInspections = Math.max(maxActiveInspections, activeInspections)
           yield* Effect.sleep('20 millis')
           activeInspections -= 1
 
@@ -406,14 +363,10 @@ describe('observeProject', () => {
     }
 
     const observations = await Effect.runPromise(
-      Effect.flatMap(ScannerService, (service) =>
-        service.observeProjects(projects),
-      ).pipe(
+      Effect.flatMap(ScannerService, (service) => service.observeProjects(projects)).pipe(
         Effect.provide(
           ScannerServiceLive.pipe(
-            Layer.provide(
-              Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
-            ),
+            Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
             Layer.provide(Layer.succeed(GitService, git)),
           ),
         ),
@@ -421,9 +374,11 @@ describe('observeProject', () => {
     )
 
     expect(maxActiveInspections).toBeGreaterThan(1)
-    expect(observations.map((observation) => observation.project.name)).toEqual(
-      ['alpha', 'beta', 'gamma'],
-    )
+    expect(observations.map((observation) => observation.project.name)).toEqual([
+      'alpha',
+      'beta',
+      'gamma',
+    ])
   })
 
   it('maps matching workspace and module runtimes', async () => {
@@ -482,14 +437,10 @@ describe('observeProject', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(ScannerService, (service) =>
-          service.observeProject(project),
-        ).pipe(
+        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
-              Layer.provide(
-                Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
-              ),
+              Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
               Layer.provide(
                 Layer.succeed(GitService, {
                   createWorktree: () => Effect.die('not used'),
@@ -637,14 +588,10 @@ describe('observeProject', () => {
     }
 
     const observation = await Effect.runPromise(
-      Effect.flatMap(ScannerService, (service) =>
-        service.observeProject(project),
-      ).pipe(
+      Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
         Effect.provide(
           ScannerServiceLive.pipe(
-            Layer.provide(
-              Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
-            ),
+            Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
             Layer.provide(Layer.succeed(GitService, git)),
           ),
         ),
@@ -711,14 +658,10 @@ describe('observeProject', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(ScannerService, (service) =>
-          service.observeProject(project),
-        ).pipe(
+        Effect.flatMap(ScannerService, (service) => service.observeProject(project)).pipe(
           Effect.provide(
             ScannerServiceLive.pipe(
-              Layer.provide(
-                Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
-              ),
+              Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
               Layer.provide(
                 Layer.succeed(GitService, {
                   createWorktree: () => Effect.die('not used'),
@@ -822,9 +765,7 @@ async function runObservation(effect: ReturnType<typeof observeProject>) {
       Effect.provide(
         ScannerServiceLive.pipe(
           Layer.provide(GitServiceLive),
-          Layer.provide(
-            Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery),
-          ),
+          Layer.provide(Layer.succeed(RuntimeDiscoveryService, runtimeDiscovery)),
         ),
       ),
     ),
@@ -832,9 +773,7 @@ async function runObservation(effect: ReturnType<typeof observeProject>) {
 }
 
 function observeProject(project: ProjectConfig) {
-  return Effect.flatMap(ScannerService, (service) =>
-    service.observeProject(project),
-  )
+  return Effect.flatMap(ScannerService, (service) => service.observeProject(project))
 }
 
 function createProject(modules: ProjectConfig['modules']): ProjectConfig {

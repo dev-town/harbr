@@ -57,29 +57,17 @@ describe('openRuntimeForTarget', () => {
         events,
       )
 
-      await openRuntimeForTarget(
-        services,
-        tuiStore,
-        target,
-        context,
-        undefined,
-        {
-          persistContext: async (_services, persistedContext) => {
-            expect(persistedContext).toEqual(context)
-            events.push('persist')
-          },
-          refresh: async () => {
-            events.push('refresh')
-          },
+      await openRuntimeForTarget(services, tuiStore, target, context, undefined, {
+        persistContext: async (_services, persistedContext) => {
+          expect(persistedContext).toEqual(context)
+          events.push('persist')
         },
-      )
+        refresh: async () => {
+          events.push('refresh')
+        },
+      })
 
-      expect(events).toEqual([
-        `open:${target.cwd}`,
-        'persist',
-        'refresh',
-        'shutdown',
-      ])
+      expect(events).toEqual([`open:${target.cwd}`, 'persist', 'refresh', 'shutdown'])
       expect(tuiStore.getState().surfaces.surface).toEqual({ kind: 'browser' })
       expect(tuiStore.getState().app.isLoading).toBe(false)
       expect(tuiStore.getState().app.notice).toBeNull()
@@ -250,14 +238,10 @@ describe('closeActiveRuntime', () => {
   })
 })
 
-function testServices(
-  open: Effect.Effect<unknown, RuntimeProviderError>,
-  events: string[],
-) {
+function testServices(open: Effect.Effect<unknown, RuntimeProviderError>, events: string[]) {
   const layer = Layer.succeed(RuntimeService, {
     closeRuntime: () => Effect.void,
-    createRuntimeWindows: () =>
-      Effect.succeed({ createdWindowNames: [], skippedWindowNames: [] }),
+    createRuntimeWindows: () => Effect.succeed({ createdWindowNames: [], skippedWindowNames: [] }),
     getCurrentRuntime: Effect.succeed(null),
     openOrCreateRuntime: () => open.pipe(Effect.asVoid),
     source,
@@ -277,15 +261,12 @@ function testServices(
 }
 
 function closeTestServices(
-  close: (
-    identity: RuntimeIdentity,
-  ) => Effect.Effect<void, RuntimeProviderError>,
+  close: (identity: RuntimeIdentity) => Effect.Effect<void, RuntimeProviderError>,
   runtimeSource: RuntimeIdentity['source'] = source,
 ) {
   const layer = Layer.succeed(RuntimeService, {
     closeRuntime: close,
-    createRuntimeWindows: () =>
-      Effect.succeed({ createdWindowNames: [], skippedWindowNames: [] }),
+    createRuntimeWindows: () => Effect.succeed({ createdWindowNames: [], skippedWindowNames: [] }),
     getCurrentRuntime: Effect.succeed(null),
     openOrCreateRuntime: () => Effect.void,
     source: runtimeSource,

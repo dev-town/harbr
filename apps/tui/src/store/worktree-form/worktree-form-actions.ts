@@ -4,10 +4,7 @@ import type { TuiStoreActions, TuiStoreGet, TuiStoreSet } from '~/store/types'
 export function createWorktreeFormActions(
   set: TuiStoreSet,
   get: TuiStoreGet,
-): Pick<
-  TuiStoreActions,
-  'backWorktreeForm' | 'closeWorktreeForm' | 'openCreateWorkspaceForm'
-> {
+): Pick<TuiStoreActions, 'backWorktreeForm' | 'closeWorktreeForm' | 'openCreateWorkspaceForm'> {
   return {
     backWorktreeForm: () => {
       const { worktreeForm } = get()

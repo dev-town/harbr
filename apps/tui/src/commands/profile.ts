@@ -67,13 +67,9 @@ function ensureProfileFiles() {
 }
 
 function runDockerCompose(args: string[]) {
-  const result = spawnSync(
-    'docker',
-    ['compose', '-f', composePath, '-p', projectName, ...args],
-    {
-      stdio: 'inherit',
-    },
-  )
+  const result = spawnSync('docker', ['compose', '-f', composePath, '-p', projectName, ...args], {
+    stdio: 'inherit',
+  })
 
   if (result.error) {
     console.error(`docker compose failed: ${result.error.message}`)

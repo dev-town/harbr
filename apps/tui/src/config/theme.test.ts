@@ -48,23 +48,17 @@ describe('theme config', () => {
   it('resolves static themes without querying terminal mode', async () => {
     const reader = makeThemeModeReader('light')
 
-    await expect(resolveTheme('tokyonight', reader)).resolves.toBe(
-      themeCatalog.tokyonight,
-    )
+    await expect(resolveTheme('tokyonight', reader)).resolves.toBe(themeCatalog.tokyonight)
     expect(reader.waitCount).toBe(0)
   })
 
   it('resolves system theme from terminal mode', async () => {
-    await expect(
-      resolveTheme('system', makeThemeModeReader('light')),
-    ).resolves.toMatchObject({
+    await expect(resolveTheme('system', makeThemeModeReader('light'))).resolves.toMatchObject({
       panel: '#ffffff',
       text: '#18181b',
     })
 
-    await expect(
-      resolveTheme('system', makeThemeModeReader('dark')),
-    ).resolves.toMatchObject({
+    await expect(resolveTheme('system', makeThemeModeReader('dark'))).resolves.toMatchObject({
       border: '#6b7280',
       panel: '#171717',
       text: '#e5e7eb',
@@ -72,9 +66,7 @@ describe('theme config', () => {
   })
 
   it('falls back to dark system theme when terminal mode is unavailable', async () => {
-    await expect(
-      resolveTheme('system', makeThemeModeReader(null)),
-    ).resolves.toMatchObject({
+    await expect(resolveTheme('system', makeThemeModeReader(null))).resolves.toMatchObject({
       border: '#6b7280',
       panel: '#171717',
       text: '#e5e7eb',
@@ -94,9 +86,9 @@ describe('theme config', () => {
   })
 
   it('keeps catppuccin distinct from the dark system fallback', async () => {
-    await expect(
-      resolveTheme('system', makeThemeModeReader('dark')),
-    ).resolves.not.toMatchObject(themeCatalog.catppuccin)
+    await expect(resolveTheme('system', makeThemeModeReader('dark'))).resolves.not.toMatchObject(
+      themeCatalog.catppuccin,
+    )
   })
 
   it('updates the active exported theme in place', () => {

@@ -60,20 +60,14 @@ function resolveInitialSelectedId<T extends ActionItemBase>(
   items: readonly T[],
   initialSelectedId?: string | null,
 ) {
-  if (
-    initialSelectedId &&
-    items.some((item) => item.id === initialSelectedId)
-  ) {
+  if (initialSelectedId && items.some((item) => item.id === initialSelectedId)) {
     return initialSelectedId
   }
 
   return items[0]?.id ?? null
 }
 
-function getIndexForItemId(
-  items: readonly ActionItemBase[],
-  itemId: string | null,
-) {
+function getIndexForItemId(items: readonly ActionItemBase[], itemId: string | null) {
   if (items.length === 0) {
     return 0
   }

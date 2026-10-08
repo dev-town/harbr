@@ -5,15 +5,11 @@ export class DatabaseOpenError extends Data.TaggedError('DatabaseOpenError')<{
   message: string
 }> {}
 
-export class DatabaseMigrationError extends Data.TaggedError(
-  'DatabaseMigrationError',
-)<{
+export class DatabaseMigrationError extends Data.TaggedError('DatabaseMigrationError')<{
   message: string
 }> {}
 
-export class ProjectServiceError extends Data.TaggedError(
-  'ProjectServiceError',
-)<{
+export class ProjectServiceError extends Data.TaggedError('ProjectServiceError')<{
   operation:
     | 'findByName'
     | 'listActiveRuntimeSummaries'

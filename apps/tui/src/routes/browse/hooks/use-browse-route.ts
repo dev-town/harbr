@@ -25,15 +25,7 @@ export function useBrowseRoute() {
   const visibility = useTuiStore((state) => state.browse.visibility)
   const rows = useMemo(
     () => selectVisibleBrowseRows(tuiStore.getState()),
-    [
-      currentRuntime,
-      moduleRows,
-      projectRows,
-      query,
-      scope,
-      visibility,
-      workspaceRows,
-    ],
+    [currentRuntime, moduleRows, projectRows, query, scope, visibility, workspaceRows],
   )
   const selectedRow = useMemo(
     () => rows.find((row) => row.id === selectedId) ?? null,

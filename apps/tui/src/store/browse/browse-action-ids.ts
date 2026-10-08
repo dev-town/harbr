@@ -9,5 +9,4 @@ export const browseActionIds = {
   openWorkspaceRoot: 'action.open_workspace_root',
 } as const
 
-export type BrowseActionId =
-  (typeof browseActionIds)[keyof typeof browseActionIds]
+export type BrowseActionId = (typeof browseActionIds)[keyof typeof browseActionIds]

@@ -14,11 +14,7 @@ export type StartupEvent = {
 
 export type StartupTimeline = {
   events(): readonly StartupEvent[]
-  mark(
-    name: string,
-    attributes?: StartupEventAttributes,
-    markedAt?: number,
-  ): void
+  mark(name: string, attributes?: StartupEventAttributes, markedAt?: number): void
   timing: StartupTiming
 }
 

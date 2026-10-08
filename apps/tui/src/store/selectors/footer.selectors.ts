@@ -15,9 +15,7 @@ export function selectEffectiveVisibility(state: TuiStoreModel) {
     return 'all'
   }
 
-  return selectVisibleBrowseRows(state).some((row) => row.isActive)
-    ? 'active'
-    : 'all'
+  return selectVisibleBrowseRows(state).some((row) => row.isActive) ? 'active' : 'all'
 }
 
 export function selectFooterHints(state: TuiStoreModel) {

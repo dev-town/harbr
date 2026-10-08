@@ -10,18 +10,10 @@ import {
   InvalidJsonError,
 } from '../config.errors'
 import type { HarbourConfigError, HarbourConfigIssue } from '../config.errors'
-import {
-  normalizeModuleSelector,
-  isWithinParent,
-  mapSchemaIssue,
-} from '../config.normalize'
+import { normalizeModuleSelector, isWithinParent, mapSchemaIssue } from '../config.normalize'
 import { getDefaultConfigPath, resolveTopLevelPath } from '../config.path'
 import { configSchema, type HarbourConfigInput } from '../schema'
-import {
-  ConfigService,
-  ConfigServiceOptions,
-  type ConfigServiceApi,
-} from './config.service'
+import { ConfigService, ConfigServiceOptions, type ConfigServiceApi } from './config.service'
 import type { HarbourConfig, HarbourProject } from '../config.types'
 
 export const ConfigServiceOptionsLive = Layer.succeed(ConfigServiceOptions, {
@@ -44,9 +36,7 @@ function loadConfigFile(configPath: string) {
   const resolvedConfigPath = resolveTopLevelPath(configPath)
 
   return Effect.gen(function* () {
-    const configExists = yield* Effect.promise(() =>
-      pathExists(resolvedConfigPath),
-    )
+    const configExists = yield* Effect.promise(() => pathExists(resolvedConfigPath))
 
     if (!configExists) {
       return yield* Effect.fail(
@@ -89,10 +79,7 @@ function loadConfigFile(configPath: string) {
     const projects: HarbourProject[] = []
     const issues: HarbourConfigIssue[] = []
 
-    for (const [
-      projectIndex,
-      project,
-    ] of parsedConfig.data.projects.entries()) {
+    for (const [projectIndex, project] of parsedConfig.data.projects.entries()) {
       const repoPath = resolveTopLevelPath(project.repo)
 
       if (!(yield* Effect.promise(() => isDirectory(repoPath)))) {
@@ -108,14 +95,9 @@ function loadConfigFile(configPath: string) {
 
       const modules: ModuleSelector[] = []
 
-      for (const [moduleIndex, moduleSelector] of (
-        project.modules ?? []
-      ).entries()) {
+      for (const [moduleIndex, moduleSelector] of (project.modules ?? []).entries()) {
         const normalizedSelector = normalizeModuleSelector(moduleSelector)
-        const absoluteModulePath = path.resolve(
-          repoPath,
-          normalizedSelector.path,
-        )
+        const absoluteModulePath = path.resolve(repoPath, normalizedSelector.path)
 
         if (!isWithinParent(repoPath, absoluteModulePath)) {
           issues.push({
@@ -164,9 +146,7 @@ function loadConfigFile(configPath: string) {
       configPath: resolvedConfigPath,
       projects,
       theme: parsedConfig.data.theme ?? 'system',
-      ...(parsedConfig.data.$schema
-        ? { $schema: parsedConfig.data.$schema }
-        : {}),
+      ...(parsedConfig.data.$schema ? { $schema: parsedConfig.data.$schema } : {}),
     } satisfies HarbourConfig
   }).pipe(
     Effect.withSpan('config.load', {
@@ -253,10 +233,7 @@ function appendResolvedWindow(input: {
   input.resolvedWindows.push(input.window)
 }
 
-function resolveGlobalWindow(
-  globalWindows: readonly WindowConfig[],
-  windowName: string,
-) {
+function resolveGlobalWindow(globalWindows: readonly WindowConfig[], windowName: string) {
   return globalWindows.find((window) => window.name === windowName) ?? null
 }
 

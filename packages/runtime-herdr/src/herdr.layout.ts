@@ -31,12 +31,8 @@ export function createHerdrRuntimeWindows(
 ) {
   return Effect.gen(function* () {
     let snapshot = yield* readSnapshot(client)
-    const existingRuntime = normalizeHerdrSnapshot(
-      snapshot,
-      source,
-    ).runtimes.find(
-      (runtime) =>
-        canonicalPath(runtime.contextPath) === canonicalPath(input.target.cwd),
+    const existingRuntime = normalizeHerdrSnapshot(snapshot, source).runtimes.find(
+      (runtime) => canonicalPath(runtime.contextPath) === canonicalPath(input.target.cwd),
     )
     let workspaceId = existingRuntime?.identity.externalId
     let initialSurface: CreatedHerdrSurface | null = null
@@ -58,9 +54,7 @@ export function createHerdrRuntimeWindows(
       workspaceId = initialSurface.workspaceId
 
       if (!workspaceId) {
-        return yield* Effect.fail(
-          new Error('Herdr workspace creation response is missing an ID'),
-        )
+        return yield* Effect.fail(new Error('Herdr workspace creation response is missing an ID'))
       }
 
       snapshot = yield* readSnapshot(client)
@@ -70,11 +64,7 @@ export function createHerdrRuntimeWindows(
 
     const existingTabNames = new Set(
       snapshot.tabs
-        .filter(
-          (tab) =>
-            tab.workspace_id === workspaceId &&
-            tab.tab_id !== initialSurface?.tabId,
-        )
+        .filter((tab) => tab.workspace_id === workspaceId && tab.tab_id !== initialSurface?.tabId)
         .map((tab) => tab.label),
     )
     const createdWindowNames: string[] = []
@@ -88,16 +78,10 @@ export function createHerdrRuntimeWindows(
       }
 
       const firstPane = window.panes[0]
-      const firstPaneCwd = resolveRuntimePaneCwd(
-        input.target.cwd,
-        firstPane?.cwd,
-      )
+      const firstPaneCwd = resolveRuntimePaneCwd(input.target.cwd, firstPane?.cwd)
       let surface: CreatedHerdrSurface
 
-      if (
-        unusedInitialSurface &&
-        canonicalPath(firstPaneCwd) === canonicalPath(input.target.cwd)
-      ) {
+      if (unusedInitialSurface && canonicalPath(firstPaneCwd) === canonicalPath(input.target.cwd)) {
         surface = unusedInitialSurface
         unusedInitialSurface = null
         yield* client.execute(['tab', 'rename', surface.tabId, window.name])
@@ -190,11 +174,7 @@ function configureTab(
   })
 }
 
-function configurePane(
-  client: HerdrClientApi,
-  paneId: string,
-  pane: WindowPaneConfig,
-) {
+function configurePane(client: HerdrClientApi, paneId: string, pane: WindowPaneConfig) {
   return Effect.gen(function* () {
     yield* client.execute(['pane', 'rename', paneId, pane.name])
 
@@ -209,8 +189,7 @@ function readSnapshot(client: HerdrClientApi) {
     Effect.flatMap((stdout) =>
       Effect.try({
         try: () => readHerdrSessionSnapshot(JSON.parse(stdout) as unknown),
-        catch: (error) =>
-          error instanceof Error ? error : new Error(String(error)),
+        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       }),
     ),
   )
@@ -225,8 +204,7 @@ function executeAndRead(
     Effect.flatMap((stdout) =>
       Effect.try({
         try: () => read(JSON.parse(stdout) as unknown),
-        catch: (error) =>
-          error instanceof Error ? error : new Error(String(error)),
+        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       }),
     ),
   )
@@ -288,9 +266,7 @@ function findReusableInitialSurface(
   workspaceId: string,
 ): CreatedHerdrSurface | null {
   const tabs = snapshot.tabs.filter((tab) => tab.workspace_id === workspaceId)
-  const panes = snapshot.panes.filter(
-    (pane) => pane.workspace_id === workspaceId,
-  )
+  const panes = snapshot.panes.filter((pane) => pane.workspace_id === workspaceId)
   const tab = tabs[0]
   const pane = panes[0]
 

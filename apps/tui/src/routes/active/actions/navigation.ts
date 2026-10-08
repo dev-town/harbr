@@ -29,10 +29,7 @@ export function handleActiveRouteBack(store: TuiStore) {
   store.getState().clearNotice()
 }
 
-export function handleActiveRouteSelect(
-  services: TuiServices,
-  store: TuiStore,
-) {
+export function handleActiveRouteSelect(services: TuiServices, store: TuiStore) {
   const row = selectSelectedActiveRow(store.getState())
 
   if (!row) {

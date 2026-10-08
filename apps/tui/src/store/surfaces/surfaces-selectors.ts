@@ -18,17 +18,11 @@ export function selectIsActionsOpen(state: TuiStoreModel) {
 }
 
 export function selectIsActiveActionsOpen(state: TuiStoreModel) {
-  return (
-    state.surfaces.surface.kind === 'actions' &&
-    state.surfaces.surface.route === 'active'
-  )
+  return state.surfaces.surface.kind === 'actions' && state.surfaces.surface.route === 'active'
 }
 
 export function selectIsBrowseActionsOpen(state: TuiStoreModel) {
-  return (
-    state.surfaces.surface.kind === 'actions' &&
-    state.surfaces.surface.route === 'browse'
-  )
+  return state.surfaces.surface.kind === 'actions' && state.surfaces.surface.route === 'browse'
 }
 
 export function selectIsHelpOpen(state: TuiStoreModel) {
@@ -43,9 +37,7 @@ export function selectIsWindowPickerOpen(state: TuiStoreModel) {
   return state.surfaces.surface.kind === 'window-picker'
 }
 
-export function selectActiveActionRows(
-  state: TuiStoreModel,
-): readonly ActiveActionRow[] {
+export function selectActiveActionRows(state: TuiStoreModel): readonly ActiveActionRow[] {
   const target = selectSelectedActiveRow(state)
 
   if (!target) {
@@ -65,9 +57,7 @@ export function selectActiveActionRows(
       actionId: activeActionIds.closeRuntimeSession,
       ...(target.isCurrent
         ? {
-            disabledNotice: getCannotCloseCurrentRuntimeNotice(
-              target.runtime.identity,
-            ),
+            disabledNotice: getCannotCloseCurrentRuntimeNotice(target.runtime.identity),
           }
         : {}),
       id: `action.close:${target.id}`,
@@ -99,8 +89,8 @@ function makeActiveWindowActionRows(
 
 function hasProjectWindows(state: TuiStoreModel, projectId: string) {
   return (
-    (state.data.projectWindows.find((entry) => entry.projectId === projectId)
-      ?.windows.length ?? 0) > 0
+    (state.data.projectWindows.find((entry) => entry.projectId === projectId)?.windows.length ??
+      0) > 0
   )
 }
 

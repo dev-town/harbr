@@ -3,7 +3,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { format } from 'prettier'
+import { format } from 'oxfmt'
 import { z } from 'zod'
 import { configSchema } from '../src/schema'
 
@@ -12,20 +12,21 @@ type JsonObject = Record<string, unknown>
 const schemaPath = join(import.meta.dirname, '..', 'harbr.schema.json')
 const checkOnly = process.argv.includes('--check')
 
-const { ['~standard']: _standard, ...generatedSchema } = z.toJSONSchema(
-  configSchema,
-  {
-    io: 'input',
-    target: 'draft-2020-12',
-  },
-)
+const { ['~standard']: _standard, ...generatedSchema } = z.toJSONSchema(configSchema, {
+  io: 'input',
+  target: 'draft-2020-12',
+})
 
 const schema = withClosedObjects({
   $id: 'https://raw.githubusercontent.com/dev-town/harbr/main/packages/config/harbr.schema.json',
   title: 'Harbr Config',
   ...generatedSchema,
 })
-const serialized = await format(JSON.stringify(schema), { parser: 'json' })
+const { code: serialized } = await format('harbr.schema.json', JSON.stringify(schema), {
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'all',
+})
 
 if (checkOnly) {
   const current = await readFile(schemaPath, 'utf8')

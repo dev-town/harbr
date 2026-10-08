@@ -1,22 +1,14 @@
 import { Context, type Effect } from 'effect'
 import type { CreateWorktreeInput } from '@harbr/domain'
-import type {
-  RepoNotGitError,
-  RepoInspectionError,
-  WorktreeMutationError,
-} from '../git.errors'
+import type { RepoNotGitError, RepoInspectionError, WorktreeMutationError } from '../git.errors'
 import type { RepoInspection, WorkspaceTarget } from '../git.types'
 
 export type GitServiceApi = {
   readonly getDefaultBranchIssue: (
     repo: RepoInspection,
   ) => Effect.Effect<string | null, RepoNotGitError>
-  readonly inspectRepo: (
-    repoPath: string,
-  ) => Effect.Effect<RepoInspection, RepoInspectionError>
-  readonly getDefaultBranch: (
-    repo: RepoInspection,
-  ) => Effect.Effect<string, WorktreeMutationError>
+  readonly inspectRepo: (repoPath: string) => Effect.Effect<RepoInspection, RepoInspectionError>
+  readonly getDefaultBranch: (repo: RepoInspection) => Effect.Effect<string, WorktreeMutationError>
   readonly listWorkspaces: (
     repo: RepoInspection,
   ) => Effect.Effect<WorkspaceTarget[], RepoNotGitError>
@@ -29,7 +21,4 @@ export type GitServiceApi = {
   ) => Effect.Effect<string | null, RepoNotGitError>
 }
 
-export class GitService extends Context.Tag('@harbr/git/GitService')<
-  GitService,
-  GitServiceApi
->() {}
+export class GitService extends Context.Tag('@harbr/git/GitService')<GitService, GitServiceApi>() {}

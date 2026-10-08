@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  getCannotCloseCurrentRuntimeNotice,
-  getCloseRuntimeLabel,
-} from './runtime-terminology'
+import { getCannotCloseCurrentRuntimeNotice, getCloseRuntimeLabel } from './runtime-terminology'
 
 describe('runtime terminology', () => {
   it('describes Herdr runtimes as workspaces', () => {
@@ -14,9 +11,7 @@ describe('runtime terminology', () => {
     }
 
     expect(getCloseRuntimeLabel(identity)).toBe('Close workspace')
-    expect(getCannotCloseCurrentRuntimeNotice(identity)).toBe(
-      'Cannot close current workspace',
-    )
+    expect(getCannotCloseCurrentRuntimeNotice(identity)).toBe('Cannot close current workspace')
   })
 
   it('preserves tmux session wording', () => {
@@ -27,8 +22,6 @@ describe('runtime terminology', () => {
     }
 
     expect(getCloseRuntimeLabel(identity)).toBe('Close session')
-    expect(getCannotCloseCurrentRuntimeNotice(identity)).toBe(
-      'Cannot close current session',
-    )
+    expect(getCannotCloseCurrentRuntimeNotice(identity)).toBe('Cannot close current session')
   })
 })

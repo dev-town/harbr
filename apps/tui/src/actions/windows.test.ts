@@ -1,9 +1,6 @@
 import type { ResolvedContextTarget } from '@harbr/domain'
 import { RuntimeProviderError, RuntimeService } from '@harbr/runtime'
-import {
-  runtimeLayoutTargetFixture,
-  runtimeLayoutWindowsFixture,
-} from '@harbr/test-utils'
+import { runtimeLayoutTargetFixture, runtimeLayoutWindowsFixture } from '@harbr/test-utils'
 import { Effect, Layer } from 'effect'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -48,20 +45,14 @@ describe('createWindowsForContext', () => {
       events,
     )
 
-    await createWindowsForContext(
-      services,
-      tuiStore,
-      target,
-      runtimeLayoutWindowsFixture,
-      {
-        persistContext: async () => {
-          events.push('persist')
-        },
-        refresh: async () => {
-          events.push('refresh')
-        },
+    await createWindowsForContext(services, tuiStore, target, runtimeLayoutWindowsFixture, {
+      persistContext: async () => {
+        events.push('persist')
       },
-    )
+      refresh: async () => {
+        events.push('refresh')
+      },
+    })
 
     expect(events).toEqual(['create', 'persist', 'refresh', 'shutdown'])
     expect(tuiStore.getState().surfaces.surface).toEqual({ kind: 'browser' })
@@ -78,20 +69,14 @@ describe('createWindowsForContext', () => {
       events,
     )
 
-    await createWindowsForContext(
-      services,
-      tuiStore,
-      target,
-      runtimeLayoutWindowsFixture,
-      {
-        persistContext: async () => {
-          events.push('persist')
-        },
-        refresh: async () => {
-          events.push('refresh')
-        },
+    await createWindowsForContext(services, tuiStore, target, runtimeLayoutWindowsFixture, {
+      persistContext: async () => {
+        events.push('persist')
       },
-    )
+      refresh: async () => {
+        events.push('refresh')
+      },
+    })
 
     expect(events).toEqual(['create', 'persist', 'refresh'])
     expect(tuiStore.getState().surfaces.surface.kind).toBe('window-picker')
@@ -115,18 +100,12 @@ describe('createWindowsForContext', () => {
       events,
     )
 
-    await createWindowsForContext(
-      services,
-      tuiStore,
-      target,
-      runtimeLayoutWindowsFixture,
-      {
-        persistContext: persist,
-        refresh: async () => {
-          events.push('refresh')
-        },
+    await createWindowsForContext(services, tuiStore, target, runtimeLayoutWindowsFixture, {
+      persistContext: persist,
+      refresh: async () => {
+        events.push('refresh')
       },
-    )
+    })
 
     expect(persist).not.toHaveBeenCalled()
     expect(events).toEqual(['create', 'refresh'])

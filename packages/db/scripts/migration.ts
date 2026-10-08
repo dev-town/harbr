@@ -3,7 +3,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
-import { format } from 'prettier'
+import { format } from 'oxfmt'
 
 const packageRoot = path.resolve(import.meta.dirname, '..')
 const drizzleDir = path.join(packageRoot, 'drizzle')
@@ -39,9 +39,7 @@ for (const entry of journal.entries) {
 
 expectedFiles.set(
   registryPath,
-  await formatTypeScript(
-    renderRegistry(journal.entries.map((entry) => entry.tag)),
-  ),
+  await formatTypeScript(renderRegistry(journal.entries.map((entry) => entry.tag))),
 )
 
 if (args.values.check) {
@@ -68,10 +66,7 @@ async function check(files: Map<string, string>) {
   }
 }
 
-function renderMigration(
-  entry: { breakpoints: boolean; tag: string; when: number },
-  sql: string,
-) {
+function renderMigration(entry: { breakpoints: boolean; tag: string; when: number }, sql: string) {
   return `import type { EmbeddedMigrationSource } from '../migrations.types'
 
 export default {
@@ -95,9 +90,10 @@ ${tags.map((tag) => `    import('./migrations/${tag}'),`).join('\n')}
 }
 
 async function formatTypeScript(contents: string) {
-  return format(contents, {
-    parser: 'typescript',
+  const { code } = await format('migration.ts', contents, {
     semi: false,
     singleQuote: true,
+    trailingComma: 'all',
   })
+  return code
 }

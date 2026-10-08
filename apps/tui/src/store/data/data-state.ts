@@ -1,11 +1,6 @@
 import type { WindowConfig } from '@harbr/domain'
 
-import type {
-  HarbourRow,
-  ModuleRow,
-  ProjectRow,
-  WorkspaceRow,
-} from '~/types/rows'
+import type { HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
 
 export type ProjectWindowConfig = {
   projectId: string

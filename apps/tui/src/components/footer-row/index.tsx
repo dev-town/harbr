@@ -1,10 +1,6 @@
 import { theme } from '~/config/theme'
 import { noticeIcon, type NoticeLevel } from '~/types/notice'
-import {
-  selectBreadcrumb,
-  selectEffectiveVisibility,
-  useTuiStore,
-} from '~/store'
+import { selectBreadcrumb, selectEffectiveVisibility, useTuiStore } from '~/store'
 import { breadcrumbLabel } from './utils/breadcrumb-label'
 import { visibilityColor } from './utils/visibility-color'
 
@@ -34,20 +30,15 @@ export function FooterRow() {
         {notice ? (
           <span fg={noticeColor(notice.level)}>
             {' '}
-            {noticeIcon(notice.level)} {noticeLabel(notice.level)}{' '}
-            {notice.message}
+            {noticeIcon(notice.level)} {noticeLabel(notice.level)} {notice.message}
           </span>
         ) : (
           <span fg={theme.muted}> {breadcrumbLabel(breadcrumb)}</span>
         )}
       </text>
       <text>
-        <span fg={theme.active}>
-          {interactionMode === 'input' ? 'Esc' : 'i'}
-        </span>
-        <span fg={theme.muted}>
-          {interactionMode === 'input' ? ' Normal' : ' Search'}
-        </span>
+        <span fg={theme.active}>{interactionMode === 'input' ? 'Esc' : 'i'}</span>
+        <span fg={theme.muted}>{interactionMode === 'input' ? ' Normal' : ' Search'}</span>
         <span fg={theme.muted}> </span>
         <span fg={theme.active}>?</span>
         <span fg={theme.muted}> Help</span>

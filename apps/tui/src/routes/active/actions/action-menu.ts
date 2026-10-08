@@ -23,9 +23,7 @@ export function handleActiveActionSelect(
   }
 
   if (row.actionId === activeActionIds.createRuntimeWindows) {
-    store
-      .getState()
-      .openWindowPicker(row.target.target, row.target.target.breadcrumb)
+    store.getState().openWindowPicker(row.target.target, row.target.target.breadcrumb)
     return
   }
 

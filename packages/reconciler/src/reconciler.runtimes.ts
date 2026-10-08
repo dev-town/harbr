@@ -12,9 +12,7 @@ export function stabilizeRuntimeFacts(
   existing: readonly ActiveRuntimeSummary[],
 ): readonly ProjectObservationResult[] {
   const successful = observations.flatMap((observation) =>
-    Either.isRight(observation.result)
-      ? [{ value: observation.result.right }]
-      : [],
+    Either.isRight(observation.result) ? [{ value: observation.result.right }] : [],
   )
   const first = successful[0]?.value
 
@@ -23,10 +21,7 @@ export function stabilizeRuntimeFacts(
   }
 
   const observedById = new Map(
-    first.observedRuntimes.map((runtime) => [
-      runtime.identity.externalId,
-      runtime,
-    ]),
+    first.observedRuntimes.map((runtime) => [runtime.identity.externalId, runtime]),
   )
   const existingById = new Map(
     existing.map((runtime) => [runtime.runtime.identity.externalId, runtime]),
@@ -56,10 +51,7 @@ export function stabilizeRuntimeFacts(
     const newRuntimes = value.runtimes.filter((runtime) => {
       const externalId = runtime.identity.externalId
 
-      return (
-        !existingById.has(externalId) &&
-        candidateTargets.get(externalId)?.size === 1
-      )
+      return !existingById.has(externalId) && candidateTargets.get(externalId)?.size === 1
     })
     const preservedRuntimes = existing.flatMap((runtime) => {
       const observed = observedById.get(runtime.runtime.identity.externalId)
@@ -81,10 +73,7 @@ export function stabilizeRuntimeFacts(
   })
 }
 
-function runtimeTargetExists(
-  runtime: ActiveRuntimeSummary,
-  observation: ProjectObservation,
-) {
+function runtimeTargetExists(runtime: ActiveRuntimeSummary, observation: ProjectObservation) {
   if (runtime.scope === 'project') {
     return true
   }
@@ -118,7 +107,5 @@ function runtimeSummaryToFact(
 }
 
 function runtimeTargetKey(runtime: RuntimeFact) {
-  return [runtime.projectName, runtime.workspaceName, runtime.moduleName].join(
-    '\u0000',
-  )
+  return [runtime.projectName, runtime.workspaceName, runtime.moduleName].join('\u0000')
 }

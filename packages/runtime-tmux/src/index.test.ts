@@ -7,10 +7,7 @@ import {
   normalizeRuntimePaneCommands,
   resolveRuntimePaneCwd,
 } from '@harbr/runtime'
-import {
-  runtimeLayoutTargetFixture,
-  runtimeLayoutWindowsFixture,
-} from '@harbr/test-utils'
+import { runtimeLayoutTargetFixture, runtimeLayoutWindowsFixture } from '@harbr/test-utils'
 
 import type {
   CreateRuntimeWindowsResult,
@@ -24,11 +21,7 @@ import {
   parseSessionName,
 } from './session-name.util'
 import { classifyRuntimeDiscoveryIssue } from './runtime-tmux.discovery'
-import {
-  getTmuxRuntimeSource,
-  RuntimeDiscoveryServiceLive,
-  RuntimeServiceLive,
-} from './index'
+import { getTmuxRuntimeSource, RuntimeDiscoveryServiceLive, RuntimeServiceLive } from './index'
 
 const source = { provider: 'tmux', sourceId: '/tmp/tmux/default' }
 
@@ -77,9 +70,7 @@ describe('parseSessionName', () => {
       moduleName: 'apps/__generated.test%ok',
     })
 
-    expect(sessionName).toBe(
-      'alpha~~feature/__fixtures~3amain~~apps/__generated~2etest~25ok',
-    )
+    expect(sessionName).toBe('alpha~~feature/__fixtures~3amain~~apps/__generated~2etest~25ok')
     expect(parseSessionName(sessionName, source)).toEqual({
       identity: identity(sessionName),
       scope: 'module',
@@ -203,9 +194,7 @@ describe('listRuntimes', () => {
         'error connecting to /private/tmp/tmux-501/default (Operation not permitted)',
       ),
     ).toBe('source_unavailable')
-    expect(classifyRuntimeDiscoveryIssue('unexpected tmux failure')).toBe(
-      undefined,
-    )
+    expect(classifyRuntimeDiscoveryIssue('unexpected tmux failure')).toBe(undefined)
   })
 
   it('returns provided runtime discovery from the service layer', async () => {
@@ -230,10 +219,9 @@ describe('listRuntimes', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(
-          RuntimeDiscoveryService,
-          (service) => service.listRuntimes,
-        ).pipe(Effect.provide(layer)),
+        Effect.flatMap(RuntimeDiscoveryService, (service) => service.listRuntimes).pipe(
+          Effect.provide(layer),
+        ),
       ),
     ).resolves.toEqual(discovery)
   })
@@ -264,10 +252,9 @@ describe('getCurrentRuntime', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(
-          RuntimeService,
-          (service) => service.getCurrentRuntime,
-        ).pipe(Effect.provide(layer)),
+        Effect.flatMap(RuntimeService, (service) => service.getCurrentRuntime).pipe(
+          Effect.provide(layer),
+        ),
       ),
     ).resolves.toEqual(currentRuntime)
   })

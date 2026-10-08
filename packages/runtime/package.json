@@ -14,8 +14,6 @@
     "@harbr/test-utils": "workspace:*"
   },
   "scripts": {
-    "lint": "eslint src --max-warnings=0",
-    "lint:fix": "eslint src --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }

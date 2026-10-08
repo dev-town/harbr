@@ -17,23 +17,19 @@ export class HerdrUnavailable extends Error {
 }
 
 export type HerdrClientApi = {
-  readonly execute: (
-    args: readonly string[],
-  ) => Effect.Effect<string, HerdrUnavailable>
+  readonly execute: (args: readonly string[]) => Effect.Effect<string, HerdrUnavailable>
 }
 
-export class HerdrClient extends Context.Tag(
-  '@harbr/runtime-herdr/HerdrClient',
-)<HerdrClient, HerdrClientApi>() {}
+export class HerdrClient extends Context.Tag('@harbr/runtime-herdr/HerdrClient')<
+  HerdrClient,
+  HerdrClientApi
+>() {}
 
 export const HerdrClientLive = Layer.succeed(HerdrClient, {
   execute: (args) =>
     Effect.tryPromise({
       try: async () => {
-        const { stdout } = await execFileAsync(
-          process.env.HERDR_BIN_PATH || 'herdr',
-          [...args],
-        )
+        const { stdout } = await execFileAsync(process.env.HERDR_BIN_PATH || 'herdr', [...args])
 
         return stdout
       },

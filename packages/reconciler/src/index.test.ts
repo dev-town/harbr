@@ -12,10 +12,7 @@ import {
 } from '@harbr/db'
 import { type ProjectConfig, type ProjectObservation } from '@harbr/domain'
 import { GitServiceLive, RepoNotGitError } from '@harbr/git'
-import {
-  RuntimeDiscoveryService,
-  type RuntimeDiscoveryServiceApi,
-} from '@harbr/runtime/discovery'
+import { RuntimeDiscoveryService, type RuntimeDiscoveryServiceApi } from '@harbr/runtime/discovery'
 import { Effect, Either, Layer } from 'effect'
 import { ScannerService, ScannerServiceLive } from '@harbr/scanner'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -28,9 +25,7 @@ const runtimeSource = { provider: 'tmux', sourceId: 'test' }
 
 afterEach(async () => {
   await Promise.all(
-    tempRoots
-      .splice(0)
-      .map((tempRoot) => rm(tempRoot, { recursive: true, force: true })),
+    tempRoots.splice(0).map((tempRoot) => rm(tempRoot, { recursive: true, force: true })),
   )
 })
 
@@ -80,9 +75,9 @@ describe('reconciler', () => {
       runtimeSource,
     }
     await Effect.runPromise(
-      Effect.flatMap(ReconcilerService, (service) =>
-        service.refreshProject(project),
-      ).pipe(Effect.provide(layer)),
+      Effect.flatMap(ReconcilerService, (service) => service.refreshProject(project)).pipe(
+        Effect.provide(layer),
+      ),
     )
 
     observation = {
@@ -114,9 +109,9 @@ describe('reconciler', () => {
       runtimeSource: otherSource,
     }
     await Effect.runPromise(
-      Effect.flatMap(ReconcilerService, (service) =>
-        service.refreshProject(project),
-      ).pipe(Effect.provide(layer)),
+      Effect.flatMap(ReconcilerService, (service) => service.refreshProject(project)).pipe(
+        Effect.provide(layer),
+      ),
     )
 
     const summaries = await Effect.runPromise(
@@ -136,12 +131,8 @@ describe('reconciler', () => {
       externalId: 'alpha',
       source: runtimeSource,
     })
-    expect(summaries.otherActive[0]?.runtime.identity.source).toEqual(
-      otherSource,
-    )
-    expect(summaries.otherBrowse[0]?.runtime?.identity.externalId).toBe(
-      'alpha-other',
-    )
+    expect(summaries.otherActive[0]?.runtime.identity.source).toEqual(otherSource)
+    expect(summaries.otherBrowse[0]?.runtime?.identity.externalId).toBe('alpha-other')
   })
 
   it('syncs configured projects and persists snapshots', async () => {
@@ -154,9 +145,9 @@ describe('reconciler', () => {
     const projects = [createProjectConfig('alpha', repoPath, 'apps/')]
 
     const result = await Effect.runPromise(
-      Effect.flatMap(ReconcilerService, (service) =>
-        service.syncProjects(projects),
-      ).pipe(Effect.provide(makeTestReconcilerLayer(dbPath))),
+      Effect.flatMap(ReconcilerService, (service) => service.syncProjects(projects)).pipe(
+        Effect.provide(makeTestReconcilerLayer(dbPath)),
+      ),
     )
 
     expect(result.projects).toHaveLength(1)
@@ -169,14 +160,12 @@ describe('reconciler', () => {
       status: 'synced',
       errorTag: null,
     })
-    expect([null, 'provider_not_found']).toContain(
-      result.projects[0]?.runtimeIssue?.code ?? null,
-    )
+    expect([null, 'provider_not_found']).toContain(result.projects[0]?.runtimeIssue?.code ?? null)
 
     const project = await Effect.runPromise(
-      Effect.flatMap(ProjectService, (service) =>
-        service.findByName('alpha'),
-      ).pipe(Effect.provide(makeTestProjectServiceLayer(dbPath))),
+      Effect.flatMap(ProjectService, (service) => service.findByName('alpha')).pipe(
+        Effect.provide(makeTestProjectServiceLayer(dbPath)),
+      ),
     )
 
     expect(project?.repoPath).toBe(repoPath)
@@ -228,27 +217,21 @@ describe('reconciler', () => {
     )
 
     await Effect.runPromise(
-      Effect.flatMap(ReconcilerService, (service) =>
-        service.syncProjects([project]),
-      ).pipe(Effect.provide(reconciler)),
+      Effect.flatMap(ReconcilerService, (service) => service.syncProjects([project])).pipe(
+        Effect.provide(reconciler),
+      ),
     )
 
     const summaries = await Effect.runPromise(
       Effect.gen(function* () {
         const projects = yield* ProjectService
         const browse = yield* projects.listProjectSummaries(herdrSource)
-        const workspaces = yield* projects.listWorkspaceSummaries(
-          browse[0]!.id,
-          herdrSource,
-        )
+        const workspaces = yield* projects.listWorkspaceSummaries(browse[0]!.id, herdrSource)
 
         return {
           active: yield* projects.listActiveRuntimeSummaries(herdrSource),
           browse,
-          modules: yield* projects.listModuleSummaries(
-            workspaces[0]!.id,
-            herdrSource,
-          ),
+          modules: yield* projects.listModuleSummaries(workspaces[0]!.id, herdrSource),
           tmuxActive: yield* projects.listActiveRuntimeSummaries(runtimeSource),
         }
       }).pipe(Effect.provide(makeTestProjectServiceLayer(dbPath))),
@@ -263,12 +246,8 @@ describe('reconciler', () => {
       { externalId: 'herdr-project', scope: 'project' },
       { externalId: 'herdr-module', scope: 'module' },
     ])
-    expect(summaries.browse[0]?.runtime?.identity.externalId).toBe(
-      'herdr-project',
-    )
-    expect(summaries.modules[0]?.runtime?.identity.externalId).toBe(
-      'herdr-module',
-    )
+    expect(summaries.browse[0]?.runtime?.identity.externalId).toBe('herdr-project')
+    expect(summaries.modules[0]?.runtime?.identity.externalId).toBe('herdr-module')
     expect(summaries.tmuxActive).toEqual([])
   })
 
@@ -296,9 +275,7 @@ describe('reconciler', () => {
     } | null = null
     const runtimeDiscovery: RuntimeDiscoveryServiceApi = {
       listRuntimes: Effect.sync(() => ({
-        runtimes: contextPath
-          ? [{ contextPath, identity, status: 'open' as const }]
-          : [],
+        runtimes: contextPath ? [{ contextPath, identity, status: 'open' as const }] : [],
         runtimeIssue,
         source: herdrSource,
       })),
@@ -317,28 +294,20 @@ describe('reconciler', () => {
     ]
 
     await syncProjects(reconciler, projects)
-    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([
-      'alpha',
-    ])
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual(['alpha'])
 
     contextPath = betaPath
     await syncProjects(reconciler, projects)
-    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([
-      'alpha',
-    ])
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual(['alpha'])
 
     contextPath = elsewherePath
     await syncProjects(reconciler, projects)
-    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([
-      'alpha',
-    ])
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual(['alpha'])
 
     contextPath = null
     runtimeIssue = { code: 'source_unavailable', source: herdrSource }
     await syncProjects(reconciler, projects)
-    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual([
-      'alpha',
-    ])
+    await expect(activeProjectNames(dbPath, herdrSource)).resolves.toEqual(['alpha'])
 
     runtimeIssue = null
     await syncProjects(reconciler, projects)
@@ -354,9 +323,9 @@ describe('reconciler', () => {
     const projects = [createProjectConfig('alpha', repoPath, 'docs')]
 
     const result = await Effect.runPromise(
-      Effect.flatMap(ReconcilerService, (service) =>
-        service.refreshProject(projects[0]!),
-      ).pipe(Effect.provide(makeTestReconcilerLayer(dbPath))),
+      Effect.flatMap(ReconcilerService, (service) => service.refreshProject(projects[0]!)).pipe(
+        Effect.provide(makeTestReconcilerLayer(dbPath)),
+      ),
     )
 
     expect(result).toMatchObject({
@@ -368,9 +337,7 @@ describe('reconciler', () => {
       status: 'no_workspace',
       errorTag: null,
     })
-    expect([null, 'provider_not_found']).toContain(
-      result.runtimeIssue?.code ?? null,
-    )
+    expect([null, 'provider_not_found']).toContain(result.runtimeIssue?.code ?? null)
   })
 
   it('isolates per-project failures during sync', async () => {
@@ -388,9 +355,9 @@ describe('reconciler', () => {
     ]
 
     const result = await Effect.runPromise(
-      Effect.flatMap(ReconcilerService, (service) =>
-        service.syncProjects(projects),
-      ).pipe(Effect.provide(makeTestReconcilerLayer(dbPath))),
+      Effect.flatMap(ReconcilerService, (service) => service.syncProjects(projects)).pipe(
+        Effect.provide(makeTestReconcilerLayer(dbPath)),
+      ),
     )
 
     expect(result.projects).toHaveLength(2)
@@ -403,9 +370,7 @@ describe('reconciler', () => {
       status: 'synced',
       errorTag: null,
     })
-    expect([null, 'provider_not_found']).toContain(
-      result.projects[0]?.runtimeIssue?.code ?? null,
-    )
+    expect([null, 'provider_not_found']).toContain(result.projects[0]?.runtimeIssue?.code ?? null)
     expect(result.projects[1]).toEqual({
       projectName: 'beta',
       repoPath: plainDirPath,
@@ -436,9 +401,7 @@ describe('reconciler', () => {
                 result:
                   project.name === 'alpha'
                     ? Either.right(createObservation(project))
-                    : Either.left(
-                        new RepoNotGitError({ repoPath: project.repo }),
-                      ),
+                    : Either.left(new RepoNotGitError({ repoPath: project.repo })),
               })),
             ),
           observeProject: () => Effect.die('not used'),
@@ -484,9 +447,9 @@ describe('reconciler', () => {
 
     await expect(
       Effect.runPromise(
-        Effect.flatMap(ReconcilerService, (service) =>
-          service.syncProjects(projects),
-        ).pipe(Effect.provide(layer)),
+        Effect.flatMap(ReconcilerService, (service) => service.syncProjects(projects)).pipe(
+          Effect.provide(layer),
+        ),
       ),
     ).resolves.toEqual({
       projects: [
@@ -580,16 +543,13 @@ async function syncProjects<E>(
   projects: readonly ProjectConfig[],
 ) {
   await Effect.runPromise(
-    Effect.flatMap(ReconcilerService, (service) =>
-      service.syncProjects(projects),
-    ).pipe(Effect.provide(layer)),
+    Effect.flatMap(ReconcilerService, (service) => service.syncProjects(projects)).pipe(
+      Effect.provide(layer),
+    ),
   )
 }
 
-async function activeProjectNames(
-  dbPath: string,
-  source: { provider: string; sourceId: string },
-) {
+async function activeProjectNames(dbPath: string, source: { provider: string; sourceId: string }) {
   return Effect.runPromise(
     Effect.gen(function* () {
       const projects = yield* ProjectService

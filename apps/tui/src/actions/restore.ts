@@ -1,18 +1,10 @@
-import type {
-  ActiveRuntimeSummary,
-  HarbourContext,
-  ProjectSummary,
-} from '@harbr/domain'
+import type { ActiveRuntimeSummary, HarbourContext, ProjectSummary } from '@harbr/domain'
 
 import type { TuiServices, TuiStore } from '~/app-context'
 import { listWorkspaceSummaries } from '~/data'
 import { workspacesScope } from '~/store'
 import { mapWorkspaceSummaryToRow } from '~/transforms'
-import {
-  openDefaultWorkspaceModules,
-  openModules,
-  openWorkspaces,
-} from './drilldown'
+import { openDefaultWorkspaceModules, openModules, openWorkspaces } from './drilldown'
 
 export async function restoreUiContext(
   services: TuiServices,
@@ -63,9 +55,7 @@ export async function restoreUiContext(
     if (savedContext.workspaceId) {
       const workspaceRow = store
         .getState()
-        .data.workspaceRows.find(
-          (row) => row.workspaceId === savedContext.workspaceId,
-        )
+        .data.workspaceRows.find((row) => row.workspaceId === savedContext.workspaceId)
 
       if (workspaceRow) {
         store.setState((state) => ({
@@ -95,9 +85,7 @@ export async function restoreCurrentRuntime(
     return false
   }
 
-  const project = projects.find(
-    (candidate) => candidate.name === currentRuntime.projectName,
-  )
+  const project = projects.find((candidate) => candidate.name === currentRuntime.projectName)
 
   if (!project) {
     return false
@@ -116,9 +104,7 @@ export async function restoreCurrentRuntime(
 
   const workspaces = await listWorkspaceSummaries(services, project.id)
   const workspace = currentRuntime.workspaceName
-    ? workspaces.find(
-        (candidate) => candidate.name === currentRuntime.workspaceName,
-      )
+    ? workspaces.find((candidate) => candidate.name === currentRuntime.workspaceName)
     : undefined
 
   if (!workspace) {
@@ -150,9 +136,7 @@ export async function restoreCurrentRuntime(
   })
 
   const moduleRows = store.getState().data.moduleRows
-  const moduleRow = moduleRows.find(
-    (row) => row.label === currentRuntime.moduleName,
-  )
+  const moduleRow = moduleRows.find((row) => row.label === currentRuntime.moduleName)
 
   if (moduleRow) {
     store.setState((state) => ({

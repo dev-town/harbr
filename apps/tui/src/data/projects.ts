@@ -51,10 +51,7 @@ export async function listActiveRuntimeSummaries(
   )
 }
 
-export async function listWorkspaceSummaries(
-  services: TuiServices,
-  projectId: string,
-) {
+export async function listWorkspaceSummaries(services: TuiServices, projectId: string) {
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
       const projects = yield* ProjectService
@@ -65,10 +62,7 @@ export async function listWorkspaceSummaries(
   )
 }
 
-export async function listModuleSummaries(
-  services: TuiServices,
-  workspaceId: string,
-) {
+export async function listModuleSummaries(services: TuiServices, workspaceId: string) {
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
       const projects = yield* ProjectService
@@ -79,10 +73,7 @@ export async function listModuleSummaries(
   )
 }
 
-export async function saveUiContext(
-  services: TuiServices,
-  context: HarbourContext,
-) {
+export async function saveUiContext(services: TuiServices, context: HarbourContext) {
   return services.effectRuntime.runPromise(
     Effect.gen(function* () {
       const projects = yield* ProjectService

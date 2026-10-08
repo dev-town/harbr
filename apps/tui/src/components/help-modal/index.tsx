@@ -37,15 +37,9 @@ export function HelpModal() {
             bindings: makeHelpBindings({
               onClose: () => tuiStore.getState().closeHelpModal(),
               onPageDown: () =>
-                scrollboxRef.current?.scrollBy(
-                  Math.max(1, Math.floor(bodyHeight / 2)),
-                  'step',
-                ),
+                scrollboxRef.current?.scrollBy(Math.max(1, Math.floor(bodyHeight / 2)), 'step'),
               onPageUp: () =>
-                scrollboxRef.current?.scrollBy(
-                  -Math.max(1, Math.floor(bodyHeight / 2)),
-                  'step',
-                ),
+                scrollboxRef.current?.scrollBy(-Math.max(1, Math.floor(bodyHeight / 2)), 'step'),
               onScrollDown: () => scrollboxRef.current?.scrollBy(1, 'step'),
               onScrollUp: () => scrollboxRef.current?.scrollBy(-1, 'step'),
             }),
@@ -82,9 +76,7 @@ export function HelpModal() {
         borderStyle="single"
         focusable
         flexDirection="column"
-        onMouseUp={(event: { stopPropagation(): void }) =>
-          event.stopPropagation()
-        }
+        onMouseUp={(event: { stopPropagation(): void }) => event.stopPropagation()}
         padding={padding}
         ref={focusRef}
         style={{ backgroundColor: theme.panel }}
@@ -108,10 +100,7 @@ export function HelpModal() {
             const showGroup = !previous || previous.group !== row.group
 
             return (
-              <box
-                key={`${row.group}:${row.key}:${row.title}`}
-                flexDirection="column"
-              >
+              <box key={`${row.group}:${row.key}:${row.title}`} flexDirection="column">
                 {showGroup ? (
                   <box marginTop={index === 0 ? 0 : 1} width="100%">
                     <text fg={theme.accent}>{row.group}</text>
@@ -132,9 +121,7 @@ export function HelpModal() {
   )
 }
 
-function makeHelpRows(
-  keymap: ReturnType<typeof useKeymap>,
-): readonly HelpRow[] {
+function makeHelpRows(keymap: ReturnType<typeof useKeymap>): readonly HelpRow[] {
   const seen = new Set<string>()
   const rows: HelpRow[] = []
 
@@ -159,8 +146,7 @@ function makeHelpRows(
   return rows.sort((a, b) =>
     a.group === b.group
       ? a.title.localeCompare(b.title)
-      : groupOrder(a.group) - groupOrder(b.group) ||
-        a.group.localeCompare(b.group),
+      : groupOrder(a.group) - groupOrder(b.group) || a.group.localeCompare(b.group),
   )
 }
 

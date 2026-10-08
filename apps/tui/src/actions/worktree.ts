@@ -1,16 +1,10 @@
 import type { TuiServices, TuiStore } from '~/app-context'
 import { formatError } from '~/helpers/errors'
-import {
-  validateBranchName,
-  validateWorkspaceName,
-} from '~/helpers/worktree-form'
+import { validateBranchName, validateWorkspaceName } from '~/helpers/worktree-form'
 import { createWorkspace } from '~/use-cases/create-workspace'
 import { openWorkspaces } from './drilldown'
 
-export async function handleWorktreeFormSubmit(
-  services: TuiServices,
-  store: TuiStore,
-) {
+export async function handleWorktreeFormSubmit(services: TuiServices, store: TuiStore) {
   const step = store.getState().worktreeForm.step
 
   if (step === 'workspace') {
@@ -55,9 +49,7 @@ export async function handleWorktreeFormSubmit(
 
   const projectId = store.getState().worktreeForm.projectId
   const project = projectId
-    ? (store
-        .getState()
-        .data.projectRows.find((row) => row.projectId === projectId) ?? null)
+    ? (store.getState().data.projectRows.find((row) => row.projectId === projectId) ?? null)
     : null
 
   if (!project) {

@@ -3,19 +3,12 @@ import { Context, Effect, Exit, Option } from 'effect'
 
 import type { TuiEffectRuntime } from '~/services/effect-runtime'
 import type { TuiProfileOptions } from '~/types'
-import type {
-  StartupEventAttributes,
-  StartupTimeline,
-} from './startup-timeline'
+import type { StartupEventAttributes, StartupTimeline } from './startup-timeline'
 
 export type StartupTelemetry = {
   completeOnNextFrame(attributes: StartupEventAttributes): void
   finish(name: string, attributes?: StartupEventAttributes): void
-  mark(
-    name: string,
-    attributes?: StartupEventAttributes,
-    markedAt?: number,
-  ): void
+  mark(name: string, attributes?: StartupEventAttributes, markedAt?: number): void
   markOnNextFrame(name: string, attributes?: StartupEventAttributes): void
   withParent<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R>
 }
@@ -76,24 +69,16 @@ export async function makeStartupTelemetry({
 
   const timestampAt = (markedAt: number) =>
     timeline.timing.processStartedAtUnixNanos +
-    BigInt(
-      Math.round((markedAt - timeline.timing.processStartedAt) * 1_000_000),
-    )
+    BigInt(Math.round((markedAt - timeline.timing.processStartedAt) * 1_000_000))
 
-  const mark: StartupTelemetry['mark'] = (
-    name,
-    attributes = {},
-    markedAt = performance.now(),
-  ) => {
+  const mark: StartupTelemetry['mark'] = (name, attributes = {}, markedAt = performance.now()) => {
     if (isComplete) {
       return
     }
 
     span.event(name, timestampAt(markedAt), {
       ...attributes,
-      'harbr.startup.elapsed_ms': Number(
-        (markedAt - timeline.timing.processStartedAt).toFixed(3),
-      ),
+      'harbr.startup.elapsed_ms': Number((markedAt - timeline.timing.processStartedAt).toFixed(3)),
     })
   }
 
@@ -156,7 +141,6 @@ export async function makeStartupTelemetry({
 
       pendingFrameEvents.push({ attributes, name })
     },
-    withParent: (effect) =>
-      isComplete ? effect : effect.pipe(Effect.withParentSpan(span)),
+    withParent: (effect) => (isComplete ? effect : effect.pipe(Effect.withParentSpan(span))),
   }
 }

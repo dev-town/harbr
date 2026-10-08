@@ -5,11 +5,7 @@ import type { AppState } from './app/app-state'
 import type { ActiveState } from './active/active-state'
 import type { BrowseState } from './browse/browse-state'
 import type { DataState } from './data/data-state'
-import type {
-  FocusTargetRef,
-  SurfaceId,
-  SurfacesState,
-} from './surfaces/surfaces-state'
+import type { FocusTargetRef, SurfaceId, SurfacesState } from './surfaces/surfaces-state'
 import type { WorktreeFormState } from './worktree-form/worktree-form-state'
 import type { AppRoute, VisibilityFilter } from '~/types/navigation'
 import type { NoticeLevel } from '~/types/notice'

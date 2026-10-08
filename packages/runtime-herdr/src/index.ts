@@ -1,5 +1,2 @@
 export * from './herdr.source'
-export {
-  RuntimeDiscoveryServiceLive,
-  RuntimeServiceLive,
-} from './services/runtime-herdr.live'
+export { RuntimeDiscoveryServiceLive, RuntimeServiceLive } from './services/runtime-herdr.live'

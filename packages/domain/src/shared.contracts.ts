@@ -21,10 +21,7 @@ export const RuntimeSourceSchema = z.object({
 })
 export type RuntimeSource = z.infer<typeof RuntimeSourceSchema>
 
-export const RuntimeIssueCodeSchema = z.enum([
-  'provider_not_found',
-  'source_unavailable',
-])
+export const RuntimeIssueCodeSchema = z.enum(['provider_not_found', 'source_unavailable'])
 export type RuntimeIssueCode = z.infer<typeof RuntimeIssueCodeSchema>
 
 export const RuntimeIssueSchema = z.object({

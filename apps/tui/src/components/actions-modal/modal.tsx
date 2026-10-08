@@ -21,8 +21,12 @@ export function ActionsModal<T extends ActionItemBase>({
   const modalRef = focusRef ?? localFocusRef
   const { modalWidth, padding } = useActionModalLayout()
   const { clearHoveredId, hoveredId, setHoveredId } = useActionHover(isOpen)
-  const { moveSelection, selectedId, selectCurrent, setSelectedId } =
-    useActionSelection({ initialSelectedId, isOpen, items, onSelect })
+  const { moveSelection, selectedId, selectCurrent, setSelectedId } = useActionSelection({
+    initialSelectedId,
+    isOpen,
+    items,
+    onSelect,
+  })
 
   useActionKeybindings({
     enabled: isOpen,
@@ -59,21 +63,13 @@ export function ActionsModal<T extends ActionItemBase>({
         borderStyle="single"
         focusable
         flexDirection="column"
-        onMouseUp={(event: { stopPropagation(): void }) =>
-          event.stopPropagation()
-        }
+        onMouseUp={(event: { stopPropagation(): void }) => event.stopPropagation()}
         padding={padding}
         ref={modalRef}
         style={{ backgroundColor: theme.panel }}
         width={modalWidth}
       >
-        <box
-          flexDirection="column"
-          marginBottom={1}
-          paddingLeft={1}
-          paddingRight={1}
-          width="100%"
-        >
+        <box flexDirection="column" marginBottom={1} paddingLeft={1} paddingRight={1} width="100%">
           <text>
             <strong fg={theme.text}>{title}</strong>
           </text>
@@ -105,19 +101,9 @@ export function ActionsModal<T extends ActionItemBase>({
                 width="100%"
               >
                 <text>
-                  <span fg={isSelected ? theme.accent : theme.muted}>
-                    {isSelected ? '›' : ' '}
-                  </span>
+                  <span fg={isSelected ? theme.accent : theme.muted}>{isSelected ? '›' : ' '}</span>
                   <span fg={theme.text}> </span>
-                  <span
-                    fg={
-                      isDisabled
-                        ? theme.muted
-                        : isSelected
-                          ? theme.activeText
-                          : theme.text
-                    }
-                  >
+                  <span fg={isDisabled ? theme.muted : isSelected ? theme.activeText : theme.text}>
                     {item.label}
                   </span>
                 </text>

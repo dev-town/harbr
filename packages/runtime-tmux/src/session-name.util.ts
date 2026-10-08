@@ -2,10 +2,7 @@ import type { RuntimeFact, RuntimeSource, RuntimeTarget } from '@harbr/domain'
 
 const encodedSeparator = '~~'
 
-export function parseSessionName(
-  sessionName: string,
-  source: RuntimeSource,
-): RuntimeFact | null {
+export function parseSessionName(sessionName: string, source: RuntimeSource): RuntimeFact | null {
   if (sessionName.length === 0) {
     return null
   }
@@ -69,11 +66,7 @@ function parseEncodedSessionName(sessionName: string, source: RuntimeSource) {
   return buildRuntimeFact(source, sessionName, decodedParts)
 }
 
-function buildRuntimeFact(
-  source: RuntimeSource,
-  sessionName: string,
-  parts: readonly string[],
-) {
+function buildRuntimeFact(source: RuntimeSource, sessionName: string, parts: readonly string[]) {
   const projectName = parts[0]!
 
   if (parts.length === 1) {
@@ -121,10 +114,7 @@ function runtimeIdentity(source: RuntimeSource, sessionName: string) {
 }
 
 function encodeSessionSegment(value: string) {
-  return value.replaceAll(
-    /[~:.%]/g,
-    (match) => `~${match.charCodeAt(0).toString(16)}`,
-  )
+  return value.replaceAll(/[~:.%]/g, (match) => `~${match.charCodeAt(0).toString(16)}`)
 }
 
 function decodeSessionParts(parts: readonly string[]) {

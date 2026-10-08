@@ -23,11 +23,7 @@ import type { TuiOptions } from './types'
 export async function launchTui(args: string[], startupTiming: StartupTiming) {
   const startupTimeline = createStartupTimeline(startupTiming)
   startupTimeline.mark('app.entry', {}, startupTiming.processStartedAt)
-  startupTimeline.mark(
-    'tui.bootstrap_module_loaded',
-    {},
-    startupTiming.tuiModuleLoadedAt,
-  )
+  startupTimeline.mark('tui.bootstrap_module_loaded', {}, startupTiming.tuiModuleLoadedAt)
 
   const configPath = readArgValue(args, '--path')
   const dbPath = readArgValue(args, '--db-path')
@@ -108,10 +104,7 @@ export async function launchTui(args: string[], startupTiming: StartupTiming) {
   startupTimeline.mark('ui.bootstrap_render_requested')
   root.render(
     <KeymapProvider keymap={keymap}>
-      <StartupShell
-        onCommit={onBootstrapCommit}
-        onQuit={() => void shutdown()}
-      />
+      <StartupShell onCommit={onBootstrapCommit} onQuit={() => void shutdown()} />
     </KeymapProvider>,
   )
 
@@ -186,22 +179,14 @@ function waitForStartupPaint({
 
       if (!hasRenderedFrame) {
         hasRenderedFrame = true
-        startupTimeline.mark(
-          'renderer.first_frame',
-          { 'ui.frame_id': event.frameId },
-          markedAt,
-        )
+        startupTimeline.mark('renderer.first_frame', { 'ui.frame_id': event.frameId }, markedAt)
       }
 
       if (!hasCommitted) {
         return
       }
 
-      startupTimeline.mark(
-        'ui.first_paint',
-        { 'ui.frame_id': event.frameId },
-        markedAt,
-      )
+      startupTimeline.mark('ui.first_paint', { 'ui.frame_id': event.frameId }, markedAt)
       finish(true)
     }
 

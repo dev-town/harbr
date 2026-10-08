@@ -18,9 +18,7 @@ import { useActiveKeybindings } from './use-active-keybindings'
 export function useActiveRoute() {
   const services = useTuiServices()
   const searchRef = useRef<InputRenderable | null>(null)
-  const focusSearchNonce = useTuiStore(
-    (state) => state.surfaces.focusRequestKey,
-  )
+  const focusSearchNonce = useTuiStore((state) => state.surfaces.focusRequestKey)
   const isActionsOpen = useTuiStore(selectIsActiveActionsOpen)
   const isWindowPickerOpen = useTuiStore(selectIsWindowPickerOpen)
   const query = useTuiStore((state) => state.active.list.query)
@@ -70,8 +68,7 @@ export function useActiveRoute() {
     query,
     rows,
     searchRef,
-    searchFocused:
-      interactionMode === 'input' && !isActionsOpen && !isWindowPickerOpen,
+    searchFocused: interactionMode === 'input' && !isActionsOpen && !isWindowPickerOpen,
     selectedId,
     selectedRow,
   }

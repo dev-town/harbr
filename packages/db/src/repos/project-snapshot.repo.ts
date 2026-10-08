@@ -33,11 +33,7 @@ import {
 } from '../schema'
 
 export function getProjectByName(db: HarbourDatabase, projectName: string) {
-  const row = db
-    .select()
-    .from(projects)
-    .where(eq(projects.name, projectName))
-    .get()
+  const row = db.select().from(projects).where(eq(projects.name, projectName)).get()
 
   return row ? mapProjectRow(projectRowSchema.parse(row)) : null
 }
@@ -62,10 +58,7 @@ export function pruneRuntimeBindings(
     .run()
 }
 
-export function listProjectSummaries(
-  db: HarbourDatabase,
-  source: RuntimeSource,
-): ProjectSummary[] {
+export function listProjectSummaries(db: HarbourDatabase, source: RuntimeSource): ProjectSummary[] {
   const projectRows = db
     .select()
     .from(projects)
@@ -93,9 +86,7 @@ export function listProjectSummaries(
       const projectWorkspaces = workspaceRows.filter(
         (workspace) => workspace.projectId === project.id,
       )
-      const workspaceIds = new Set(
-        projectWorkspaces.map((workspace) => workspace.id),
-      )
+      const workspaceIds = new Set(projectWorkspaces.map((workspace) => workspace.id))
 
       return {
         id: project.id,
@@ -105,17 +96,13 @@ export function listProjectSummaries(
         repoKind: project.repoKind,
         runtime: mapRuntimeAttachment(
           runtimeRows.find(
-            (runtime) =>
-              runtime.projectId === project.id && runtime.scope === 'project',
+            (runtime) => runtime.projectId === project.id && runtime.scope === 'project',
           ) ?? null,
         ),
-        activeSessionCount: runtimeRows.filter(
-          (runtime) => runtime.projectId === project.id,
-        ).length,
+        activeSessionCount: runtimeRows.filter((runtime) => runtime.projectId === project.id)
+          .length,
         workspaceCount: projectWorkspaces.length,
-        hasModules: moduleRows.some((module) =>
-          workspaceIds.has(module.workspaceId),
-        ),
+        hasModules: moduleRows.some((module) => workspaceIds.has(module.workspaceId)),
         hasWorkspaces:
           projectWorkspaces.length > 1 ||
           projectWorkspaces.some((workspace) => workspace.kind === 'worktree'),
@@ -165,8 +152,7 @@ export function listActiveRuntimeSummaries(
         runtime.scope === 'module' && runtime.workspaceId && runtime.modulePath
           ? (moduleRows.find(
               (row) =>
-                row.workspaceId === runtime.workspaceId &&
-                row.modulePath === runtime.modulePath,
+                row.workspaceId === runtime.workspaceId && row.modulePath === runtime.modulePath,
             ) ?? null)
           : null
 
@@ -195,9 +181,7 @@ export function listActiveRuntimeSummaries(
     })
     .filter((runtime): runtime is ActiveRuntimeSummary => runtime !== null)
     .sort((left, right) =>
-      left.runtime.identity.displayLabel.localeCompare(
-        right.runtime.identity.displayLabel,
-      ),
+      left.runtime.identity.displayLabel.localeCompare(right.runtime.identity.displayLabel),
     )
 }
 
@@ -217,10 +201,7 @@ export function loadUiContext(db: HarbourDatabase): HarbourContext {
   })
 }
 
-export function saveUiContext(
-  db: HarbourDatabase,
-  context: HarbourContext,
-): HarbourContext {
+export function saveUiContext(db: HarbourDatabase, context: HarbourContext): HarbourContext {
   const updatedAt = Date.now()
 
   db.insert(uiContext)
@@ -250,11 +231,7 @@ export function listWorkspaceSummaries(
   projectId: string,
   source: RuntimeSource,
 ): WorkspaceSummary[] {
-  const projectRow = db
-    .select()
-    .from(projects)
-    .where(eq(projects.id, projectId))
-    .get()
+  const projectRow = db.select().from(projects).where(eq(projects.id, projectId)).get()
 
   if (!projectRow) {
     return []
@@ -281,9 +258,7 @@ export function listWorkspaceSummaries(
 
   return workspaceRows
     .map((workspace) => {
-      const workspaceModules = moduleRows.filter(
-        (module) => module.workspaceId === workspace.id,
-      )
+      const workspaceModules = moduleRows.filter((module) => module.workspaceId === workspace.id)
 
       return {
         branchName: workspace.branchName,
@@ -295,15 +270,12 @@ export function listWorkspaceSummaries(
         repoPath: project.repoPath,
         runtime: mapRuntimeAttachment(
           runtimeRows.find(
-            (runtime) =>
-              runtime.workspaceId === workspace.id &&
-              runtime.scope === 'workspace',
+            (runtime) => runtime.workspaceId === workspace.id && runtime.scope === 'workspace',
           ) ?? null,
         ),
         workspacePath: workspace.workspacePath,
-        activeSessionCount: runtimeRows.filter(
-          (runtime) => runtime.workspaceId === workspace.id,
-        ).length,
+        activeSessionCount: runtimeRows.filter((runtime) => runtime.workspaceId === workspace.id)
+          .length,
         moduleCount: workspaceModules.length,
         hasModules: workspaceModules.length > 0,
         isDefault: workspace.kind === 'default',
@@ -323,22 +295,14 @@ export function listModuleSummaries(
   workspaceId: string,
   source: RuntimeSource,
 ): ModuleSummary[] {
-  const workspaceRow = db
-    .select()
-    .from(workspaces)
-    .where(eq(workspaces.id, workspaceId))
-    .get()
+  const workspaceRow = db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).get()
 
   if (!workspaceRow) {
     return []
   }
 
   const workspace = workspaceRowSchema.parse(workspaceRow)
-  const projectRow = db
-    .select()
-    .from(projects)
-    .where(eq(projects.id, workspace.projectId))
-    .get()
+  const projectRow = db.select().from(projects).where(eq(projects.id, workspace.projectId)).get()
 
   if (!projectRow) {
     return []
@@ -370,16 +334,13 @@ export function listModuleSummaries(
         module.modulePath === '.'
           ? runtime.scope === 'workspace' ||
             (runtime.scope === 'module' && runtime.modulePath === '.')
-          : runtime.scope === 'module' &&
-            runtime.modulePath === module.modulePath,
+          : runtime.scope === 'module' && runtime.modulePath === module.modulePath,
       ),
       projectName: project.name,
       repoPath: project.repoPath,
       runtime: mapRuntimeAttachment(
         runtimeRows.find(
-          (runtime) =>
-            runtime.scope === 'module' &&
-            runtime.modulePath === module.modulePath,
+          (runtime) => runtime.scope === 'module' && runtime.modulePath === module.modulePath,
         ) ?? null,
       ),
       workspaceName: workspace.name,
@@ -396,11 +357,7 @@ export function upsertProject(
   >,
 ) {
   const now = Date.now()
-  const existing = db
-    .select()
-    .from(projects)
-    .where(eq(projects.name, input.projectName))
-    .get()
+  const existing = db.select().from(projects).where(eq(projects.name, input.projectName)).get()
 
   if (existing) {
     db.update(projects)
@@ -413,11 +370,7 @@ export function upsertProject(
       .where(eq(projects.id, existing.id))
       .run()
 
-    const row = db
-      .select()
-      .from(projects)
-      .where(eq(projects.id, existing.id))
-      .get()
+    const row = db.select().from(projects).where(eq(projects.id, existing.id)).get()
 
     if (!row) {
       throw new Error(`project disappeared after update: ${existing.id}`)
@@ -449,10 +402,7 @@ export function upsertProject(
   return mapProjectRow(projectRowSchema.parse(row))
 }
 
-export function replaceProjectSnapshot(
-  db: HarbourDatabase,
-  input: ReplaceProjectSnapshotInput,
-) {
+export function replaceProjectSnapshot(db: HarbourDatabase, input: ReplaceProjectSnapshotInput) {
   if (
     input.runtimes.some(
       (runtime) =>
@@ -482,8 +432,7 @@ export function replaceProjectSnapshot(
       .map((row) => runtimeRowSchema.parse(row))
       .filter(
         (runtime) =>
-          !matchesRuntimeSource(runtime, input.runtimeSource) ||
-          input.runtimeIssue !== null,
+          !matchesRuntimeSource(runtime, input.runtimeSource) || input.runtimeIssue !== null,
       )
       .map((runtime) => ({
         runtime,
@@ -514,12 +463,7 @@ export function replaceProjectSnapshot(
     }
 
     const createdAt = now()
-    const workspaceRecords = insertWorkspaces(
-      tx,
-      project.id,
-      input.workspaces,
-      createdAt,
-    )
+    const workspaceRecords = insertWorkspaces(tx, project.id, input.workspaces, createdAt)
     const workspacesByName = new Map(
       workspaceRecords.map((workspace) => [workspace.name, workspace]),
     )
@@ -591,11 +535,7 @@ function insertWorkspaces(
       .run()
   }
 
-  const rows = db
-    .select()
-    .from(workspaces)
-    .where(eq(workspaces.projectId, projectId))
-    .all()
+  const rows = db.select().from(workspaces).where(eq(workspaces.projectId, projectId)).all()
 
   return rows.map((row) => mapWorkspaceRow(workspaceRowSchema.parse(row)))
 }
@@ -622,11 +562,7 @@ function insertModules(
       .run()
   }
 
-  const rows = db
-    .select()
-    .from(modules)
-    .where(eq(modules.workspaceId, workspaceId))
-    .all()
+  const rows = db.select().from(modules).where(eq(modules.workspaceId, workspaceId)).all()
 
   return rows.map((row) => mapModuleRow(moduleRowSchema.parse(row)))
 }
@@ -646,16 +582,13 @@ function insertRuntimes(
       throw new Error('runtime source identity must not be empty')
     }
     const workspace =
-      runtime.workspaceName === null
-        ? null
-        : (workspacesByName.get(runtime.workspaceName) ?? null)
+      runtime.workspaceName === null ? null : (workspacesByName.get(runtime.workspaceName) ?? null)
 
     db.insert(runtimes)
       .values({
         id: randomUUID(),
         projectId,
-        workspaceId:
-          runtime.scope === 'project' ? null : (workspace?.id ?? null),
+        workspaceId: runtime.scope === 'project' ? null : (workspace?.id ?? null),
         provider: runtime.identity.source.provider,
         sourceId: runtime.identity.source.sourceId,
         externalId: runtime.identity.externalId,
@@ -674,11 +607,7 @@ function insertRuntimes(
       .run()
   }
 
-  const rows = db
-    .select()
-    .from(runtimes)
-    .where(eq(runtimes.projectId, projectId))
-    .all()
+  const rows = db.select().from(runtimes).where(eq(runtimes.projectId, projectId)).all()
 
   return rows.map((row) => mapRuntimeRow(runtimeRowSchema.parse(row)))
 }
@@ -693,9 +622,7 @@ function restoreRuntimes(
   }>,
 ) {
   for (const { runtime, workspaceName } of preserved) {
-    const workspace = workspaceName
-      ? (workspacesByName.get(workspaceName) ?? null)
-      : null
+    const workspace = workspaceName ? (workspacesByName.get(workspaceName) ?? null) : null
 
     if (runtime.scope !== 'project' && !workspace) {
       continue
@@ -705,16 +632,13 @@ function restoreRuntimes(
       .values({
         ...runtime,
         projectId,
-        workspaceId:
-          runtime.scope === 'project' ? null : (workspace?.id ?? null),
+        workspaceId: runtime.scope === 'project' ? null : (workspace?.id ?? null),
       })
       .run()
   }
 }
 
-function mapProjectRow(
-  row: ReturnType<typeof projectRowSchema.parse>,
-): ProjectRecord {
+function mapProjectRow(row: ReturnType<typeof projectRowSchema.parse>): ProjectRecord {
   return {
     id: row.id,
     projectIssue: row.projectIssue ?? null,
@@ -726,9 +650,7 @@ function mapProjectRow(
   }
 }
 
-function mapWorkspaceRow(
-  row: ReturnType<typeof workspaceRowSchema.parse>,
-): WorkspaceRecord {
+function mapWorkspaceRow(row: ReturnType<typeof workspaceRowSchema.parse>): WorkspaceRecord {
   return {
     branchName: row.branchName,
     id: row.id,
@@ -741,9 +663,7 @@ function mapWorkspaceRow(
   }
 }
 
-function mapModuleRow(
-  row: ReturnType<typeof moduleRowSchema.parse>,
-): ModuleRecord {
+function mapModuleRow(row: ReturnType<typeof moduleRowSchema.parse>): ModuleRecord {
   return {
     id: row.id,
     workspaceId: row.workspaceId,
@@ -759,9 +679,7 @@ function mapModuleRow(
   }
 }
 
-function mapRuntimeRow(
-  row: ReturnType<typeof runtimeRowSchema.parse>,
-): RuntimeRecord {
+function mapRuntimeRow(row: ReturnType<typeof runtimeRowSchema.parse>): RuntimeRecord {
   return {
     id: row.id,
     projectId: row.projectId,
@@ -779,9 +697,7 @@ function mapRuntimeRow(
   }
 }
 
-function mapRuntimeAttachment(
-  runtime: ReturnType<typeof runtimeRowSchema.parse> | null,
-) {
+function mapRuntimeAttachment(runtime: ReturnType<typeof runtimeRowSchema.parse> | null) {
   return runtime
     ? {
         identity: {
@@ -801,7 +717,5 @@ function matchesRuntimeSource(
   runtime: ReturnType<typeof runtimeRowSchema.parse>,
   source: RuntimeSource,
 ) {
-  return (
-    runtime.provider === source.provider && runtime.sourceId === source.sourceId
-  )
+  return runtime.provider === source.provider && runtime.sourceId === source.sourceId
 }

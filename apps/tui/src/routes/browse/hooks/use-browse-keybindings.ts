@@ -4,10 +4,7 @@ import { useTerminalDimensions } from '@opentui/react'
 import { loadProjects } from '~/actions/refresh'
 import { makeBrowseBindings } from '~/keymap/bindings'
 import { keymapPriority } from '~/keymap/priorities'
-import {
-  handleBrowseRouteBack,
-  handleBrowseRouteSelect,
-} from '~/routes/browse/actions'
+import { handleBrowseRouteBack, handleBrowseRouteSelect } from '~/routes/browse/actions'
 import { useTuiServices } from '~/hooks/useTuiServices'
 import { selectSelectedBrowseRow, tuiStore, useTuiStore } from '~/store'
 
@@ -32,10 +29,8 @@ export function useBrowseKeybindings() {
               onMoveDown: () => tuiStore.getState().moveBrowseSelection(1),
               onMoveUp: () => tuiStore.getState().moveBrowseSelection(-1),
               onNextRoute: () => tuiStore.getState().nextRoute(),
-              onPageDown: () =>
-                tuiStore.getState().moveBrowseSelection(pageDelta),
-              onPageUp: () =>
-                tuiStore.getState().moveBrowseSelection(-pageDelta),
+              onPageDown: () => tuiStore.getState().moveBrowseSelection(pageDelta),
+              onPageUp: () => tuiStore.getState().moveBrowseSelection(-pageDelta),
               onPreviousRoute: () => tuiStore.getState().previousRoute(),
               onRefresh: () => void loadProjects(services, tuiStore),
               onSelect: () =>
@@ -44,8 +39,7 @@ export function useBrowseKeybindings() {
                   tuiStore,
                   selectSelectedBrowseRow(tuiStore.getState()),
                 ),
-              onToggleVisibility: () =>
-                tuiStore.getState().toggleBrowseVisibility(),
+              onToggleVisibility: () => tuiStore.getState().toggleBrowseVisibility(),
             }),
           }
         : { bindings: [] },

@@ -1,11 +1,6 @@
 import type { ResolvedContextTarget, RuntimeAttachment } from '@harbr/domain'
 
-export type RowKind =
-  | 'action'
-  | 'active-action'
-  | 'module'
-  | 'project'
-  | 'workspace'
+export type RowKind = 'action' | 'active-action' | 'module' | 'project' | 'workspace'
 
 export type BaseRow = {
   id: string

@@ -26,8 +26,7 @@ export async function runSyncCommand(args: string[]) {
   const profile = readProfileOptions(args)
 
   const missingFlag =
-    getMissingValueFlag(args, ['--path', '--db-path']) ??
-    getProfileMissingValueFlag(args)
+    getMissingValueFlag(args, ['--path', '--db-path']) ?? getProfileMissingValueFlag(args)
 
   if (missingFlag) {
     console.error(`missing value for ${missingFlag}`)
@@ -66,16 +65,12 @@ export async function runSyncCommand(args: string[]) {
         Effect.match({
           onFailure: (error) => ({
             exitCode: 1,
-            output: jsonMode
-              ? JSON.stringify(error, null, 2)
-              : formatCliError(error),
+            output: jsonMode ? JSON.stringify(error, null, 2) : formatCliError(error),
             stream: 'stderr' as const,
           }),
           onSuccess: (output) => ({
             exitCode: 0,
-            output: jsonMode
-              ? JSON.stringify(output, null, 2)
-              : formatCliOutput(output),
+            output: jsonMode ? JSON.stringify(output, null, 2) : formatCliOutput(output),
             stream: 'stdout' as const,
           }),
         }),

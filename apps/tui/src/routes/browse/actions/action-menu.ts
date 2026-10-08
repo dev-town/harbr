@@ -1,9 +1,5 @@
 import type { TuiServices, TuiStore } from '~/app-context'
-import {
-  openDefaultWorkspaceModules,
-  openModules,
-  openWorkspaces,
-} from '~/actions/drilldown'
+import { openDefaultWorkspaceModules, openModules, openWorkspaces } from '~/actions/drilldown'
 import {
   closeActiveRuntime,
   openModuleRuntime,
@@ -11,13 +7,7 @@ import {
   openWorkspaceRoot,
 } from '~/actions/runtime'
 import { browseActionIds } from '~/store'
-import type {
-  ActionRow,
-  HarbourRow,
-  ModuleRow,
-  ProjectRow,
-  WorkspaceRow,
-} from '~/types/rows'
+import type { ActionRow, HarbourRow, ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
 
 type SupportedContextRow = ModuleRow | ProjectRow | WorkspaceRow
 
@@ -133,9 +123,7 @@ export function handleBrowseActionSelect(
           ? target
           : (store
               .getState()
-              .data.workspaceRows.find(
-                (item) => item.workspaceId === target.workspaceId,
-              ) ?? null)
+              .data.workspaceRows.find((item) => item.workspaceId === target.workspaceId) ?? null)
 
       if (!workspace) {
         store.getState().setNotice('Workspace context missing', 'warning')
@@ -156,18 +144,12 @@ export function handleBrowseActionSelect(
   }
 }
 
-function resolveActionTarget(
-  store: TuiStore,
-  row: ActionRow,
-): SupportedContextRow | null {
+function resolveActionTarget(store: TuiStore, row: ActionRow): SupportedContextRow | null {
   const context = row.target.context
 
   if (context.moduleId) {
     return (
-      store
-        .getState()
-        .data.moduleRows.find((item) => item.moduleId === context.moduleId) ??
-      null
+      store.getState().data.moduleRows.find((item) => item.moduleId === context.moduleId) ?? null
     )
   }
 
@@ -175,9 +157,7 @@ function resolveActionTarget(
     return (
       store
         .getState()
-        .data.workspaceRows.find(
-          (item) => item.workspaceId === context.workspaceId,
-        ) ?? null
+        .data.workspaceRows.find((item) => item.workspaceId === context.workspaceId) ?? null
     )
   }
 
@@ -186,10 +166,7 @@ function resolveActionTarget(
   }
 
   return (
-    store
-      .getState()
-      .data.projectRows.find((item) => item.projectId === context.projectId) ??
-    null
+    store.getState().data.projectRows.find((item) => item.projectId === context.projectId) ?? null
   )
 }
 
@@ -199,9 +176,6 @@ function getProjectTarget(store: TuiStore, target: SupportedContextRow) {
   }
 
   return (
-    store
-      .getState()
-      .data.projectRows.find((item) => item.projectId === target.projectId) ??
-    null
+    store.getState().data.projectRows.find((item) => item.projectId === target.projectId) ?? null
   )
 }

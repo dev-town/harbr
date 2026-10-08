@@ -22,13 +22,7 @@ describe('formatCliOutput', () => {
     }
 
     expect(formatCliOutput(output)).toBe(
-      [
-        'alpha',
-        '  repo: standard',
-        '  workspaces: 2',
-        '  modules: 2',
-        '  runtimes: 1',
-      ].join('\n'),
+      ['alpha', '  repo: standard', '  workspaces: 2', '  modules: 2', '  runtimes: 1'].join('\n'),
     )
   })
 
@@ -82,9 +76,7 @@ describe('formatCliOutput', () => {
       ],
     }
 
-    expect(formatCliOutput(output)).toBe(
-      ['alpha', '  error: RepoNotFoundError'].join('\n'),
-    )
+    expect(formatCliOutput(output)).toBe(['alpha', '  error: RepoNotFoundError'].join('\n'))
   })
 })
 

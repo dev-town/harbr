@@ -60,14 +60,9 @@ export const RuntimePathObservationSchema = z.object({
   status: RuntimeStatusSchema,
 })
 
-export type RuntimePathObservation = z.infer<
-  typeof RuntimePathObservationSchema
->
+export type RuntimePathObservation = z.infer<typeof RuntimePathObservationSchema>
 
-export const RuntimeObservationSchema = z.union([
-  RuntimeFactSchema,
-  RuntimePathObservationSchema,
-])
+export const RuntimeObservationSchema = z.union([RuntimeFactSchema, RuntimePathObservationSchema])
 
 export type RuntimeObservation = z.infer<typeof RuntimeObservationSchema>
 
@@ -102,12 +97,6 @@ export function isSameRuntimeSource(left: RuntimeSource, right: RuntimeSource) {
   return left.provider === right.provider && left.sourceId === right.sourceId
 }
 
-export function isSameRuntimeIdentity(
-  left: RuntimeIdentity,
-  right: RuntimeIdentity,
-) {
-  return (
-    isSameRuntimeSource(left.source, right.source) &&
-    left.externalId === right.externalId
-  )
+export function isSameRuntimeIdentity(left: RuntimeIdentity, right: RuntimeIdentity) {
+  return isSameRuntimeSource(left.source, right.source) && left.externalId === right.externalId
 }

@@ -22,9 +22,7 @@ export function WindowPickerModal() {
     () =>
       surface.kind === 'window-picker'
         ? resolvePickerState({
-            ...(surface.contextLabel
-              ? { contextLabel: surface.contextLabel }
-              : {}),
+            ...(surface.contextLabel ? { contextLabel: surface.contextLabel } : {}),
             projectWindows,
             target: surface.target,
           })
@@ -59,10 +57,7 @@ export function WindowPickerModal() {
       : 0
     const nextIndex = Math.max(
       0,
-      Math.min(
-        picker.windows.length - 1,
-        (currentIndex >= 0 ? currentIndex : 0) + delta,
-      ),
+      Math.min(picker.windows.length - 1, (currentIndex >= 0 ? currentIndex : 0) + delta),
     )
 
     setSelectedId(picker.windows[nextIndex]?.name ?? null)
@@ -86,16 +81,9 @@ export function WindowPickerModal() {
       return
     }
 
-    const selectedWindows = picker.windows.filter((window) =>
-      selectedNames.includes(window.name),
-    )
+    const selectedWindows = picker.windows.filter((window) => selectedNames.includes(window.name))
 
-    void createWindowsForContext(
-      services,
-      tuiStore,
-      picker.target,
-      selectedWindows,
-    )
+    void createWindowsForContext(services, tuiStore, picker.target, selectedWindows)
   }
 
   useBindings(
@@ -143,21 +131,13 @@ export function WindowPickerModal() {
         borderStyle="single"
         focusable
         flexDirection="column"
-        onMouseUp={(event: { stopPropagation(): void }) =>
-          event.stopPropagation()
-        }
+        onMouseUp={(event: { stopPropagation(): void }) => event.stopPropagation()}
         padding={padding}
         ref={focusRef}
         style={{ backgroundColor: theme.panel }}
         width={modalWidth}
       >
-        <box
-          flexDirection="column"
-          marginBottom={1}
-          paddingLeft={1}
-          paddingRight={1}
-          width="100%"
-        >
+        <box flexDirection="column" marginBottom={1} paddingLeft={1} paddingRight={1} width="100%">
           <text>
             <strong fg={theme.text}>{`Create ${picker.scope} windows`}</strong>
           </text>
@@ -183,16 +163,10 @@ export function WindowPickerModal() {
                 width="100%"
               >
                 <text>
-                  <span fg={isSelected ? theme.accent : theme.muted}>
-                    {isSelected ? '›' : ' '}
-                  </span>
+                  <span fg={isSelected ? theme.accent : theme.muted}>{isSelected ? '›' : ' '}</span>
                   <span fg={theme.text}> {isChecked ? '[x]' : '[ ]'} </span>
-                  <span fg={isSelected ? theme.activeText : theme.text}>
-                    {window.name}
-                  </span>
-                  <span
-                    fg={theme.muted}
-                  >{` · ${formatPaneCount(window.panes.length)}`}</span>
+                  <span fg={isSelected ? theme.activeText : theme.text}>{window.name}</span>
+                  <span fg={theme.muted}>{` · ${formatPaneCount(window.panes.length)}`}</span>
                 </text>
               </box>
             )
@@ -215,9 +189,8 @@ function resolvePickerState(input: {
   >['target']
 }) {
   const windows =
-    input.projectWindows.find(
-      (entry) => entry.projectId === input.target.context.projectId,
-    )?.windows ?? []
+    input.projectWindows.find((entry) => entry.projectId === input.target.context.projectId)
+      ?.windows ?? []
   const contextLabel = input.contextLabel ?? input.target.breadcrumb
 
   return {

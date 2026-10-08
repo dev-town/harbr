@@ -44,9 +44,7 @@ try {
   assert.equal(overflowInitial.scrollbarVisible, false)
   assert.equal(overflowSettled?.verticalScrollBar.visible, true)
 
-  console.log(
-    'Validated stable startup header geometry and deferred scrollbar visibility.',
-  )
+  console.log('Validated stable startup header geometry and deferred scrollbar visibility.')
 } finally {
   act(() => root.unmount())
   setup.renderer.destroy()
@@ -54,9 +52,7 @@ try {
 }
 
 async function capture(node: ReactNode) {
-  act(() =>
-    root.render(<KeymapProvider keymap={keymap}>{node}</KeymapProvider>),
-  )
+  act(() => root.render(<KeymapProvider keymap={keymap}>{node}</KeymapProvider>))
   await setup.renderOnce()
 
   const rows = setup.captureCharFrame().split('\n')
@@ -65,15 +61,12 @@ async function capture(node: ReactNode) {
   assert.notEqual(tabsRow, -1)
 
   return {
-    scrollbarVisible: findScrollbox(setup.renderer.root)?.verticalScrollBar
-      .visible,
+    scrollbarVisible: findScrollbox(setup.renderer.root)?.verticalScrollBar.visible,
     tabsRow,
   }
 }
 
-function findScrollbox(
-  rootRenderable: Renderable,
-): ScrollBoxRenderable | undefined {
+function findScrollbox(rootRenderable: Renderable): ScrollBoxRenderable | undefined {
   if (rootRenderable instanceof ScrollBoxRenderable) return rootRenderable
 
   for (const child of rootRenderable.getChildren()) {

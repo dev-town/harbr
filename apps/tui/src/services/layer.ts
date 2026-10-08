@@ -1,8 +1,4 @@
-import {
-  ConfigServiceLive,
-  ConfigServiceOptions,
-  ConfigServiceOptionsLive,
-} from '@harbr/config'
+import { ConfigServiceLive, ConfigServiceOptions, ConfigServiceOptionsLive } from '@harbr/config'
 import {
   DatabaseClientLive,
   DatabaseClientOptions,

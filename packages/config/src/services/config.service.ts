@@ -6,15 +6,14 @@ export type ConfigServiceOptionsApi = {
   readonly defaultConfigPath: string
 }
 
-export class ConfigServiceOptions extends Context.Tag(
-  '@harbr/config/ConfigServiceOptions',
-)<ConfigServiceOptions, ConfigServiceOptionsApi>() {}
+export class ConfigServiceOptions extends Context.Tag('@harbr/config/ConfigServiceOptions')<
+  ConfigServiceOptions,
+  ConfigServiceOptionsApi
+>() {}
 
 export type ConfigServiceApi = {
   readonly load: Effect.Effect<HarbourConfig, HarbourConfigError>
-  readonly loadAtPath: (
-    configPath: string,
-  ) => Effect.Effect<HarbourConfig, HarbourConfigError>
+  readonly loadAtPath: (configPath: string) => Effect.Effect<HarbourConfig, HarbourConfigError>
 }
 
 export class ConfigService extends Context.Tag('@harbr/config/ConfigService')<

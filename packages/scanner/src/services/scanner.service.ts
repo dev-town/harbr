@@ -4,10 +4,7 @@ import type { ProjectConfig, ProjectObservation } from '@harbr/domain'
 import type { RepoInspectionError, RepoNotGitError } from '@harbr/git'
 import type { RuntimeProviderError } from '@harbr/runtime/discovery'
 
-export type ScannerError =
-  | RepoInspectionError
-  | RepoNotGitError
-  | RuntimeProviderError
+export type ScannerError = RepoInspectionError | RepoNotGitError | RuntimeProviderError
 
 export type ProjectObservationResult = {
   readonly project: ProjectConfig
@@ -23,6 +20,7 @@ export type ScannerServiceApi = {
   ) => Effect.Effect<ProjectObservation, ScannerError>
 }
 
-export class ScannerService extends Context.Tag(
-  '@harbr/scanner/ScannerService',
-)<ScannerService, ScannerServiceApi>() {}
+export class ScannerService extends Context.Tag('@harbr/scanner/ScannerService')<
+  ScannerService,
+  ScannerServiceApi
+>() {}

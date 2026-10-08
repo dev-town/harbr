@@ -4,10 +4,7 @@ import { DatabaseMigrationError, DatabaseOpenError } from '../db.errors'
 import { openDatabase, getDefaultDatabasePath } from '../client'
 import { migrateDatabase } from '../migrate'
 import type { DatabaseClientApi, HarbourDatabaseConnection } from '../db.types'
-import {
-  DatabaseClient,
-  DatabaseClientOptions,
-} from './database-client.service'
+import { DatabaseClient, DatabaseClientOptions } from './database-client.service'
 
 export const DatabaseClientOptionsLive = Layer.succeed(DatabaseClientOptions, {
   dbPath: getDefaultDatabasePath(),

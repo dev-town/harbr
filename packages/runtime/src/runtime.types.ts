@@ -17,10 +17,4 @@ export type RuntimeWindowCreation = {
   windows: readonly WindowConfig[]
 }
 
-export type {
-  CurrentRuntime,
-  RuntimeDiscovery,
-  RuntimeIdentity,
-  RuntimeSource,
-  RuntimeTarget,
-}
+export type { CurrentRuntime, RuntimeDiscovery, RuntimeIdentity, RuntimeSource, RuntimeTarget }

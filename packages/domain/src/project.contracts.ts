@@ -2,11 +2,7 @@ import { z } from 'zod'
 
 import { ModuleSelectorSchema, ResolvedModuleSchema } from './module.contracts'
 import { RuntimeAttachmentSchema, RuntimeFactSchema } from './runtime.contracts'
-import {
-  RepoKindSchema,
-  RuntimeIssueSchema,
-  RuntimeSourceSchema,
-} from './shared.contracts'
+import { RepoKindSchema, RuntimeIssueSchema, RuntimeSourceSchema } from './shared.contracts'
 import { WindowConfigSchema } from './window.contracts'
 import { WorkspaceObservationSchema } from './workspace.contracts'
 

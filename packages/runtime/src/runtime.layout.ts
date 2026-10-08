@@ -2,9 +2,7 @@ import { isAbsolute, join } from 'node:path'
 
 import type { WindowPaneConfig } from '@harbr/domain'
 
-export function normalizeRuntimePaneCommands(
-  command: WindowPaneConfig['command'],
-) {
+export function normalizeRuntimePaneCommands(command: WindowPaneConfig['command']) {
   if (!command) {
     return []
   }
@@ -12,10 +10,7 @@ export function normalizeRuntimePaneCommands(
   return typeof command === 'string' ? [command] : command
 }
 
-export function resolveRuntimePaneCwd(
-  runtimeCwd: string,
-  paneCwd: string | undefined,
-) {
+export function resolveRuntimePaneCwd(runtimeCwd: string, paneCwd: string | undefined) {
   if (!paneCwd) {
     return runtimeCwd
   }

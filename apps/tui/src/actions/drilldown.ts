@@ -83,9 +83,7 @@ export async function openModules(
         scope: modulesScope(
           projectId,
           workspaceId,
-          openOptions?.implicitWorkspace === true
-            ? 'implicit-default'
-            : 'explicit',
+          openOptions?.implicitWorkspace === true ? 'implicit-default' : 'explicit',
         ),
       },
       data: {
