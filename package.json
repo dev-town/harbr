@@ -27,6 +27,7 @@
     "test:herdr-plugin": "sh herdr-plugin/scripts/open.test.sh",
     "test:installer": "sh scripts/install.test.sh",
     "test:e2e:tui-themes": "bun run --cwd apps/tui test:e2e:tui-themes",
+    "test:e2e:terminal-control": "bun run --cwd apps/tui test:e2e:terminal-control",
     "typecheck": "turbo run typecheck",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

@@ -37,6 +37,7 @@
       },
       "devDependencies": {
         "@harbr/test-utils": "workspace:*",
+        "@kitlangton/terminal-control": "1.2.1",
         "@types/react": "^19.2.17",
       },
     },
@@ -273,6 +274,16 @@
     "@inquirer/external-editor": ["@inquirer/external-editor@1.0.3", "", { "dependencies": { "chardet": "^2.1.1", "iconv-lite": "^0.7.0" }, "peerDependencies": { "@types/node": ">=18" }, "optionalPeers": ["@types/node"] }, "sha512-RWbSrDiYmO4LbejWY7ttpxczuwQyZLBUyygsA9Nsv95hpzUWwnNTVQmAq3xuh7vNwCp07UTmE5i11XAEExx4RA=="],
 
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
+
+    "@kitlangton/terminal-control": ["@kitlangton/terminal-control@1.2.1", "", { "optionalDependencies": { "@kitlangton/terminal-control-darwin-arm64": "1.2.1", "@kitlangton/terminal-control-darwin-x64": "1.2.1", "@kitlangton/terminal-control-linux-arm64-gnu": "1.2.1", "@kitlangton/terminal-control-linux-x64-gnu": "1.2.1" }, "peerDependencies": { "vitest": ">=3.0.0" }, "optionalPeers": ["vitest"] }, "sha512-xLHRikahSWCRAGr6QHegmVrDGHOBFDzcn+Xm5d5KhbcZ0zaBfeVND7jDNAzSdqW/llHjVdvCDWsP6MgH5VNWTA=="],
+
+    "@kitlangton/terminal-control-darwin-arm64": ["@kitlangton/terminal-control-darwin-arm64@1.2.1", "", { "os": "darwin", "cpu": "arm64", "bin": { "termctrl": "bin/termctrl" } }, "sha512-iKsdk5FGSNbhYirbv1UH3lCQ0zxDCLymKFEQqifVGLj9rZQl+Qr32jzR5yLZVO7d10EzjiNUag1Rkn4hXC7JCg=="],
+
+    "@kitlangton/terminal-control-darwin-x64": ["@kitlangton/terminal-control-darwin-x64@1.2.1", "", { "os": "darwin", "cpu": "x64", "bin": { "termctrl": "bin/termctrl" } }, "sha512-cwU6UDWWF8x5SrE/+oqmUTAik8Gj8dj4jDftbzCaZkNTUKPkxbSyRyWUlOtCQEC0R5c3lD63riIqwXOLmxig3g=="],
+
+    "@kitlangton/terminal-control-linux-arm64-gnu": ["@kitlangton/terminal-control-linux-arm64-gnu@1.2.1", "", { "os": "linux", "cpu": "arm64", "bin": { "termctrl": "bin/termctrl" } }, "sha512-+HsI5ifWOHj463OfxDwjcJtfJmrXrHLcPoO+lgq+cgOfGkKvhad0oU9O2w71jZjIcpqL+Q20gtMzzPycm01Jgw=="],
+
+    "@kitlangton/terminal-control-linux-x64-gnu": ["@kitlangton/terminal-control-linux-x64-gnu@1.2.1", "", { "os": "linux", "cpu": "x64", "bin": { "termctrl": "bin/termctrl" } }, "sha512-2qKEK/CGaXx5P8XXCCXAPWmjucE+QRSJ3iM8Zguig0FVJtsYn2qvhNyGMqh9txB/kS8JJLmo/ATWmMN6z9xPLg=="],
 
     "@manypkg/find-root": ["@manypkg/find-root@1.1.0", "", { "dependencies": { "@babel/runtime": "^7.5.5", "@types/node": "^12.7.1", "find-up": "^4.1.0", "fs-extra": "^8.1.0" } }, "sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA=="],
 

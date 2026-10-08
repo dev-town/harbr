@@ -476,6 +476,14 @@ Run checks:
 bun run check
 ```
 
+Run the popup end-to-end flows (requires `tmux`):
+
+```sh
+bun run test:e2e:terminal-control
+```
+
+This builds the TUI, opens Harbr through a centered tmux popup in a private tmux server, and checks Active session switching, Browse navigation, keyboard help, and configured window and pane creation. The test creates disposable Git repositories and a worktree; it does not use your running tmux server or Harbr database. Failure recordings are saved under `.artifacts/terminal-control/e2e/`.
+
 Individual checks:
 
 ```sh
