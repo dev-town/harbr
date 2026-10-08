@@ -4,7 +4,7 @@ import type {
   SyncProjectResult,
   SyncResult,
 } from '@harbr/domain'
-import { Effect, Either } from 'effect'
+import { Effect, Result } from 'effect'
 
 import type { ProjectServiceApi, ProjectServiceError } from '@harbr/db'
 import type {
@@ -21,17 +21,17 @@ export function syncProjects(
 ) {
   return Effect.gen(function* () {
     const observations = yield* scanner.observeProjects(projects).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.succeed<readonly ProjectObservationResult[]>(
           projects.map((project) => ({
             project,
-            result: Either.left(error),
+            result: Result.fail(error),
           })),
         ),
       ),
     )
     const runtimeObservation = observations.flatMap((observation) =>
-      Either.isRight(observation.result) ? [observation.result.right] : [],
+      Result.isSuccess(observation.result) ? [observation.result.success] : [],
     )[0]
     const reconciledObservations = runtimeObservation
       ? yield* reconcileRuntimeFacts(
@@ -44,11 +44,11 @@ export function syncProjects(
     const results = yield* Effect.forEach(
       reconciledObservations,
       ({ project, result }) =>
-        Either.isLeft(result)
+        Result.isFailure(result)
           ? Effect.succeed<SyncProjectResult>(
-              projectErrorResult(project, result.left),
+              projectErrorResult(project, result.failure),
             )
-          : persistObservation(projectService, result.right),
+          : persistObservation(projectService, result.success),
     )
 
     if (runtimeObservation && runtimeObservation.runtimeIssue === null) {
@@ -72,13 +72,13 @@ export function refreshConfiguredProject(
   return Effect.gen(function* () {
     const observation = yield* scanner.observeProject(project)
     const reconciled = yield* reconcileRuntimeFacts(
-      [{ project, result: Either.right(observation) }],
+      [{ project, result: Result.succeed(observation) }],
       projectService,
       observation.runtimeSource,
     )
     const reconciledResult = reconciled[0]!.result
-    const reconciledObservation = Either.isRight(reconciledResult)
-      ? reconciledResult.right
+    const reconciledObservation = Result.isSuccess(reconciledResult)
+      ? reconciledResult.success
       : observation
     const result = yield* persistObservation(
       projectService,

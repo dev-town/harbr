@@ -7,6 +7,7 @@ export type RuntimeDiscoveryServiceApi = {
   readonly listRuntimes: Effect.Effect<RuntimeDiscovery, RuntimeProviderError>
 }
 
-export class RuntimeDiscoveryService extends Context.Tag(
-  '@harbr/runtime/RuntimeDiscoveryService',
-)<RuntimeDiscoveryService, RuntimeDiscoveryServiceApi>() {}
+export class RuntimeDiscoveryService extends Context.Service<
+  RuntimeDiscoveryService,
+  RuntimeDiscoveryServiceApi
+>()('@harbr/runtime/RuntimeDiscoveryService') {}

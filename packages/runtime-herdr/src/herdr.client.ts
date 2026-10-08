@@ -22,9 +22,9 @@ export type HerdrClientApi = {
   ) => Effect.Effect<string, HerdrUnavailable>
 }
 
-export class HerdrClient extends Context.Tag(
+export class HerdrClient extends Context.Service<HerdrClient, HerdrClientApi>()(
   '@harbr/runtime-herdr/HerdrClient',
-)<HerdrClient, HerdrClientApi>() {}
+) {}
 
 export const HerdrClientLive = Layer.succeed(HerdrClient, {
   execute: (args) =>

@@ -1,7 +1,4 @@
-import {
-  ProjectService,
-  type ProjectServiceApi,
-} from '@harbr/db'
+import { ProjectService, type ProjectServiceApi } from '@harbr/db'
 import type {
   ActiveRuntimeSummary,
   ModuleSummary,
@@ -14,10 +11,7 @@ import { Effect, Layer } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { TuiServices } from '~/app-context'
-import {
-  selectVisibleBrowseRows,
-  tuiStore,
-} from '~/store'
+import { selectVisibleBrowseRows, tuiStore } from '~/store'
 import { createAppState } from '~/store/app/app-state'
 import { createBrowseState } from '~/store/browse/browse-state'
 import { createDataState } from '~/store/data/data-state'
@@ -122,17 +116,13 @@ function testServices(
   workspaces: readonly WorkspaceSummary[],
   modules: readonly ModuleSummary[] = [],
 ) {
-  const projectLayer = Layer.succeed(
-    ProjectService,
-    {
-      listModuleSummaries: () => Effect.succeed(modules),
-      listWorkspaceSummaries: () => Effect.succeed(workspaces),
-    } as unknown as ProjectServiceApi,
-  )
-  const runtimeLayer = Layer.succeed(
-    RuntimeService,
-    { source } as unknown as RuntimeServiceApi,
-  )
+  const projectLayer = Layer.succeed(ProjectService, {
+    listModuleSummaries: () => Effect.succeed(modules),
+    listWorkspaceSummaries: () => Effect.succeed(workspaces),
+  } as unknown as ProjectServiceApi)
+  const runtimeLayer = Layer.succeed(RuntimeService, {
+    source,
+  } as unknown as RuntimeServiceApi)
   const layer = Layer.merge(projectLayer, runtimeLayer)
 
   return {
@@ -216,9 +206,7 @@ function activeRuntime({
     scope,
     workspaceId,
     workspaceName: workspaceId ? 'main' : null,
-    workspacePath: workspaceId
-      ? '/worktrees/workspace-current/main'
-      : null,
+    workspacePath: workspaceId ? '/worktrees/workspace-current/main' : null,
     workspaceProvider: workspaceId ? 'harbr' : null,
   }
 }

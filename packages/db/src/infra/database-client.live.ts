@@ -13,41 +13,31 @@ export const DatabaseClientOptionsLive = Layer.succeed(DatabaseClientOptions, {
   dbPath: getDefaultDatabasePath(),
 })
 
-export const DatabaseClientLive = Layer.scoped(
+export const DatabaseClientLive = Layer.effect(
   DatabaseClient,
-  Effect.flatMap(DatabaseClientOptions, ({ dbPath }) =>
-    Effect.acquireRelease(
-      Effect.gen(function* () {
-        const database = yield* Effect.tryPromise({
-          try: () => openDatabase(dbPath),
-          catch: (error) =>
-            new DatabaseOpenError({
-              dbPath,
-              message: error instanceof Error ? error.message : String(error),
-            }),
-        })
-
-        yield* migrateDatabaseEffect(database)
-
-        return database
+  Effect.gen(function* () {
+    const { dbPath } = yield* DatabaseClientOptions
+    const database = yield* Effect.acquireRelease(
+      Effect.tryPromise({
+        try: () => openDatabase(dbPath),
+        catch: (error) =>
+          new DatabaseOpenError({
+            dbPath,
+            message: error instanceof Error ? error.message : String(error),
+          }),
       }).pipe(
-        Effect.withSpan('db.open', {
-          attributes: {
-            'db.path': dbPath,
-          },
-        }),
+        Effect.withSpan('db.open', { attributes: { 'db.path': dbPath } }),
       ),
       (database) => Effect.sync(() => database.sqlite.close()),
-    ).pipe(
-      Effect.map(
-        (database) =>
-          ({
-            db: database.db,
-            migrate: migrateDatabaseEffect(database),
-          }) satisfies DatabaseClientApi,
-      ),
-    ),
-  ),
+    )
+
+    yield* migrateDatabaseEffect(database)
+
+    return {
+      db: database.db,
+      migrate: migrateDatabaseEffect(database),
+    } satisfies DatabaseClientApi
+  }),
 )
 
 function migrateDatabaseEffect(database: HarbourDatabaseConnection) {

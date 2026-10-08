@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { Either, Effect, Layer } from 'effect'
+import { Result, Effect, Layer } from 'effect'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
@@ -26,7 +26,7 @@ afterEach(async () => {
 
 describe('loadConfigAtPath', () => {
   it('returns config_not_found for missing files', async () => {
-    const result = await runEither(
+    const result = await runResult(
       loadConfigAtPath('/tmp/harbour-config-that-does-not-exist.json'),
     )
 
@@ -41,7 +41,7 @@ describe('loadConfigAtPath', () => {
 
     await writeFile(configPath, '{bad json', 'utf8')
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
     expectLeft(result, InvalidJsonError, {})
   })
@@ -68,19 +68,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'duplicate_project_name' }),
       ]),
@@ -148,19 +148,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: 'schema',
@@ -252,19 +252,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: 'schema',
@@ -288,19 +288,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'repo_not_found' }),
       ]),
@@ -357,19 +357,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'module_path_not_relative' }),
       ]),
@@ -427,19 +427,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: 'module_path_not_relative',
@@ -672,19 +672,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'unknown_window_ref' }),
       ]),
@@ -709,19 +709,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'duplicate_window_name' }),
       ]),
@@ -750,19 +750,19 @@ describe('loadConfigAtPath', () => {
       ],
     })
 
-    const result = await runEither(loadConfigAtPath(configPath))
+    const result = await runResult(loadConfigAtPath(configPath))
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (!Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) {
       return
     }
 
-    expect(result.left).toBeInstanceOf(InvalidConfigError)
-    if (!(result.left instanceof InvalidConfigError)) {
+    expect(result.failure).toBeInstanceOf(InvalidConfigError)
+    if (!(result.failure instanceof InvalidConfigError)) {
       return
     }
 
-    expect(result.left.issues).toEqual(
+    expect(result.failure.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'duplicate_pane_name' }),
       ]),
@@ -770,9 +770,9 @@ describe('loadConfigAtPath', () => {
   })
 })
 
-async function runEither(effect: ReturnType<typeof loadConfigAtPath>) {
+async function runResult(effect: ReturnType<typeof loadConfigAtPath>) {
   return Effect.runPromise(
-    Effect.either(effect).pipe(Effect.provide(configTestLayer)),
+    Effect.result(effect).pipe(Effect.provide(configTestLayer)),
   )
 }
 
@@ -795,17 +795,17 @@ const configTestLayer = ConfigServiceLive.pipe(
 )
 
 function expectLeft(
-  result: Awaited<ReturnType<typeof runEither>>,
+  result: Awaited<ReturnType<typeof runResult>>,
   ErrorType: abstract new (...args: never[]) => Error,
   shape: Record<string, unknown>,
 ) {
-  expect(Either.isLeft(result)).toBe(true)
-  if (!Either.isLeft(result)) {
+  expect(Result.isFailure(result)).toBe(true)
+  if (!Result.isFailure(result)) {
     return
   }
 
-  expect(result.left).toBeInstanceOf(ErrorType)
-  expect(result.left).toMatchObject(shape)
+  expect(result.failure).toBeInstanceOf(ErrorType)
+  expect(result.failure).toMatchObject(shape)
 }
 
 async function createTempRoot() {

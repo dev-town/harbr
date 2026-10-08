@@ -16,7 +16,7 @@ import {
   RuntimeDiscoveryService,
   type RuntimeDiscoveryServiceApi,
 } from '@harbr/runtime/discovery'
-import { Effect, Either, Layer } from 'effect'
+import { Effect, Result, Layer } from 'effect'
 import { ScannerService, ScannerServiceLive } from '@harbr/scanner'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -435,8 +435,8 @@ describe('reconciler', () => {
                 project,
                 result:
                   project.name === 'alpha'
-                    ? Either.right(createObservation(project))
-                    : Either.left(
+                    ? Result.succeed(createObservation(project))
+                    : Result.fail(
                         new RepoNotGitError({ repoPath: project.repo }),
                       ),
               })),
