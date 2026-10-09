@@ -111,6 +111,7 @@ try {
   ])
 
   try {
+    await hold(1_200)
     if (terminalTheme) {
       const statePath = path.join(fixtureRoot, 'terminal-state.json')
       run(termctrl, ['save', sessionName, '--format', 'json', '--out', statePath])
@@ -196,6 +197,17 @@ try {
     mark('modules-end')
 
     await hold(1_000)
+    mark('search-start')
+    await hold(850)
+    send('text:ghostty')
+    await hold(1_750)
+    send('escape')
+    await hold(400)
+    send('escape')
+    await hold(950)
+    mark('search-end')
+
+    await hold(900)
     send('ctrl-a')
     waitFor('Create module windows')
     await hold(750)
@@ -239,15 +251,19 @@ try {
       ],
     },
     {
-      file: '02-find-repos-and-packages.mp4',
+      file: '02-explore-your-projects-and-packages.mp4',
       clips: [{ from: 'active-end', to: 'modules-end' }],
     },
     {
-      file: '03-configured-layouts.mp4',
-      clips: [{ from: 'modules-end', to: 'layout-end' }],
+      file: '03-easy-search.mp4',
+      clips: [{ from: 'modules-end', to: 'search-end' }],
     },
     {
-      file: '04-keyboard-help.mp4',
+      file: '04-custom-layouts.mp4',
+      clips: [{ from: 'search-end', to: 'layout-end' }],
+    },
+    {
+      file: '05-need-help.mp4',
       clips: [{ from: 'layout-end', to: 'end' }],
     },
   ]
