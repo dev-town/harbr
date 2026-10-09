@@ -120,11 +120,13 @@ You can also run `harbr` directly in a terminal after saving the config.
 
 ## See Harbr in action
 
-Watch a one-minute walkthrough of session switching, monorepo navigation, layouts, and keyboard help.
+Watch a short walkthrough of session switching, project and package browsing, search, custom layouts, and keyboard help.
 
 [![Harbr Active tab in a tmux popup over LazyGit](docs/assets/readme/harbr-walkthrough-poster.jpg)](https://dev-town.com/labs/harbr/harbr-walkthrough.mp4)
 
 [Watch the walkthrough with audio (MP4)](https://dev-town.com/labs/harbr/harbr-walkthrough.mp4)
+
+Music: “R&B Trap Beat” by [soundoffreedom on Pixabay](https://pixabay.com/users/soundoffreedom-50460407/), used under the [Pixabay Content License](https://pixabay.com/service/license-summary/). See [video production](docs/video-production.md) for source assets and regeneration steps.
 
 ## Basic controls
 

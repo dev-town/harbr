@@ -125,14 +125,14 @@ Recreate the walkthrough linked in the README from the repository root. This req
 
 ```sh
 HARBR_DEMO_APP_COMMAND=lazygit bun run record:walkthrough
-bun run render:walkthrough
+HARBR_DEMO_MUSIC=/absolute/path/to/soundoffreedom-rampb-trap-beat-549549.mp3 bun run render:walkthrough
 ```
 
 The recorder builds Harbr, creates disposable Git repos and tmux sessions, and captures one continuous walkthrough. It writes an editable recording, review frames, and numbered MP4 feature clips under `.artifacts/terminal-control/walkthrough/`. The private tmux server does not load your normal tmux or Zsh plugin setup.
 
 Set `HARBR_DEMO_APP_COMMAND` to another app launch command or omit it to record without an extra app. For LazyGit, the recorder copies `~/.config/lazygit/config.yml` into its disposable fixture; use `HARBR_DEMO_LAZYGIT_CONFIG` to choose another file. It reads `~/.config/ghostty/ghostty-theme` for the outer terminal session; set `HARBR_DEMO_GHOSTTY_THEME` to use a different file. OpenCode can be recorded with `HARBR_DEMO_APP_COMMAND=$HOME/.opencode/bin/opencode`. The recorder uses disposable XDG data and config directories.
 
-The renderer puts the bundled DevTown Labs intro before clips 01–04 and preserves its audio. Set `HARBR_DEMO_INTRO=/absolute/path/to/another-intro.mp4` to replace it, or add a `99-*.mp4` outro. To edit a feature without re-recording, replace its numbered MP4 and rerender. The standalone `05-also-features.mp4` highlights mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes it before “Try Harbr.”
+The renderer puts the bundled DevTown Labs intro before clips 01–05 and preserves its audio. Set `HARBR_DEMO_INTRO=/absolute/path/to/another-intro.mp4` to replace it, or add a `99-*.mp4` outro. To edit a feature without re-recording, replace its numbered MP4 and rerender. The standalone `06-also-features.mp4` highlights Vim bindings, mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes it before “Try Harbr.” The optional music source, license, and render details are in [video production](docs/video-production.md).
 
 The README links to the playable copy at `https://dev-town.com/labs/harbr/harbr-walkthrough.mp4`. After updating and reviewing `docs/assets/readme/harbr-walkthrough.mp4`, copy it to `apps/website/public/labs/harbr/harbr-walkthrough.mp4` in the DevTown website repository and deploy the website. Keep both files identical.
 

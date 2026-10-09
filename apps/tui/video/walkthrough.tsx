@@ -12,7 +12,7 @@ const cream = '#F9F7F3'
 const gold = '#C89D65'
 const muted = '#6F6862'
 const splashFrames = 102
-export const alsoFrames = 135
+export const alsoFrames = 165
 const endFrames = 120
 
 export type Clip = {
@@ -35,7 +35,7 @@ export function totalFrames(clips: Clip[]) {
   )
 }
 
-function Splash({ clip }: { clip: Clip }) {
+function Splash({ clip, featureCount }: { clip: Clip; featureCount: number }) {
   const frame = useCurrentFrame()
   const opacity = interpolate(frame, [0, 14, 84, 101], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
@@ -67,12 +67,12 @@ function Splash({ clip }: { clip: Clip }) {
             marginBottom: 20,
           }}
         >
-          {clip.number} / 04
+          {clip.number} / {String(featureCount).padStart(2, '0')}
         </div>
         <div
           style={{
             fontFamily: 'Cormorant Garamond, Georgia, serif',
-            fontSize: 122,
+            fontSize: (clip.title?.length ?? 0) > 25 ? 100 : 122,
             fontWeight: 500,
             lineHeight: 1.05,
             maxWidth: 1680,
@@ -87,7 +87,7 @@ function Splash({ clip }: { clip: Clip }) {
 
 export function AlsoScene() {
   const frame = useCurrentFrame()
-  const opacity = interpolate(frame, [0, 16, 117, 134], [0, 1, 1, 0], {
+  const opacity = interpolate(frame, [0, 16, 147, 164], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -116,10 +116,11 @@ export function AlsoScene() {
         </div>
         <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
           {[
-            'Mouse support (if you really need it)',
-            'Herdr supported',
+            'Vim bindings (*lite)',
+            "Mouse support (if that's you)",
+            'Herdr',
             'Monorepo quick navigation',
-            'Git worktrees',
+            'Git Worktrees',
           ].map((feature) => (
             <div
               key={feature}
@@ -204,6 +205,7 @@ function ClipVideo({ clip }: { clip: Clip }) {
 export function Walkthrough({ clips }: WalkthroughProps) {
   const introAndFeatures = clips.filter((clip) => clip.kind !== 'outro')
   const outros = clips.filter((clip) => clip.kind === 'outro')
+  const featureCount = clips.filter((clip) => clip.kind === 'feature').length
 
   return (
     <Series>
@@ -211,7 +213,7 @@ export function Walkthrough({ clips }: WalkthroughProps) {
         ...(clip.kind === 'feature'
           ? [
               <Series.Sequence key={`${clip.file}-splash`} durationInFrames={splashFrames}>
-                <Splash clip={clip} />
+                <Splash clip={clip} featureCount={featureCount} />
               </Series.Sequence>,
             ]
           : []),
