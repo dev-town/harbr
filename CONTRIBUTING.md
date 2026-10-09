@@ -134,10 +134,12 @@ Set `HARBR_DEMO_APP_COMMAND` to another app launch command or omit it to record 
 
 The renderer puts the bundled DevTown Labs intro before clips 01–04 and preserves its audio. Set `HARBR_DEMO_INTRO=/absolute/path/to/another-intro.mp4` to replace it, or add a `99-*.mp4` outro. To edit a feature without re-recording, replace its numbered MP4 and rerender. The standalone `05-also-features.mp4` highlights mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes it before “Try Harbr.”
 
-| Purpose                             | Location                                                                                                                                               |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Intro and audio                     | [`apps/tui/video/assets/devtown-tilde-to-labs.mp4`](apps/tui/video/assets/devtown-tilde-to-labs.mp4)                                                   |
-| Recorder and renderer               | [`record-walkthrough.ts`](apps/tui/scripts/record-walkthrough.ts), [`render-walkthrough.ts`](apps/tui/scripts/render-walkthrough.ts)                   |
-| Scene cards and composition         | [`apps/tui/video/walkthrough.tsx`](apps/tui/video/walkthrough.tsx)                                                                                     |
-| Editable recording and local render | `.artifacts/terminal-control/walkthrough/` (ignored by Git)                                                                                            |
-| Reviewed video and poster           | [`harbr-walkthrough.mp4`](docs/assets/readme/harbr-walkthrough.mp4), [`harbr-walkthrough-poster.jpg`](docs/assets/readme/harbr-walkthrough-poster.jpg) |
+The README links to the playable copy at `https://dev-town.com/labs/harbr/harbr-walkthrough.mp4`. After updating and reviewing `docs/assets/readme/harbr-walkthrough.mp4`, copy it to `apps/website/public/labs/harbr/harbr-walkthrough.mp4` in the DevTown website repository and deploy the website. Keep both files identical.
+
+| Purpose                             | Location                                                                                                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Intro and audio                     | [`apps/tui/video/assets/devtown-tilde-to-labs.mp4`](apps/tui/video/assets/devtown-tilde-to-labs.mp4)                                                       |
+| Recorder and renderer               | [`record-walkthrough.ts`](apps/tui/scripts/record-walkthrough.ts), [`render-walkthrough.ts`](apps/tui/scripts/render-walkthrough.ts)                       |
+| Scene cards and composition         | [`apps/tui/video/walkthrough.tsx`](apps/tui/video/walkthrough.tsx)                                                                                         |
+| Editable recording and local render | `.artifacts/terminal-control/walkthrough/` (ignored by Git)                                                                                                |
+| Reviewed video and poster           | [Playable video](https://dev-town.com/labs/harbr/harbr-walkthrough.mp4), [`harbr-walkthrough-poster.jpg`](docs/assets/readme/harbr-walkthrough-poster.jpg) |
