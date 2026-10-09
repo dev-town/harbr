@@ -12,19 +12,13 @@ Project -> Workspace -> Module -> Runtime
 
 Git remains the source of truth for repository state. The environment that launches Harbr selects the current tmux server or Herdr session as its runtime source. Harbr observes, reconciles, and coordinates them while keeping project configuration provider-neutral.
 
-## Screenshots
+## See Harbr in action
 
-Browse projects, workspaces, and modules from a tmux popup:
+Watch a one-minute walkthrough of live session switching, repository and monorepo navigation, configured layouts, and keyboard help.
 
-![Harbr Browse tab showing module selection](docs/assets/readme/browse-modules.png)
+[![Harbr Active tab in a tmux popup over LazyGit](docs/assets/readme/harbr-walkthrough-poster.jpg)](docs/assets/readme/harbr-walkthrough.mp4)
 
-Switch between active Harbr runtimes:
-
-![Harbr Active tab showing running sessions](docs/assets/readme/active-sessions.png)
-
-Focused popup view:
-
-![Harbr tmux popup focused on active sessions](docs/assets/readme/active-sessions-popup.png)
+[Watch the walkthrough with audio (MP4)](docs/assets/readme/harbr-walkthrough.mp4)
 
 ## Current Status
 
@@ -500,7 +494,7 @@ Render the launch cut with Remotion. The DevTown Labs welcome video with audio i
 bun run render:walkthrough
 ```
 
-The renderer copies the bundled intro into the clips directory as `00-devtown-intro.mp4`, then reads the numbered 01–04 MP4 files in order, preserving the intro audio. Set `HARBR_DEMO_INTRO=/absolute/path/to/another-intro.mp4` to use a different opening, or add a `99-*.mp4` outro. Each recorded feature gets a longer DevTown-styled title card. A standalone `05-also-features.mp4` lists mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes that card before “Try Harbr” and the GitHub URL. The result is `launch-cut-1080p.mp4`. To edit a feature without re-recording, replace its numbered MP4 and rerender. Generated clips and renders remain local artifacts.
+The renderer copies the bundled intro into the clips directory as `00-devtown-intro.mp4`, then reads the numbered 01–04 MP4 files in order, preserving the intro audio. Set `HARBR_DEMO_INTRO=/absolute/path/to/another-intro.mp4` to use a different opening, or add a `99-*.mp4` outro. Each recorded feature gets a longer DevTown-styled title card. A standalone `05-also-features.mp4` lists mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes that card before “Try Harbr” and the GitHub URL. The result is `launch-cut-1080p.mp4`. To edit a feature without re-recording, replace its numbered MP4 and rerender. Working clips and renders remain local artifacts; the reviewed cut linked above is committed at `docs/assets/readme/harbr-walkthrough.mp4`.
 
 Individual checks:
 
