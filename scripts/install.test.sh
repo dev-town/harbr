@@ -21,11 +21,16 @@ case "$(uname -s)" in
   *) fail "unsupported test operating system" ;;
 esac
 
-case "$(uname -m)" in
-  x86_64 | amd64) architecture=x64 ;;
-  arm64 | aarch64) architecture=arm64 ;;
-  *) fail "unsupported test architecture" ;;
-esac
+if [ "$operating_system" = darwin ] && command -v sysctl >/dev/null 2>&1 &&
+  [ "$(sysctl -n hw.optional.arm64 2>/dev/null || true)" = 1 ]; then
+  architecture=arm64
+else
+  case "$(uname -m)" in
+    x86_64 | amd64) architecture=x64 ;;
+    arm64 | aarch64) architecture=arm64 ;;
+    *) fail "unsupported test architecture" ;;
+  esac
+fi
 
 version=9.8.7-test.1
 target="$operating_system-$architecture"
@@ -64,5 +69,39 @@ fi
 [ ! -e "$bad_install_dir/harbr" ] || fail "installer installed an unverified binary"
 grep -F "checksum verification failed" "$temporary_dir/bad-output" >/dev/null || \
   fail "installer did not explain the checksum failure"
+
+mock_bin="$temporary_dir/mock-bin"
+rosetta_target=darwin-arm64
+rosetta_artifact="harbr-$version-$rosetta_target.tar.gz"
+rosetta_release_dir="$temporary_dir/rosetta-releases/v$version"
+rosetta_fixture_dir="$temporary_dir/rosetta-fixture/harbr-$version-$rosetta_target"
+rosetta_install_dir="$temporary_dir/rosetta-bin"
+
+mkdir -p "$mock_bin" "$rosetta_release_dir" "$rosetta_fixture_dir"
+cat > "$mock_bin/uname" <<'EOF'
+#!/bin/sh
+case "$1" in
+  -s) printf 'Darwin\n' ;;
+  -m) printf 'x86_64\n' ;;
+esac
+EOF
+cat > "$mock_bin/sysctl" <<'EOF'
+#!/bin/sh
+[ "$1" = '-n' ] && [ "$2" = 'hw.optional.arm64' ] || exit 1
+printf '1\n'
+EOF
+chmod +x "$mock_bin/uname" "$mock_bin/sysctl"
+cp "$fixture_dir/harbr" "$rosetta_fixture_dir/harbr"
+tar -czf "$rosetta_release_dir/$rosetta_artifact" -C "$temporary_dir/rosetta-fixture" \
+  "harbr-$version-$rosetta_target"
+rosetta_checksum=$(calculate_sha256 "$rosetta_release_dir/$rosetta_artifact")
+printf '%s  %s\n' "$rosetta_checksum" "$rosetta_artifact" > "$rosetta_release_dir/SHA256SUMS"
+
+PATH="$mock_bin:$PATH" HARBR_VERSION="$version" \
+  HARBR_RELEASE_BASE_URL="file://$temporary_dir/rosetta-releases" \
+  HARBR_INSTALL_DIR="$rosetta_install_dir" \
+  sh scripts/install.sh >/dev/null
+[ "$("$rosetta_install_dir/harbr")" = "harbr $version" ] || \
+  fail "installer did not select ARM hardware from a translated shell"
 
 printf 'installer test: ok\n'
