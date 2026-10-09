@@ -4,7 +4,7 @@ Open [Harbr](https://github.com/dev-town/harbr) as a named popup inside Herdr.
 
 ## Requirements
 
-- Herdr 0.8.2 or newer.
+- Herdr 0.8.2 or newer for the plugin.
 - `harbr` available on `PATH`.
 
 Install Harbr with Homebrew:
@@ -60,3 +60,17 @@ herdr plugin uninstall dev-town.harbr
 
 If the popup reports that `harbr` is missing, confirm the executable is on the
 `PATH` inherited by Herdr and reload or restart Herdr.
+
+## Legacy popup
+
+For Herdr versions without plugin support, use a custom-command popup instead:
+
+```toml
+[[keys.command]]
+key = "prefix+shift+h"
+type = "popup"
+command = "harbr"
+description = "Open Harbr"
+width = "80%"
+height = "60%"
+```

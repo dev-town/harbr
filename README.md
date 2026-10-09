@@ -1,356 +1,101 @@
 # Harbr
 
-Harbr is a terminal-native workspace orchestrator for developers working with Git repositories, monorepos, worktrees, tmux or Herdr runtimes, and configured command layouts.
+Harbr brings your Git projects, worktrees, modules, and terminal sessions into one place. Browse a project, create a workspace, open its runtime, or jump back to a session you already have running.
 
-Harbr is not an IDE, terminal multiplexer, Git client, or AI coding tool. It is the control layer that understands development contexts and helps you create, navigate, restore, and jump into the right runtime.
-
-Core model:
-
-```text
-Project -> Workspace -> Module -> Runtime
-```
-
-Git remains the source of truth for repository state. The environment that launches Harbr selects the current tmux server or Herdr session as its runtime source. Harbr observes, reconciles, and coordinates them while keeping project configuration provider-neutral.
-
-## See Harbr in action
-
-Watch a one-minute walkthrough of live session switching, repository and monorepo navigation, configured layouts, and keyboard help.
-
-[![Harbr Active tab in a tmux popup over LazyGit](docs/assets/readme/harbr-walkthrough-poster.jpg)](docs/assets/readme/harbr-walkthrough.mp4)
-
-[Watch the walkthrough with audio (MP4)](docs/assets/readme/harbr-walkthrough.mp4)
-
-## Current Status
-
-Built today:
-
-- TUI popover with Active and Browse tabs.
-- Project -> workspace -> module drilldown.
-- Config loading, validation, and normalization.
-- Git/worktree scanning and module expansion.
-- SQLite state and migrations.
-- Reconciler flow from validated config intent, scanner facts, and runtime facts into the database.
-- tmux session discovery, open/create, close, and configured window/pane creation.
-- Herdr workspace discovery plus project, workspace, and module open/create/focus.
-- Workspace creation that creates Git worktrees.
-- Configured window/pane layout loading into project, workspace, and module sessions.
-- CLI sync entrypoint.
-
-## Roadmap
-
-- Durable events and OpenTelemetry export when product/debugging needs justify them.
-- Richer local agent workflows built on configured tmux layouts.
-- Remote sandbox or agent runtimes if the local runtime model proves out.
+A project is a Git repository. Its workspaces are Git worktrees; modules are directories within them. A tmux session or Herdr workspace is the runtime you can open for any of those contexts.
 
 ## Requirements
 
-To run Harbr locally:
-
 - macOS or Linux on x64 or ARM64.
 - Git with worktree support.
-- tmux or [Herdr](https://herdr.dev/) for local runtimes and popup usage. If tmux `display-popup -B` fails, remove `-B` from the binding.
-
-To build from source or work on this repo:
-
-- Bun `1.3.14`.
+- tmux with `display-popup`, or [Herdr](https://herdr.dev/) 0.8.2 or newer for the Harbr plugin.
 
 ## Install
 
-### Installer
-
-Install the latest stable release to `~/.local/bin`:
+Choose one method:
 
 ```sh
+# Installs the latest stable release to ~/.local/bin
 curl -fsSL https://dev-town.com/labs/harbr/install.sh | sh
 ```
 
-To install a specific version, pass it to the installer process:
-
 ```sh
-curl -fsSL https://dev-town.com/labs/harbr/install.sh | \
-  HARBR_VERSION=0.1.0 sh
-```
-
-Override the installation directory if needed:
-
-```sh
-curl -fsSL https://dev-town.com/labs/harbr/install.sh | \
-  HARBR_INSTALL_DIR="$HOME/bin" sh
-```
-
-The installer downloads the matching macOS or Linux release archive from GitHub and verifies it against the release's `SHA256SUMS` file before installing `harbr`.
-
-### Homebrew
-
-Install with Homebrew:
-
-```sh
+# Installs through the DevTown Homebrew tap
 brew install dev-town/tap/harbr
 ```
 
-Update an existing Homebrew install:
+Check the installation with `harbr --version`. If you used the curl installer and your shell cannot find `harbr`, add its directory to your `PATH` (and to your shell startup file to keep it there):
 
 ```sh
-brew update
-brew upgrade dev-town/tap/harbr
-harbr --version
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-If Homebrew still reports an older Harbr version after `brew update`, reset the tap and check again:
+The installer verifies the release archive against its published SHA-256 checksum.
+
+To update later, rerun the curl installer or use `brew update && brew upgrade dev-town/tap/harbr` for Homebrew.
+
+## Configure Harbr
+
+Harbr needs a JSON config file at `~/.config/harbr/config.json` before it can load your projects. Create that directory and save a config like this:
 
 ```sh
-brew update-reset dev-town/tap
-brew info dev-town/tap/harbr
+mkdir -p ~/.config/harbr
 ```
-
-### From Source
-
-Harbr uses Bun workspaces and Turborepo. From a checkout of this repo:
-
-```sh
-bun install
-```
-
-Build the single Harbr binary:
-
-```sh
-bun run build:tui
-```
-
-Build output:
-
-- Binary: `apps/tui/dist/harbr`
-- Headless sync: `apps/tui/dist/harbr sync`
-
-## Run
-
-Run the installed binary:
-
-```sh
-harbr
-```
-
-Run the source-built binary:
-
-```sh
-./apps/tui/dist/harbr
-```
-
-Run headless sync:
-
-```sh
-harbr sync
-```
-
-Run headless sync with JSON output:
-
-```sh
-harbr sync --json
-```
-
-Run with explicit config and database paths:
-
-```sh
-harbr --path ~/.config/harbr/config.json --db-path ~/.local/share/harbr/harbr.db
-```
-
-## Local Profiling
-
-Harbr can export local OpenTelemetry traces for boot and sync debugging. Start the local Jaeger/OTLP stack:
-
-```sh
-harbr profile up
-```
-
-Run Harbr with profiling enabled:
-
-```sh
-harbr --profile
-```
-
-Profile headless sync:
-
-```sh
-harbr sync --profile
-```
-
-Open the Jaeger UI:
-
-```sh
-harbr profile url
-```
-
-The default OTLP endpoint is `http://localhost:4318`. Use `--profile-endpoint <url>` or `HARBR_OTLP_ENDPOINT` to export to a different local collector. Stop the local stack with:
-
-```sh
-harbr profile down
-```
-
-When profiling is enabled and no collector is reachable, Harbr exits with a message telling you to run `harbr profile up`.
-
-## Config
-
-Default config path:
-
-```text
-~/.config/harbr/config.json
-```
-
-Default database path:
-
-```text
-~/.local/share/harbr/harbr.db
-```
-
-Example config:
-
-The `$schema` URL enables editor validation and completion against the current
-Harbr config schema.
 
 ```json
 {
   "$schema": "https://dev-town.com/labs/harbr/harbr.schema.json",
-  "theme": "system",
   "projects": [
     {
       "name": "harbr",
-      "repo": "~/Sites/harbr/harbr.git",
+      "repo": "~/Projects/harbr",
       "modules": [".", "apps/", "packages/"]
     },
     {
-      "name": "myweddin",
-      "repo": "~/Sites/myweddin/",
-      "modules": [".", "apps/", "packages/"]
+      "name": "Atlas",
+      "repo": "~/Projects/atlas",
+      "modules": [".", "apps/"]
     },
     {
-      "name": "DevTown 2026",
-      "repo": "~/Sites/devtown-2026/devtown.git"
-    },
-    {
-      "name": "Dotfiles",
-      "repo": "~/.dotfiles/"
+      "name": "Studio",
+      "repo": "~/Projects/studio"
     }
   ],
   "windows": [
     {
-      "name": "Agent",
-      "panes": [
-        {
-          "name": "Opencode",
-          "command": "opencode"
-        },
-        {
-          "name": "CLI"
-        }
-      ]
-    },
-    {
       "name": "Editor",
-      "panes": [
-        {
-          "name": "Neovim",
-          "command": "nvim"
-        },
-        {
-          "name": "CLI"
-        }
-      ]
+      "panes": [{ "name": "Neovim", "command": "nvim" }, { "name": "Shell" }]
     }
   ]
 }
 ```
 
-Config notes:
+Replace the example `repo` paths with Git repositories that exist on your machine, and remove projects you do not use. Harbr reports an error for a missing repo path.
 
-- `theme` is optional and defaults to `system`.
-- Supported themes: `system`, `tokyonight`, `everforest`, `ayu`, `catppuccin`, `catppuccin-macchiato`, `gruvbox`, `kanagawa`, `nord`, and `atom-one-dark`.
-- `repo` may use `~` and is resolved to an absolute path.
-- `repo` can point at a normal checkout or a bare Git directory.
-- Harbr discovers existing Git worktrees wherever Git reports them.
-- Harbr-created worktrees are stored under `~/.local/share/harbr/worktrees/<project>/<workspace>`.
-- `modules` are repo-relative selectors.
-- Use `.` for the repo root module.
-- Use a trailing slash like `apps/` or `packages/` to expand child directories.
-- Absolute module paths and `/` are rejected.
-- `windows` define reusable runtime window/pane layouts. Layout application currently targets tmux; Herdr layout support is still in progress.
-- Loading a layout creates missing configured windows and panes in the target session.
-- Existing configured windows are skipped, not duplicated.
-- Project-level `windows` can reference global window names or define inline windows.
-- A project can set `"windows": []` to disable global windows for that project.
-- Pane `cwd` is optional and is resolved relative to the runtime cwd.
-- Pane `command` may be a string or an array of strings.
+- `$schema` gives your editor validation and completion.
+- `repo` accepts `~` and can point to a checkout or bare Git directory.
+- `modules` are optional: `.` selects the repo root, while `apps/` expands its immediate child directories.
+- `windows` defines a reusable layout for tmux windows and panes or Herdr tabs and panes. Load it from Harbr's context actions. The example uses Neovim, so edit or remove that command if you do not use it.
 
-## TUI Usage
+### Open Harbr in a tmux popup
 
-The TUI starts on the Active tab when possible. It restores context from the focused runtime in the current tmux server or Herdr session, then falls back to saved UI context in the Harbr database.
-
-Core keys:
-
-- `Tab`: next tab.
-- `Shift+Tab`: previous tab.
-- `j` / `Down`: move down.
-- `k` / `Up`: move up.
-- `Ctrl+D` / `PageDown`: page down.
-- `Ctrl+U` / `PageUp`: page up.
-- `/` or `i`: focus search.
-- `Esc`: clear search, go back, close modal, or close from the root list.
-- `Enter`: select, drill down, switch session, or attach/create runtime depending on context.
-- `Ctrl+F`: toggle Active/All visibility in Browse.
-- `Ctrl+A`: open contextual actions.
-- `Ctrl+R`: refresh projects and runtimes.
-- `?`: show help.
-- `Ctrl+C`: quit.
-
-Common flows:
-
-- Browse projects, workspaces, and modules from the Browse tab.
-- Press `Enter` on a leaf context to focus an existing runtime or create one in the current provider.
-- Use the Active tab to switch between currently open Harbr runtimes in the current tmux server or Herdr session.
-- Use `Ctrl+A` to open context actions such as open/start, workspace creation, or configured layout loading.
-- Create a workspace to create a Git worktree, then open/start that workspace as a runtime.
-- Load configured layouts to create tmux windows and panes with optional startup commands.
-
-## tmux Popup Setup
-
-Harbr is designed to be launched inside a tmux popup.
-
-Example tmux binding:
+Add a binding to `~/.tmux.conf`:
 
 ```tmux
-bind-key -r H display-popup -B -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "$HOME/bin/harbr"
+bind-key -r H display-popup -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "$HOME/.local/bin/harbr"
 ```
 
-Use any key you prefer. `prefix + p` is widely used by tmux users, so `prefix + H` or `prefix + S` is usually safer.
+Reload tmux with `tmux source-file ~/.tmux.conf`, then press your tmux prefix followed by `H`. This path matches the curl installer's default. For Homebrew or a custom install directory, replace `$HOME/.local/bin/harbr` with the path shown by `command -v harbr`. The popup opens in the current pane's directory and closes when you exit Harbr.
 
-During local development, point the binding at the built binary:
+### Open Harbr in a Herdr popup
 
-```tmux
-bind-key -r H display-popup -B -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "<repo>/apps/tui/dist/harbr"
-```
-
-Option notes:
-
-- `-B`: borderless popup. Requires a newer tmux version.
-- `-E`: close the popup when Harbr exits.
-- `-d "#{pane_current_path}"`: launch from the current pane directory.
-- `-w 80% -h 60%`: popup width and height.
-- `-x C -y C`: center the popup.
-
-If your tmux does not support `-B`, remove it:
-
-```tmux
-bind-key -r H display-popup -E -d "#{pane_current_path}" -w 80% -h 60% -x C -y C "$HOME/bin/harbr"
-```
-
-## Herdr Popup Setup
-
-Install Harbr's Herdr plugin:
+Install the [Herdr plugin](herdr-plugin/README.md):
 
 ```sh
 herdr plugin install dev-town/harbr/herdr-plugin
 ```
 
-Then bind its open action in `~/.config/herdr/config.toml`:
+Add its keybinding to `~/.config/herdr/config.toml`:
 
 ```toml
 [[keys.command]]
@@ -360,196 +105,36 @@ command = "dev-town.harbr.open"
 description = "Open Harbr"
 ```
 
-Herdr plugins cannot install keybindings, so choose another key if `prefix+shift+h` conflicts with your configuration. Restart Herdr or reload its configuration after saving the binding. The plugin requires `harbr` on the shell path Herdr receives.
+Run `herdr server reload-config`, then use `prefix+shift+h`. The plugin needs `harbr` on the `PATH` inherited by Herdr. Choose another key if that binding is already in use. The [plugin guide](herdr-plugin/README.md) includes install and troubleshooting details.
 
-For Herdr versions without plugin support, use the legacy custom-command popup:
+You can also run `harbr` directly in a terminal after saving the config.
 
-```toml
-[[keys.command]]
-key = "prefix+shift+h"
-type = "popup"
-command = "harbr"
-description = "Open Harbr"
-width = "80%"
-height = "60%"
-```
+## Features
 
-When launched from this popup, Harbr scopes Active and Browse to the current Herdr session. Selecting a project, workspace, or module focuses its existing Herdr workspace by workspace ID, or creates and focuses a workspace rooted at that context's resolved working directory. The popup closes after a successful jump.
+- Browse configured projects, Git worktrees, and modules from the Browse tab.
+- See active tmux sessions or Herdr workspaces and switch to one from the Active tab.
+- Create a Git worktree from Harbr, then open its runtime.
+- Open or create a runtime for a project, workspace, or module.
+- Load configured layouts as tmux windows and panes or Herdr tabs and panes, including optional startup commands.
+- Search lists, use contextual actions, and open keyboard help without leaving the TUI.
 
-## tmux Runtime Names
+## See Harbr in action
 
-Harbr uses semantic tmux session names for created runtimes:
+Watch a one-minute walkthrough of session switching, monorepo navigation, layouts, and keyboard help.
 
-```text
-project
-project~~workspace
-project~~workspace~~module
-```
+[![Harbr Active tab in a tmux popup over LazyGit](docs/assets/readme/harbr-walkthrough-poster.jpg)](docs/assets/readme/harbr-walkthrough.mp4)
 
-Examples:
+[Watch the walkthrough with audio (MP4)](docs/assets/readme/harbr-walkthrough.mp4)
 
-```text
-shop
-shop~~feature-checkout
-shop~~feature-checkout~~apps/web
-```
+## Basic controls
 
-Session segments escape tmux-dangerous characters such as `~`, `:`, `.`, and `%`. Existing tmux sessions without `~~` are treated as project-level sessions named after the tmux session.
+- `Tab` / `Shift+Tab`: switch between Active and Browse.
+- `j` / `k` or arrow keys: move through lists.
+- `Enter`: select a context, open a runtime, or switch sessions.
+- `Ctrl+A`: open context actions, including workspace creation and layout loading.
+- `/` or `i`: search; `Esc`: clear search, go back, or close a modal.
+- `Ctrl+R`: refresh; `?`: show all keys; `Ctrl+C`: quit.
 
-## Repo Structure
+Harbr stores local metadata in `~/.local/share/harbr/harbr.db`. Use `harbr --path <config>` or `harbr --db-path <database>` to override the defaults. Run `harbr sync` to refresh configured projects without opening the TUI; add `--json` for machine-readable output.
 
-```text
-apps/
-  tui/                 OpenTUI React app
-
-packages/
-  config/              config schema, loading, validation, normalization
-  db/                  SQLite client, schema, migrations, project snapshots
-  domain/              shared domain types
-  git/                 Git repository and workspace inspection
-  reconciler/          sync/reconcile services
-  runtime/             provider-neutral runtime capabilities
-  runtime-herdr/       Herdr runtime adapter
-  runtime-tmux/        tmux runtime adapter
-  scanner/             project/workspace/module scanning
-  test-utils/          shared test helpers
-
-docs/                  product, architecture, and UX notes
-```
-
-## Working On The Repo
-
-Install dependencies:
-
-```sh
-bun install
-```
-
-Start the TUI from source:
-
-```sh
-bun run --cwd apps/tui start
-```
-
-Run headless sync from source:
-
-```sh
-bun run --cwd apps/tui start -- sync
-```
-
-Build everything:
-
-```sh
-bun run build
-```
-
-Build the TUI binary:
-
-```sh
-bun run build:tui
-```
-
-### Release Notes
-
-Harbr uses Changesets for release notes and version bumps. Feature, fix, and security PRs should include a changeset:
-
-```sh
-bun changeset
-```
-
-For user-facing binary changes, select `@harbr/tui`. After changesets land on `main`, GitHub Actions opens or updates a `Version Packages` PR with the next SemVer version and changelog. Merge that version PR when ready to release, then tag the resulting `main` commit. See the [release guide](docs/releasing.md) for the full process.
-
-Run checks:
-
-```sh
-bun run check
-```
-
-Run the popup end-to-end flows (requires `tmux`):
-
-```sh
-bun run test:e2e:terminal-control
-```
-
-This builds the TUI, opens Harbr through a centered tmux popup in a private tmux server, and checks Active session switching, Browse navigation, keyboard help, and configured window and pane creation. The test creates disposable Git repositories and a worktree; it does not use your running tmux server or Harbr database. Failure recordings are saved under `.artifacts/terminal-control/e2e/`.
-
-### Launch video
-
-Recreate the walkthrough linked above from the repository root (requires `tmux`; LazyGit provides the filmed backdrop):
-
-```sh
-HARBR_DEMO_APP_COMMAND=lazygit bun run record:walkthrough
-bun run render:walkthrough
-```
-
-The recorder builds Harbr, creates disposable Git repositories and tmux sessions, then captures the outer tmux window as one continuous walkthrough: a real switch from one active session to another, Browse navigation through a Herdr-shaped Rust workspace fixture, a menu of configured windows, and scrolling keyboard help. The demo starts real Neovim and isolated Zsh shells using your Starship theme when available. It writes an editable terminal-control recording, review frames, and four ordered MP4 feature clips to `.artifacts/terminal-control/walkthrough/`. The private tmux server uses a small warm-coloured status configuration with an obvious active-session label and does not load your full tmux or Zsh plugin setup.
-
-Set `HARBR_DEMO_APP_COMMAND` to another app launch command, or omit it to record without an extra app. For LazyGit, the recorder copies your complete `~/.config/lazygit/config.yml` into the disposable fixture and passes it explicitly with `--use-config-file`; set `HARBR_DEMO_LAZYGIT_CONFIG` to use a different file. The recorder also reads `~/.config/ghostty/ghostty-theme` when present and applies its foreground, background, and 16 ANSI colours to the outer terminal-control session before attaching tmux. Set `HARBR_DEMO_GHOSTTY_THEME` to use another theme file. OpenCode can be used if it starts successfully in an isolated fixture: `HARBR_DEMO_APP_COMMAND=$HOME/.opencode/bin/opencode bun run record:walkthrough`. The recorder gives the app disposable XDG data and config directories, so it does not use your OpenCode sessions or credentials.
-
-The renderer copies the bundled DevTown Labs intro into the clips directory as `00-devtown-intro.mp4`, then reads the numbered 01–04 MP4 files in order, preserving the intro audio. Set `HARBR_DEMO_INTRO=/absolute/path/to/another-intro.mp4` to use a different opening, or add a `99-*.mp4` outro. Each recorded feature gets a DevTown-styled title card. A standalone `05-also-features.mp4` lists mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes that card before “Try Harbr” and the GitHub URL. To edit a feature without re-recording, replace its numbered MP4 and rerender.
-
-| Purpose                                                              | Location                                                                                                                                               |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Original intro used by default, including audio                      | [`apps/tui/video/assets/devtown-tilde-to-labs.mp4`](apps/tui/video/assets/devtown-tilde-to-labs.mp4)                                                   |
-| Recording and rendering scripts                                      | [`record-walkthrough.ts`](apps/tui/scripts/record-walkthrough.ts), [`render-walkthrough.ts`](apps/tui/scripts/render-walkthrough.ts)                   |
-| Scene cards and composition                                          | [`apps/tui/video/walkthrough.tsx`](apps/tui/video/walkthrough.tsx)                                                                                     |
-| Editable recording, numbered clips, and local `launch-cut-1080p.mp4` | `.artifacts/terminal-control/walkthrough/` (ignored by Git)                                                                                            |
-| Reviewed video and README poster                                     | [`harbr-walkthrough.mp4`](docs/assets/readme/harbr-walkthrough.mp4), [`harbr-walkthrough-poster.jpg`](docs/assets/readme/harbr-walkthrough-poster.jpg) |
-
-Individual checks:
-
-```sh
-bun run lint
-bun run test
-bun run typecheck
-bun run format:check
-```
-
-### Database Migrations
-
-When changing `packages/db/src/schema.ts`, generate Drizzle SQL first, then generate Harbour's compiled-binary-safe migration wrappers:
-
-```sh
-bun run --cwd packages/db db:generate -- --name your_migration_name
-bun run --cwd packages/db db:migration
-bun run check:migrations
-```
-
-Commit both the Drizzle output and generated wrappers:
-
-```text
-packages/db/drizzle/**
-packages/db/src/migrations/**
-packages/db/src/migrations.gen.ts
-```
-
-`db:generate` updates Drizzle SQL and journal files. `db:migration` converts those SQL migrations into TypeScript modules embedded in the compiled TUI/CLI binaries.
-
-### Effect Runtime Shape
-
-Harbr packages expose Effect service tags, API types, and live layers. Packages should not export convenience helper functions that secretly provide live implementations.
-
-Runtime choices such as config and database paths are represented as option services:
-
-```text
-ConfigServiceOptions -> ConfigServiceLive
-DatabaseClientOptions -> DatabaseClientLive -> ProjectServiceLive
-```
-
-`apps/tui` composes package live layers and option layers into one app layer, then creates one shared Effect runtime when the interactive TUI launches. TUI actions and data helpers run programs through that shared runtime and request services explicitly:
-
-```ts
-Effect.gen(function* () {
-  const runtime = yield* RuntimeService
-
-  return yield* runtime.openOrCreateRuntime(target)
-})
-```
-
-One-shot commands such as `harbr sync` create an app runtime for the command and dispose it after rendering output.
-
-Format:
-
-```sh
-bun run format
-```
+For building, testing, and contributing, see [CONTRIBUTING.md](CONTRIBUTING.md). Maintainers can find the release process in [docs/releasing.md](docs/releasing.md).
