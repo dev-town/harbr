@@ -60,11 +60,16 @@ detect_target() {
     *) fail "unsupported operating system: $(uname -s)" ;;
   esac
 
-  case "$(uname -m)" in
-    x86_64 | amd64) architecture=x64 ;;
-    arm64 | aarch64) architecture=arm64 ;;
-    *) fail "unsupported architecture: $(uname -m)" ;;
-  esac
+  if [ "$operating_system" = darwin ] && has_command sysctl &&
+    [ "$(sysctl -n hw.optional.arm64 2>/dev/null || true)" = 1 ]; then
+    architecture=arm64
+  else
+    case "$(uname -m)" in
+      x86_64 | amd64) architecture=x64 ;;
+      arm64 | aarch64) architecture=arm64 ;;
+      *) fail "unsupported architecture: $(uname -m)" ;;
+    esac
+  fi
 
   printf '%s-%s\n' "$operating_system" "$architecture"
 }
