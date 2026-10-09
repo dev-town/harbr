@@ -6,7 +6,7 @@ if ! command -v harbr >/dev/null 2>&1; then
   cat >&2 <<'EOF'
 harbr is required but was not found on PATH.
 Install it from https://dev-town.com/labs/harbr/ or run:
-  curl -fsSL https://dev-town.com/labs/harbr/install.sh | HARBR_VERSION=0.1.0-beta.5 sh
+  curl -fsSL https://dev-town.com/labs/harbr/install.sh | sh
 EOF
   exit 127
 fi

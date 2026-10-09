@@ -31,8 +31,8 @@ if PATH="/usr/bin:/bin" HERDR_BIN_PATH=/bin/echo sh "$script_dir/open.sh" \
   exit 1
 fi
 
-if ! grep -q 'HARBR_VERSION=0.1.0-beta.5' "$temp_dir/missing.log"; then
-  printf '%s\n' "missing harbr instructions omit beta version" >&2
+if ! grep -Fq 'curl -fsSL https://dev-town.com/labs/harbr/install.sh | sh' "$temp_dir/missing.log"; then
+  printf '%s\n' "missing harbr instructions omit the stable installer" >&2
   exit 1
 fi
 

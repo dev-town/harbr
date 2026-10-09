@@ -13,11 +13,10 @@ Install Harbr with Homebrew:
 brew install dev-town/tap/harbr
 ```
 
-Alternatively, install the current beta on macOS or Linux:
+Alternatively, install the latest stable release on macOS or Linux:
 
 ```sh
-curl -fsSL https://dev-town.com/labs/harbr/install.sh |
-  HARBR_VERSION=0.1.0-beta.5 sh
+curl -fsSL https://dev-town.com/labs/harbr/install.sh | sh
 ```
 
 ## Install

@@ -1,5 +1,22 @@
 # @harbr/tui
 
+## 0.1.0
+
+### Minor Changes
+
+- 02c63a4: Open, create, and focus configured Harbr contexts from a Herdr custom-command popup.
+- 791545d: Boot time improvements
+- 02c63a4: Added Herdr support
+- 806952f: Theme support
+
+### Patch Changes
+
+- 8f4c98b: Add the official Herdr plugin for opening Harbr as a named popup.
+- e5f97df: Simplify popup borders and remove the header logo for a cleaner terminal layout.
+- 9cd39d6: Match space-separated search terms across active sessions, projects, workspace context, and branch names, with contiguous name matches ranked first.
+- 14974dd: Add a checksum-verified installer for macOS and Linux release binaries.
+- 94c5844: Keep Herdr workspaces attached to their original Harbr context when pane directories change.
+
 ## 0.1.0-beta.8
 
 ### Patch Changes
