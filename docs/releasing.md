@@ -55,6 +55,18 @@ that the public script matches this repository before the first stable release:
 curl -fsSL https://dev-town.com/labs/harbr/install.sh | cmp - scripts/install.sh
 ```
 
+The public config schema lives at
+`https://dev-town.com/labs/harbr/harbr.schema.json`. Its source of truth is the
+generated `packages/config/harbr.schema.json`. When the config schema changes,
+regenerate it with `bun run --cwd packages/config schema:generate`, copy it to
+`apps/website/public/labs/harbr/harbr.schema.json` in the DevTown website
+repository, and deploy the website before tagging the release. Verify the
+published file matches:
+
+```sh
+curl -fsSL https://dev-town.com/labs/harbr/harbr.schema.json | cmp - packages/config/harbr.schema.json
+```
+
 ## Publish
 
 Once the versioned commit is on `main`, create and push a matching tag:

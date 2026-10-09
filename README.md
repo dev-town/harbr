@@ -204,9 +204,12 @@ Default database path:
 
 Example config:
 
+The `$schema` URL enables editor validation and completion against the current
+Harbr config schema.
+
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/dev-town/harbr/main/packages/config/harbr.schema.json",
+  "$schema": "https://dev-town.com/labs/harbr/harbr.schema.json",
   "theme": "system",
   "projects": [
     {

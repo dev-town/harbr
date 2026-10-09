@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/dev-town/harbr/main/packages/config/harbr.schema.json",
+  "$id": "https://dev-town.com/labs/harbr/harbr.schema.json",
   "title": "Harbr Config",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
