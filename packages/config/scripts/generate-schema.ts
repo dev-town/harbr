@@ -18,7 +18,7 @@ const { ['~standard']: _standard, ...generatedSchema } = z.toJSONSchema(configSc
 })
 
 const schema = withClosedObjects({
-  $id: 'https://raw.githubusercontent.com/dev-town/harbr/main/packages/config/harbr.schema.json',
+  $id: 'https://dev-town.com/labs/harbr/harbr.schema.json',
   title: 'Harbr Config',
   ...generatedSchema,
 })
