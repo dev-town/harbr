@@ -5,7 +5,7 @@ import { selectVisibleActiveRows } from './active/active-selectors'
 import { selectVisibleBrowseRows } from './browse/browse-selectors'
 import { tuiStore } from './app-store'
 import type { TuiStoreModel } from './types'
-import type { ProjectRow, WorkspaceRow } from '~/types/rows'
+import type { ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
 
 const runtime: RuntimeAttachment = {
   identity: {
@@ -48,6 +48,46 @@ function workspace(projectName: string, name: string): WorkspaceRow {
   }
 }
 
+function moduleRow(
+  projectName: string,
+  workspaceName: string,
+  name: string,
+  branchName: string,
+): ModuleRow {
+  const id = `${projectName}-${workspaceName}-${name}`
+
+  return {
+    id,
+    kind: 'module',
+    label: name,
+    projectId: projectName,
+    workspaceId: `${projectName}-${workspaceName}`,
+    moduleId: id,
+    branchName,
+    isActive: true,
+    metadata: runtime.status,
+    hasSession: true,
+    modulePath: name,
+    runtime,
+    target: {
+      breadcrumb: `${projectName} › ${workspaceName} › ${name}`,
+      context: {
+        projectId: projectName,
+        workspaceId: `${projectName}-${workspaceName}`,
+        moduleId: id,
+      },
+      label: name,
+      runtimeTarget: {
+        cwd: `/tmp/${id}`,
+        moduleName: name,
+        projectName,
+        workspaceName,
+      },
+      scope: 'module',
+    },
+  }
+}
+
 function project(name: string, metadata: string): ProjectRow {
   return {
     id: name,
@@ -76,7 +116,10 @@ function project(name: string, metadata: string): ProjectRow {
   }
 }
 
-function withActiveQuery(rows: readonly WorkspaceRow[], query: string): TuiStoreModel {
+function withActiveQuery(
+  rows: readonly (ModuleRow | WorkspaceRow)[],
+  query: string,
+): TuiStoreModel {
   const state = tuiStore.getState()
   return {
     ...state,
@@ -117,6 +160,36 @@ describe('list search', () => {
       ['Slack-main', 'Main Slack-feature'],
     )
   })
+
+  it.each(['con har mai effec', 'effec mai har con', '  CON   HAR   MAI   EFFEC  '])(
+    'matches every monorepo module, project, workspace, and branch fragment for %s',
+    (query) => {
+      const rows = [
+        moduleRow('Harbour', 'main', 'packages/config', 'codex/effect-v4-layering'),
+        moduleRow('Harbour', 'main', 'packages/runtime', 'codex/effect-v4-layering'),
+        moduleRow('Harbour', 'main', 'packages/config', 'codex/search-ranking'),
+      ]
+
+      expect(selectVisibleActiveRows(withActiveQuery(rows, query)).map((row) => row.id)).toEqual([
+        'Harbour-main-packages/config',
+      ])
+    },
+  )
+
+  it.each(['mai har code', 'code har mai', '  MAI   HAR   CODE  '])(
+    'matches every top-level workspace, project, and branch fragment for %s',
+    (query) => {
+      const rows = [
+        { ...workspace('Harbour', 'main'), branchName: 'codex/effect-v4-layering' },
+        { ...workspace('Harbour', 'main-alt'), branchName: 'feature/effect-v4-layering' },
+        { ...workspace('Other', 'main'), branchName: 'codex/effect-v4-layering' },
+      ]
+
+      expect(selectVisibleActiveRows(withActiveQuery(rows, query)).map((row) => row.id)).toEqual([
+        'Harbour-main',
+      ])
+    },
+  )
 
   it.each(['main sla', 'sla main', '  MAIN   sLa  '])(
     'matches all project terms independently for %s',

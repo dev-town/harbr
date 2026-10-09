@@ -24,6 +24,7 @@ export function selectVisibleActiveRows(
       score: scoreSearch(terms, {
         label: row.label,
         context: row.target.breadcrumb,
+        metadata: row.kind === 'project' ? '' : (row.branchName ?? ''),
       }),
     }))
     .filter((entry) => entry.score >= 0)
