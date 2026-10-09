@@ -11,6 +11,8 @@ HARBR_DEMO_MUSIC=/absolute/path/to/soundoffreedom-rampb-trap-beat-549549.mp3 bun
 
 The recording command uses disposable Git repositories, tmux sessions, and Harbr configuration. It reads the local Ghostty palette and LazyGit configuration when available. The render command writes `.artifacts/terminal-control/walkthrough/launch-cut-1080p.mp4` and the standalone `06-also-features.mp4` card. These working files are ignored by Git. Review the cut before copying it to the public video path above; update the poster if the opening image changes.
 
+The README plays the copy hosted by the separate DevTown website. After the Harbr video is reviewed, copy the committed MP4 to `apps/website/public/labs/harbr/harbr-walkthrough.mp4` in the DevTown website repository and deploy that site. Until then, the README's hosted link will show the previous cut.
+
 The DevTown Labs intro, including its original audio, is bundled at `apps/tui/video/assets/devtown-tilde-to-labs.mp4`. Set `HARBR_DEMO_INTRO` to another MP4 to change it. The renderer adds the optional background track after the intro, at low volume, and fades it out before an optional `99-*.mp4` outro. If `HARBR_DEMO_MUSIC` is unset, the render has only audio from the source clips.
 
 Remotion normally uses its matching Chrome headless shell. If that browser is already cached elsewhere, set `HARBR_DEMO_BROWSER_EXECUTABLE` to its absolute path. A different system Chrome build previously introduced flashing frames in this walkthrough.
