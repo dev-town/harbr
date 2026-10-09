@@ -165,6 +165,7 @@ export function listActiveRuntimeSummaries(
       }
 
       return {
+        branchName: workspace?.branchName ?? null,
         id: runtime.id,
         moduleId: module?.id ?? null,
         moduleName: module?.name ?? null,

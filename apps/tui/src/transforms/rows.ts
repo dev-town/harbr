@@ -151,7 +151,7 @@ export function mapActiveRuntimeSummaryToRow(summary: ActiveRuntimeSummary): Har
       isCurrent: false,
       metadata: summary.runtime.status,
       activeSessionCount: 1,
-      branchName: null,
+      branchName: summary.branchName ?? null,
       hasModules: false,
       isDefault: false,
       runtime,
@@ -175,6 +175,7 @@ export function mapActiveRuntimeSummaryToRow(summary: ActiveRuntimeSummary): Har
   }
 
   return {
+    branchName: summary.branchName ?? null,
     id: summary.id,
     kind: 'module',
     label: summary.moduleName ?? summary.workspaceName ?? summary.projectName,

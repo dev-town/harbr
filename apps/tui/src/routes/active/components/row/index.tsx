@@ -22,13 +22,21 @@ export function ActiveRouteRow({
   row,
   variant,
 }: ActiveRouteRowProps) {
+  const { projectName, workspaceName } = row.target.runtimeTarget
+  const breadcrumb =
+    row.kind === 'project'
+      ? projectName
+      : [projectName, ...(row.kind === 'module' ? [workspaceName] : []), row.branchName]
+          .filter(Boolean)
+          .join(' › ')
+
   return (
     <ListRow
       isHovered={isHovered}
       isSelected={isSelected}
       marker={row.isCurrent ? '●' : '○'}
       markerColor={row.isCurrent ? theme.active : theme.idle}
-      meta={{ breadcrumb: row.target.breadcrumb }}
+      meta={{ breadcrumb }}
       name={row.label}
       onRowClick={onRowClick}
       onRowHover={onRowHover}

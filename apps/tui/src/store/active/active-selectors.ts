@@ -3,22 +3,30 @@ import { isSameRuntimeIdentity, type CurrentRuntime, type RuntimeAttachment } fr
 import type { TuiStoreModel } from '~/store/types'
 import type { HarbourRow } from '~/types/rows'
 import { getSelectedRow } from '~/store/shared/list-selectors'
+import { scoreSearch, searchTerms } from '~/store/shared/search'
 
 export function selectVisibleActiveRows(
   state: TuiStoreModel,
 ): readonly (HarbourRow & { runtime: RuntimeAttachment })[] {
-  const query = state.active.list.query.trim().toLowerCase()
+  const terms = searchTerms(state.active.list.query)
   const rows = state.data.activeRuntimeRows.filter(hasRuntime).map((row) => ({
     ...row,
     isCurrent: isCurrentActiveRow(row, state.app.currentRuntime),
   }))
 
-  if (!query) {
+  if (terms.length === 0) {
     return rows
   }
 
   return rows
-    .map((row) => ({ row, score: row.label.toLowerCase().indexOf(query) }))
+    .map((row) => ({
+      row,
+      score: scoreSearch(terms, {
+        label: row.label,
+        context: row.target.breadcrumb,
+        metadata: row.kind === 'project' ? '' : (row.branchName ?? ''),
+      }),
+    }))
     .filter((entry) => entry.score >= 0)
     .sort((left, right) => left.score - right.score)
     .map((entry) => entry.row)

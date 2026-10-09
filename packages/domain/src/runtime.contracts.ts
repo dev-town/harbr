@@ -67,6 +67,7 @@ export const RuntimeObservationSchema = z.union([RuntimeFactSchema, RuntimePathO
 export type RuntimeObservation = z.infer<typeof RuntimeObservationSchema>
 
 export const ActiveRuntimeSummarySchema = z.object({
+  branchName: z.string().nullable(),
   id: z.string(),
   moduleId: z.string().nullable(),
   moduleName: z.string().nullable(),
