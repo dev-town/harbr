@@ -197,9 +197,11 @@ try {
     mark('modules-end')
 
     await hold(1_000)
-    mark('search-start')
     await hold(850)
-    send('text:ghostty')
+    for (const letter of 'ghostty') {
+      send(`text:${letter}`)
+      await hold(140)
+    }
     await hold(1_750)
     send('escape')
     await hold(400)
