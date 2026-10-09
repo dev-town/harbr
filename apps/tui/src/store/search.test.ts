@@ -44,7 +44,6 @@ function workspace(projectName: string, name: string): WorkspaceRow {
       scope: 'workspace',
     },
     workspacePath: `/tmp/${id}`,
-    workspaceProvider: 'external',
   }
 }
 

@@ -37,6 +37,7 @@ export type WorkspaceRow = BaseRow & {
 }
 
 export type ModuleRow = BaseRow & {
+  branchName?: string | null
   kind: 'module'
   projectId: string
   workspaceId: string

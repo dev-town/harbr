@@ -185,6 +185,7 @@ describe('db', () => {
           {
             workspaceName: 'main',
             workspacePath: '/tmp/workspaces/alpha-main',
+            branchName: 'codex/effect-v4-layering',
             kind: 'worktree',
             modules: [
               {
@@ -220,6 +221,9 @@ describe('db', () => {
       ])
       expect(snapshot.modules).toHaveLength(1)
       expect(snapshot.runtimes).toHaveLength(1)
+      expect(listActiveRuntimeSummaries(database.db, runtimeSource)).toEqual([
+        expect.objectContaining({ branchName: 'codex/effect-v4-layering', scope: 'module' }),
+      ])
 
       const persistedProject = await getProjectByName(database.db, 'alpha')
       expect(persistedProject?.repoKind).toBe('bare')
