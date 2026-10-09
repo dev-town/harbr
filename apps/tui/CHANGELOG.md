@@ -1,5 +1,12 @@
 # @harbr/tui
 
+## 0.1.0-beta.8
+
+### Patch Changes
+
+- e5f97df: Simplify popup borders and remove the header logo for a cleaner terminal layout.
+- 9cd39d6: Match space-separated search terms across active sessions, projects, workspace context, and branch names, with contiguous name matches ranked first.
+
 ## 0.1.0-beta.7
 
 ### Patch Changes
