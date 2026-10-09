@@ -64,11 +64,11 @@ Install the latest stable release to `~/.local/bin`:
 curl -fsSL https://dev-town.com/labs/harbr/install.sh | sh
 ```
 
-Until the first stable release, install a specific beta by passing the version to the installer process:
+To install a specific version, pass it to the installer process:
 
 ```sh
 curl -fsSL https://dev-town.com/labs/harbr/install.sh | \
-  HARBR_VERSION=0.1.0-beta.5 sh
+  HARBR_VERSION=0.1.0 sh
 ```
 
 Override the installation directory if needed:
@@ -85,15 +85,7 @@ The installer downloads the matching macOS or Linux release archive from GitHub 
 Install with Homebrew:
 
 ```sh
-brew tap dev-town/tap
 brew install dev-town/tap/harbr
-```
-
-After tapping, you can also trust the tap and install by the short formula name:
-
-```sh
-brew trust dev-town/tap
-brew install harbr
 ```
 
 Update an existing Homebrew install:
@@ -462,7 +454,7 @@ Harbr uses Changesets for release notes and version bumps. Feature, fix, and sec
 bun changeset
 ```
 
-For user-facing binary changes, select `@harbr/tui`. While Harbr is in beta, Changesets prerelease mode keeps those Version Packages PRs on the `-beta.N` line. After changesets land on `main`, GitHub Actions opens or updates a `Version Packages` PR that updates package versions and changelogs. Merge that version PR when ready to release, then tag the resulting `main` commit.
+For user-facing binary changes, select `@harbr/tui`. After changesets land on `main`, GitHub Actions opens or updates a `Version Packages` PR with the next SemVer version and changelog. Merge that version PR when ready to release, then tag the resulting `main` commit. See the [release guide](docs/releasing.md) for the full process.
 
 Run checks:
 

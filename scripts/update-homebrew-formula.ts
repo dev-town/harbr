@@ -56,10 +56,10 @@ const formula = `class Harbr < Formula
 
   livecheck do
     url :stable
-    regex(/^v?(\\d+(?:\\.\\d+)+(?:-[0-9A-Za-z.-]+)?)$/i)
+    regex(/^v?(\\d+(?:\\.\\d+)+)$/i)
     strategy :github_releases do |json, regex|
       json.filter_map do |release|
-        next if release["draft"]
+        next if release["draft"] || release["prerelease"]
 
         release["tag_name"]&.[](regex, 1)
       end
