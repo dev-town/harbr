@@ -44,6 +44,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
+    "@harbr/config-typescript": "workspace:*",
     "@types/node": "^25.6.2",
     "turbo": "^2.9.10",
     "typescript": "^6.0.3",

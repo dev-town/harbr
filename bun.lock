@@ -6,6 +6,7 @@
       "name": "harbr",
       "devDependencies": {
         "@changesets/cli": "^2.31.0",
+        "@harbr/config-typescript": "workspace:*",
         "@types/node": "^25.6.2",
         "oxfmt": "^0.65.0",
         "oxlint": "^1.87.0",
@@ -26,6 +27,7 @@
         "@harbr/runtime": "workspace:*",
         "@harbr/runtime-herdr": "workspace:*",
         "@harbr/runtime-tmux": "workspace:*",
+        "@harbr/scanner": "workspace:*",
         "@opentui/core": "^0.2.16",
         "@opentui/keymap": "^0.2.16",
         "@opentui/react": "^0.2.16",
@@ -79,6 +81,7 @@
     "packages/git": {
       "name": "@harbr/git",
       "dependencies": {
+        "@harbr/domain": "workspace:*",
         "effect": "catalog:",
       },
     },

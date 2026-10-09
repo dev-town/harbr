@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@harbr/domain": "workspace:*",
     "effect": "catalog:"
   }
 }
