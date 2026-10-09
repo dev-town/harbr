@@ -8,6 +8,7 @@ import {
 import type { HarbourRow, ActionRow, ModuleRow, ProjectRow, WorkspaceRow } from '~/types/rows'
 import { browseActionIds } from './browse-action-ids'
 import { getSelectedRow } from '~/store/shared/list-selectors'
+import { scoreSearch, searchTerms } from '~/store/shared/search'
 import type { TuiStoreModel } from '~/store/types'
 import {
   getBrowseSection,
@@ -37,7 +38,7 @@ export function selectBrowseRows(state: TuiStoreModel): readonly HarbourRow[] {
 }
 
 export function selectVisibleBrowseRows(state: TuiStoreModel): readonly HarbourRow[] {
-  const query = state.browse.list.query.trim().toLowerCase()
+  const terms = searchTerms(state.browse.list.query)
   const baseRows = selectBrowseRows(state).map((row) => ({
     ...row,
     isCurrent: isCurrentBrowseRow(row, state.app.currentRuntime),
@@ -45,12 +46,19 @@ export function selectVisibleBrowseRows(state: TuiStoreModel): readonly HarbourR
   const scopedRows =
     state.browse.visibility === 'active' ? baseRows.filter((row) => row.isActive) : [...baseRows]
 
-  if (!query) {
+  if (terms.length === 0) {
     return scopedRows
   }
 
   return scopedRows
-    .map((row) => ({ row, score: getBrowseRowScore(row, query) }))
+    .map((row) => ({
+      row,
+      score: scoreSearch(terms, {
+        label: row.label,
+        context: row.target.breadcrumb,
+        metadata: row.metadata ?? '',
+      }),
+    }))
     .filter((entry) => entry.score >= 0)
     .sort((left, right) => left.score - right.score)
     .map((entry) => entry.row)
@@ -335,24 +343,6 @@ function getProjectRow(state: TuiStoreModel, projectId: string) {
 
 function getWorkspaceRow(state: TuiStoreModel, workspaceId: string) {
   return state.data.workspaceRows.find((row) => row.workspaceId === workspaceId) ?? null
-}
-
-function getBrowseRowScore(row: HarbourRow, query: string) {
-  const label = row.label.toLowerCase()
-  const metadata = row.metadata?.toLowerCase() ?? ''
-  const labelIndex = label.indexOf(query)
-
-  if (labelIndex >= 0) {
-    return labelIndex
-  }
-
-  const metadataIndex = metadata.indexOf(query)
-
-  if (metadataIndex >= 0) {
-    return 100 + metadataIndex
-  }
-
-  return -1
 }
 
 function isCurrentBrowseRow(row: HarbourRow, currentRuntime: CurrentRuntime) {
