@@ -493,13 +493,13 @@ Set `HARBR_DEMO_APP_COMMAND` to another app launch command, or omit it to record
 
 The renderer copies the bundled DevTown Labs intro into the clips directory as `00-devtown-intro.mp4`, then reads the numbered 01–04 MP4 files in order, preserving the intro audio. Set `HARBR_DEMO_INTRO=/absolute/path/to/another-intro.mp4` to use a different opening, or add a `99-*.mp4` outro. Each recorded feature gets a DevTown-styled title card. A standalone `05-also-features.mp4` lists mouse support, Herdr, monorepo navigation, and Git worktrees; the main cut includes that card before “Try Harbr” and the GitHub URL. To edit a feature without re-recording, replace its numbered MP4 and rerender.
 
-| Purpose | Location |
-| --- | --- |
-| Original intro used by default, including audio | [`apps/tui/video/assets/devtown-tilde-to-labs.mp4`](apps/tui/video/assets/devtown-tilde-to-labs.mp4) |
-| Recording and rendering scripts | [`record-walkthrough.ts`](apps/tui/scripts/record-walkthrough.ts), [`render-walkthrough.ts`](apps/tui/scripts/render-walkthrough.ts) |
-| Scene cards and composition | [`apps/tui/video/walkthrough.tsx`](apps/tui/video/walkthrough.tsx) |
-| Editable recording, numbered clips, and local `launch-cut-1080p.mp4` | `.artifacts/terminal-control/walkthrough/` (ignored by Git) |
-| Reviewed video and README poster | [`harbr-walkthrough.mp4`](docs/assets/readme/harbr-walkthrough.mp4), [`harbr-walkthrough-poster.jpg`](docs/assets/readme/harbr-walkthrough-poster.jpg) |
+| Purpose                                                              | Location                                                                                                                                               |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Original intro used by default, including audio                      | [`apps/tui/video/assets/devtown-tilde-to-labs.mp4`](apps/tui/video/assets/devtown-tilde-to-labs.mp4)                                                   |
+| Recording and rendering scripts                                      | [`record-walkthrough.ts`](apps/tui/scripts/record-walkthrough.ts), [`render-walkthrough.ts`](apps/tui/scripts/render-walkthrough.ts)                   |
+| Scene cards and composition                                          | [`apps/tui/video/walkthrough.tsx`](apps/tui/video/walkthrough.tsx)                                                                                     |
+| Editable recording, numbered clips, and local `launch-cut-1080p.mp4` | `.artifacts/terminal-control/walkthrough/` (ignored by Git)                                                                                            |
+| Reviewed video and README poster                                     | [`harbr-walkthrough.mp4`](docs/assets/readme/harbr-walkthrough.mp4), [`harbr-walkthrough-poster.jpg`](docs/assets/readme/harbr-walkthrough-poster.jpg) |
 
 Individual checks:
 
