@@ -22,9 +22,9 @@ const browserArgs = browserExecutable
 const featureTitles: Record<string, string> = {
   '01-switch-live-sessions.mp4': 'Switch live sessions',
   '02-explore-your-projects-and-packages.mp4': 'Explore your projects and packages',
-  '03-easy-search.mp4': 'Easy search',
+  '03-quick-search.mp4': 'Quick search',
   '04-custom-layouts.mp4': 'Custom layouts',
-  '05-need-help.mp4': 'Need help?',
+  '05-check-help-for-other-features.mp4': 'Check help for other features',
 }
 const introPath = path.resolve(
   process.env.HARBR_DEMO_INTRO ??
