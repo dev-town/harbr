@@ -143,24 +143,33 @@ try {
       ])
     }
     mark('start')
-    await hold(1_050)
+    await hold(525)
     mark('before-open-end')
 
     openHarbr()
     waitFor('Filter active sessions')
     await hold(450)
     mark('active-ready')
-    await hold(850)
+    await hold(425)
     send('down')
     await hold(850)
     send('enter')
-    await hold(1_700)
-    mark('active-end')
-
-    await hold(1_000)
+    await hold(1_400)
     openHarbr()
     waitFor('Filter active sessions')
-    await hold(850)
+    await hold(450)
+    mark('return-ready')
+    await hold(425)
+    send('up')
+    await hold(600)
+    send('enter')
+    await hold(1_500)
+    mark('active-end')
+
+    await hold(500)
+    openHarbr()
+    waitFor('Filter active sessions')
+    await hold(425)
     send('tab')
     waitFor('Filter projects')
     await hold(700)
@@ -196,8 +205,7 @@ try {
     await hold(1_500)
     mark('modules-end')
 
-    await hold(1_000)
-    await hold(850)
+    await hold(925)
     for (const letter of 'ghostty') {
       send(`text:${letter}`)
       await hold(140)
@@ -209,7 +217,7 @@ try {
     await hold(950)
     mark('search-end')
 
-    await hold(900)
+    await hold(450)
     send('ctrl-a')
     waitFor('Create module windows')
     await hold(750)
@@ -228,7 +236,7 @@ try {
     await hold(1_100)
     mark('layout-end')
 
-    await hold(900)
+    await hold(450)
     send('text:?')
     waitFor('Keyboard Help')
     await hold(1_100)
@@ -257,7 +265,7 @@ try {
       clips: [{ from: 'active-end', to: 'modules-end' }],
     },
     {
-      file: '03-easy-search.mp4',
+      file: '03-quick-search.mp4',
       clips: [{ from: 'modules-end', to: 'search-end' }],
     },
     {
@@ -265,7 +273,7 @@ try {
       clips: [{ from: 'search-end', to: 'layout-end' }],
     },
     {
-      file: '05-need-help.mp4',
+      file: '05-check-help-for-other-features.mp4',
       clips: [{ from: 'layout-end', to: 'end' }],
     },
   ]
@@ -297,6 +305,7 @@ try {
   }
   for (const marker of [
     'active-ready',
+    'return-ready',
     'active-end',
     'modules',
     'layout',

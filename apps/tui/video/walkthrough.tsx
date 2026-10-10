@@ -118,7 +118,7 @@ export function AlsoScene() {
           {[
             'Vim bindings (*lite)',
             "Mouse support (if that's you)",
-            'Herdr',
+            'Herdr support',
             'Monorepo quick navigation',
             'Git Worktrees',
           ].map((feature) => (
