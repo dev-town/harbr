@@ -5,7 +5,7 @@
   "type": "module",
   "dependencies": {
     "@effect/opentelemetry": "0.63.0",
-    "@effect/platform": "0.96.1",
+    "@effect/platform": "0.97.1",
     "@harbr/config": "workspace:*",
     "@harbr/db": "workspace:*",
     "@harbr/domain": "workspace:*",
